@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,7 +7,6 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../providers/notifikasi_provider.dart';
 import '../../providers/profile_menu_provider.dart';
-import '../shared/app_bottom_nav.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -29,228 +27,214 @@ class DashboardScreen extends ConsumerWidget {
         ],
         fallback: 'LATIK');
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
-        extendBody: true,
-        backgroundColor: const Color(0xFFF7FAFE),
-        body: Stack(
-          children: [
-            const _BlueHeaderBand(height: 164),
-            SafeArea(
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(latikProfileProvider);
-                  ref.invalidate(notifikasiProvider);
-                  await Future.wait([
-                    ref
-                        .read(latikProfileProvider.future)
-                        .catchError((_) => <String, dynamic>{}),
-                    ref
-                        .read(notifikasiProvider.future)
-                        .catchError((_) => const []),
-                  ]);
-                },
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 120),
+    return Stack(
+      children: [
+        const _BlueHeaderBand(height: 164),
+        SafeArea(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(latikProfileProvider);
+              ref.invalidate(notifikasiProvider);
+              await Future.wait([
+                ref
+                    .read(latikProfileProvider.future)
+                    .catchError((_) => <String, dynamic>{}),
+                ref
+                    .read(notifikasiProvider.future)
+                    .catchError((_) => const []),
+              ]);
+            },
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 120),
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Dashboard',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                namaLatik,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Color(0xDDEAF2FF),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Dashboard',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          onPressed: () =>
-                              context.push(AppRoutes.notifications),
-                          icon: const Icon(Icons.notifications_rounded),
-                          color: Colors.white,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
-                    latikAsync.when(
-                      data: (data) => _LatikSummaryCard(data: data),
-                      loading: () => const _LoadingCard(),
-                      error: (_, __) => _ErrorCard(
-                        onRetry: () => ref.invalidate(latikProfileProvider),
+                          const SizedBox(height: 4),
+                          Text(
+                            namaLatik,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xDDEAF2FF),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Aksi Cepat',
-                      style: TextStyle(
-                        color: Color(0xFF0C2D5C),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        _QuickAction(
-                          icon: Icons.description_outlined,
-                          label: 'Dokumen',
-                          onTap: () => context.push(AppRoutes.registration),
-                        ),
-                        const SizedBox(width: 18),
-                        _QuickAction(
-                          icon: Icons.groups_2_outlined,
-                          label: 'Auditor',
-                          onTap: () => context.push(AppRoutes.auditors),
-                        ),
-                        const SizedBox(width: 18),
-                        _QuickAction(
-                          icon: Icons.autorenew_rounded,
-                          label: 'Perpanjangan',
-                          onTap: () => context.push(AppRoutes.registration),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 28),
-                    const Text(
-                      'Notifikasi Terbaru',
-                      style: TextStyle(
-                        color: Color(0xFF0C2D5C),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    notifAsync.when(
-                      data: (items) {
-                        final latest = items.take(2).toList();
-                        if (latest.isEmpty) {
-                          return const Text('Belum ada notifikasi');
-                        }
-                        return Column(
-                          children: latest.map((item) {
-                            final isWarning =
-                                item.kategori == 'Tindakan Diperlukan';
-                            final actionUrl = item.actionUrl?.trim();
-                            return InkWell(
-                              onTap: actionUrl != null && actionUrl.isNotEmpty
-                                  ? () => _openAction(actionUrl)
-                                  : null,
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 11,
-                                      height: 11,
-                                      decoration: BoxDecoration(
-                                        color: isWarning
-                                            ? AppColors.accent
-                                            : AppColors.primary,
-                                        borderRadius: BorderRadius.circular(99),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            item.judul,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              color: Color(0xFF1C2638),
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                          ),
-                                          if (item.isi.trim().isNotEmpty) ...[
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              item.isi,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                color: Color(0xFF6B778C),
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      _timeAgo(item.waktu),
-                                      style: const TextStyle(
-                                        color: Color(0xFF8A96AA),
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    if (actionUrl != null &&
-                                        actionUrl.isNotEmpty) ...[
-                                      const SizedBox(width: 6),
-                                      const Icon(Icons.open_in_new,
-                                          size: 14, color: AppColors.primary),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        );
-                      },
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (_, __) => const Text('Gagal memuat notifikasi'),
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.center,
-                      child: TextButton(
-                        onPressed: () => context.push(AppRoutes.notifications),
-                        child: const Text(
-                          'Lihat semua notifikasi  >',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                      ),
+                    IconButton(
+                      onPressed: () =>
+                          context.go(AppRoutes.notifications),
+                      icon: const Icon(Icons.notifications_rounded),
+                      color: Colors.white,
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 18),
+                latikAsync.when(
+                  data: (data) => _LatikSummaryCard(data: data),
+                  loading: () => const _LoadingCard(),
+                  error: (_, __) => _ErrorCard(
+                    onRetry: () => ref.invalidate(latikProfileProvider),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Aksi Cepat',
+                  style: TextStyle(
+                    color: Color(0xFF0C2D5C),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    _QuickAction(
+                      icon: Icons.description_outlined,
+                      label: 'Dokumen',
+                      onTap: () => context.push(AppRoutes.registration),
+                    ),
+                    const SizedBox(width: 18),
+                    _QuickAction(
+                      icon: Icons.groups_2_outlined,
+                      label: 'Auditor',
+                      onTap: () => context.go(AppRoutes.auditors),
+                    ),
+                    const SizedBox(width: 18),
+                    _QuickAction(
+                      icon: Icons.autorenew_rounded,
+                      label: 'Perpanjangan',
+                      onTap: () => context.push(AppRoutes.registration),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                const Text(
+                  'Notifikasi Terbaru',
+                  style: TextStyle(
+                    color: Color(0xFF0C2D5C),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                notifAsync.when(
+                  data: (items) {
+                    final latest = items.take(2).toList();
+                    if (latest.isEmpty) {
+                      return const Text('Belum ada notifikasi');
+                    }
+                    return Column(
+                      children: latest.map((item) {
+                        final isWarning =
+                            item.kategori == 'Tindakan Diperlukan';
+                        final actionUrl = item.actionUrl?.trim();
+                        return InkWell(
+                          onTap: actionUrl != null && actionUrl.isNotEmpty
+                              ? () => _openAction(actionUrl)
+                              : null,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 11,
+                                  height: 11,
+                                  decoration: BoxDecoration(
+                                    color: isWarning
+                                        ? AppColors.accent
+                                        : AppColors.primary,
+                                    borderRadius: BorderRadius.circular(99),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.judul,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Color(0xFF1C2638),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      if (item.isi.trim().isNotEmpty) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          item.isi,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Color(0xFF6B778C),
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  _timeAgo(item.waktu),
+                                  style: const TextStyle(
+                                    color: Color(0xFF8A96AA),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (actionUrl != null &&
+                                    actionUrl.isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.open_in_new,
+                                      size: 14, color: AppColors.primary),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (_, __) => const Text('Gagal memuat notifikasi'),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.center,
+                  child: TextButton(
+                    onPressed: () => context.go(AppRoutes.notifications),
+                    child: const Text(
+                      'Lihat semua notifikasi  >',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-        bottomNavigationBar: const AppBottomNav(selectedIndex: 0),
-      ),
+      ],
     );
   }
 

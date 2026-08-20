@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_routes.dart';
 
 class AppBottomNav extends StatelessWidget {
-  const AppBottomNav({super.key, required this.selectedIndex});
+  const AppBottomNav({
+    super.key,
+    required this.selectedIndex,
+    required this.onItemTapped,
+  });
 
   final int selectedIndex;
+  final ValueChanged<int> onItemTapped;
 
   @override
   Widget build(BuildContext context) {
@@ -34,40 +37,29 @@ class AppBottomNav extends StatelessWidget {
             icon: Icons.home_rounded,
             label: 'Home',
             selected: selectedIndex == 0,
-            onTap: () => _go(context, 0),
+            onTap: () => onItemTapped(0),
           ),
           _NavItem(
             icon: Icons.groups_2_outlined,
             label: 'Auditor',
             selected: selectedIndex == 1,
-            onTap: () => _go(context, 1),
+            onTap: () => onItemTapped(1),
           ),
           _NavItem(
             icon: Icons.notifications_none_rounded,
             label: 'Notifikasi',
             selected: selectedIndex == 2,
-            onTap: () => _go(context, 2),
+            onTap: () => onItemTapped(2),
           ),
           _NavItem(
             icon: Icons.person_outline_rounded,
             label: 'Profil',
             selected: selectedIndex == 3,
-            onTap: () => _go(context, 3),
+            onTap: () => onItemTapped(3),
           ),
         ],
       ),
     );
-  }
-
-  void _go(BuildContext context, int index) {
-    final routes = [
-      AppRoutes.dashboard,
-      AppRoutes.auditors,
-      AppRoutes.notifications,
-      AppRoutes.profile,
-    ];
-    if (index == selectedIndex) return;
-    context.push(routes[index]);
   }
 }
 

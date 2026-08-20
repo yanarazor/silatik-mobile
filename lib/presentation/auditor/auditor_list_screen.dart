@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_routes.dart';
 import '../../data/models/auditor_model.dart';
 import '../../providers/auditor_provider.dart';
 import '../registration/steps/step4_auditor.dart';
-import '../shared/app_bottom_nav.dart';
 import 'auditor_detail_screen.dart';
 
 class AuditorListScreen extends ConsumerWidget {
@@ -21,107 +17,93 @@ class AuditorListScreen extends ConsumerWidget {
     final displayAuditors =
         auditors == null || auditors.isEmpty ? _previewAuditors : auditors;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
-        extendBody: true,
-        backgroundColor: const Color(0xFFF7FAFE),
-        body: Stack(
-          children: [
-            const _BlueHeaderBand(height: 150),
-            SafeArea(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(22, 18, 22, 120),
+    return Stack(
+      children: [
+        const _BlueHeaderBand(height: 150),
+        SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(22, 18, 22, 120),
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Kelola Auditor',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${displayAuditors.length} auditor terdaftar',
-                              style: const TextStyle(
-                                color: Color(0xDDEAF2FF),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      FilledButton.icon(
-                        onPressed: () => showAuditorSheet(context, ref),
-                        icon: const Icon(Icons.add_rounded, size: 18),
-                        label: const Text('Tambah'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
-                          textStyle: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Cari auditor...',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: Color(0xFFE4ECF7)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ...displayAuditors.map(
-                    (auditor) => Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: _AuditorTile(
-                        auditor: auditor,
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                AuditorDetailScreen(auditor: auditor),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Kelola Auditor',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${displayAuditors.length} auditor terdaftar',
+                          style: const TextStyle(
+                            color: Color(0xDDEAF2FF),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  FilledButton.icon(
+                    onPressed: () => showAuditorSheet(context, ref),
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text('Tambah'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      textStyle: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Cari auditor...',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Color(0xFFE4ECF7)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...displayAuditors.map(
+                (auditor) => Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _AuditorTile(
+                    auditor: auditor,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            AuditorDetailScreen(auditor: auditor),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        bottomNavigationBar: const AppBottomNav(selectedIndex: 1),
-      ),
+      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 ﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +19,7 @@ import 'presentation/dashboard/dashboard_screen.dart';
 import 'presentation/notifikasi/notifikasi_screen.dart';
 import 'presentation/profil/profil_screen.dart';
 import 'presentation/registration/registration_flow_screen.dart';
+import 'presentation/shared/app_bottom_nav.dart';
 import 'providers/auth_provider.dart';
 import 'providers/auditor_provider.dart';
 import 'providers/profile_menu_provider.dart';
@@ -62,17 +64,33 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         GoRoute(
             path: AppRoutes.registration,
             builder: (_, __) => const RegistrationFlowScreen()),
-        GoRoute(
-            path: AppRoutes.dashboard,
-            builder: (_, __) => const DashboardScreen()),
-        GoRoute(
-            path: AppRoutes.auditors,
-            builder: (_, __) => const AuditorListScreen()),
-        GoRoute(
-            path: AppRoutes.notifications,
-            builder: (_, __) => const NotifikasiScreen()),
-        GoRoute(
-            path: AppRoutes.profile, builder: (_, __) => const ProfilScreen()),
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            return ScaffoldWithNavBar(navigationShell: navigationShell);
+          },
+          branches: [
+            StatefulShellBranch(routes: [
+              GoRoute(
+                  path: AppRoutes.dashboard,
+                  builder: (_, __) => const DashboardScreen()),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                  path: AppRoutes.auditors,
+                  builder: (_, __) => const AuditorListScreen()),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                  path: AppRoutes.notifications,
+                  builder: (_, __) => const NotifikasiScreen()),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                  path: AppRoutes.profile,
+                  builder: (_, __) => const ProfilScreen()),
+            ]),
+          ],
+        ),
       ],
       redirect: (context, state) {
         final auth = ref.read(authProvider);
@@ -126,6 +144,39 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
   void dispose() {
     _router.dispose();
     super.dispose();
+  }
+}
+
+class ScaffoldWithNavBar extends StatelessWidget {
+  const ScaffoldWithNavBar({super.key, required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: const Color(0xFFF7FAFE),
+        body: navigationShell,
+        bottomNavigationBar: AppBottomNav(
+          selectedIndex: navigationShell.currentIndex,
+          onItemTapped: (index) {
+            navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
+            );
+          },
+        ),
+      ),
+    );
   }
 }
 

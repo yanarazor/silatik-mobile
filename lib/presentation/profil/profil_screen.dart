@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,7 +6,6 @@ import '../../core/constants/app_routes.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_menu_provider.dart';
 import '../../providers/registrasi_provider.dart';
-import '../shared/app_bottom_nav.dart';
 
 class ProfilScreen extends ConsumerWidget {
   const ProfilScreen({super.key});
@@ -27,127 +25,116 @@ class ProfilScreen extends ConsumerWidget {
         _stringValue(user, 'avatar_url') ?? _stringValue(user, 'photo_url');
     final isActive = user?['active'] == 1 || user?['active'] == true;
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
-        extendBody: true,
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          top: false,
-          bottom: false,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              SizedBox(
-                height: 700 + topInset,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      height: 260 + topInset,
-                      width: double.infinity,
+    return ColoredBox(
+      color: Colors.white,
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            SizedBox(
+              height: 700 + topInset,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    height: 260 + topInset,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF004CA5),
+                          Color(0xFF003676),
+                        ],
+                      ),
+                    ),
+                    child: _ProfileHeader(
+                      topInset: topInset,
+                      name: displayName,
+                      email: email,
+                      avatarUrl: avatarUrl,
+                      isActive: isActive,
+                    ),
+                  ),
+                  Positioned(
+                    top: 230 + topInset,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
                       decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF004CA5),
-                            Color(0xFF003676),
-                          ],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(22),
                         ),
                       ),
-                      child: _ProfileHeader(
-                        topInset: topInset,
-                        name: displayName,
-                        email: email,
-                        avatarUrl: avatarUrl,
-                        isActive: isActive,
-                      ),
-                    ),
-                    Positioned(
-                      top: 230 + topInset,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(22),
+                      child: Column(
+                        children: [
+                          _ProfileMenuItem(
+                            icon: Icons.apartment_outlined,
+                            title: 'Profil Lembaga',
+                            onTap: () => _showLatikProfileSheet(
+                              context,
+                              ref,
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            _ProfileMenuItem(
-                              icon: Icons.apartment_outlined,
-                              title: 'Profil Lembaga',
-                              onTap: () => _showLatikProfileSheet(
-                                context,
-                                ref,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            _ProfileMenuItem(
-                              icon: Icons.person_outline_rounded,
+                          const SizedBox(height: 12),
+                          _ProfileMenuItem(
+                            icon: Icons.person_outline_rounded,
+                            title: 'Pengguna',
+                            onTap: () => _showApiInfoSheet(
+                              context,
                               title: 'Pengguna',
-                              onTap: () => _showApiInfoSheet(
-                                context,
-                                title: 'Pengguna',
-                                future: ref.refresh(userProfileProvider.future),
-                                mapper: _mapUserProfile,
-                              ),
+                              future: ref.refresh(userProfileProvider.future),
+                              mapper: _mapUserProfile,
                             ),
-                            const SizedBox(height: 12),
-                            _ProfileMenuItem(
-                              icon: Icons.settings_outlined,
+                          ),
+                          const SizedBox(height: 12),
+                          _ProfileMenuItem(
+                            icon: Icons.settings_outlined,
+                            title: 'Pengaturan',
+                            onTap: () => _showApiInfoSheet(
+                              context,
                               title: 'Pengaturan',
-                              onTap: () => _showApiInfoSheet(
-                                context,
-                                title: 'Pengaturan',
-                                future: ref.refresh(userProfileProvider.future),
-                                mapper: _mapSettings,
-                              ),
+                              future: ref.refresh(userProfileProvider.future),
+                              mapper: _mapSettings,
                             ),
-                            const SizedBox(height: 12),
-                            _ProfileMenuItem(
-                              icon: Icons.help_outline_rounded,
+                          ),
+                          const SizedBox(height: 12),
+                          _ProfileMenuItem(
+                            icon: Icons.help_outline_rounded,
+                            title: 'Bantuan & Panduan',
+                            onTap: () =>
+                                _showApiInfoSheet<List<Map<String, dynamic>>>(
+                              context,
                               title: 'Bantuan & Panduan',
-                              onTap: () =>
-                                  _showApiInfoSheet<List<Map<String, dynamic>>>(
-                                context,
-                                title: 'Bantuan & Panduan',
-                                future: ref.refresh(faqProfileProvider.future),
-                                mapper: _mapFaqs,
-                              ),
+                              future: ref.refresh(faqProfileProvider.future),
+                              mapper: _mapFaqs,
                             ),
-                            const SizedBox(height: 22),
-                            _ProfileMenuItem(
-                              icon: Icons.logout_rounded,
-                              title: 'Keluar',
-                              isLogout: true,
-                              onTap: () async {
-                                await ref.read(authProvider.notifier).logout();
-                                if (!context.mounted) return;
-                                context.go(AppRoutes.login);
-                              },
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 22),
+                          _ProfileMenuItem(
+                            icon: Icons.logout_rounded,
+                            title: 'Keluar',
+                            isLogout: true,
+                            onTap: () async {
+                              await ref.read(authProvider.notifier).logout();
+                              if (!context.mounted) return;
+                              context.go(AppRoutes.login);
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        bottomNavigationBar: const AppBottomNav(selectedIndex: 3),
       ),
     );
   }
