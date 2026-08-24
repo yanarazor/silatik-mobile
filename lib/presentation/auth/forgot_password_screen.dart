@@ -41,10 +41,10 @@ class ForgotPasswordScreen extends ConsumerWidget {
                 TextField(
                   controller: email,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Email',
                     hintText: 'email@lembaga.com',
-                    prefixIcon: const Icon(Icons.email_outlined),
+                    prefixIcon: Icon(Icons.email_outlined),
                   ),
                 ),
                 const SizedBox(height: AppTheme.spacing24),
@@ -52,11 +52,11 @@ class ForgotPasswordScreen extends ConsumerWidget {
                   onPressed: () async {
                     if (email.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Email tidak boleh kosong'),
+                        const SnackBar(
+                          content: Text('Email tidak boleh kosong'),
                           backgroundColor: AppColors.error,
                           behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.all(16),
+                          margin: EdgeInsets.all(16),
                         ),
                       );
                       return;
@@ -66,12 +66,12 @@ class ForgotPasswordScreen extends ConsumerWidget {
                         .forgotPassword(email.text);
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text(
+                      const SnackBar(
+                        content: Text(
                             'Link reset telah dikirim. Silakan cek email Anda.'),
                         backgroundColor: AppColors.success,
                         behavior: SnackBarBehavior.floating,
-                        margin: const EdgeInsets.all(16),
+                        margin: EdgeInsets.all(16),
                       ),
                     );
                   },

@@ -156,7 +156,7 @@ class _AuditorTile extends StatelessWidget {
           border: Border.all(color: const Color(0xFFE4ECF7)),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0B2D5C).withOpacity(0.05),
+              color: const Color(0xFF0B2D5C).withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),

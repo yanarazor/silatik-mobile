@@ -27,7 +27,7 @@ class Step5Review extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(AppTheme.spacing20),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
                 ),
                 child: const Icon(
@@ -51,7 +51,7 @@ class Step5Review extends ConsumerWidget {
                   vertical: AppTheme.spacing8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                 ),
                 child: Text(
@@ -175,9 +175,9 @@ class Step5Review extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(AppTheme.spacing12),
             decoration: BoxDecoration(
-              color: AppColors.warning.withOpacity(0.05),
+              color: AppColors.warning.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              border: Border.all(color: AppColors.warning.withOpacity(0.2)),
+              border: Border.all(color: AppColors.warning.withValues(alpha: 0.2)),
             ),
             child: CheckboxListTile(
               value: data.pernyataan,
@@ -244,7 +244,7 @@ class Step5Review extends ConsumerWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     disabledBackgroundColor:
-                        AppColors.textSecondary.withOpacity(0.3),
+                        AppColors.textSecondary.withValues(alpha: 0.3),
                     padding: const EdgeInsets.symmetric(
                         vertical: AppTheme.spacing12),
                     shape: RoundedRectangleBorder(
@@ -291,8 +291,8 @@ class Step5Review extends ConsumerWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        collapsedBackgroundColor: AppColors.primary.withOpacity(0.02),
-        backgroundColor: AppColors.primary.withOpacity(0.05),
+        collapsedBackgroundColor: AppColors.primary.withValues(alpha: 0.02),
+        backgroundColor: AppColors.primary.withValues(alpha: 0.05),
         collapsedShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         ),

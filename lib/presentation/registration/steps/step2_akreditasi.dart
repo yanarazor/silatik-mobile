@@ -150,7 +150,7 @@ class _Step2AkreditasiState extends ConsumerState<Step2Akreditasi> {
                           onSelected: (v) => setState(
                               () => v ? scopes.add(e) : scopes.remove(e)),
                           backgroundColor: scopes.contains(e)
-                              ? AppColors.primary.withOpacity(0.12)
+                              ? AppColors.primary.withValues(alpha: 0.12)
                               : Colors.transparent,
                           labelStyle: TextStyle(
                             color: scopes.contains(e)
@@ -161,7 +161,7 @@ class _Step2AkreditasiState extends ConsumerState<Step2Akreditasi> {
                           side: BorderSide(
                             color: scopes.contains(e)
                                 ? AppColors.primary
-                                : AppColors.textSecondary.withOpacity(0.3),
+                                : AppColors.textSecondary.withValues(alpha: 0.3),
                           ),
                         ),
                       )
@@ -188,11 +188,11 @@ class _Step2AkreditasiState extends ConsumerState<Step2Akreditasi> {
                     margin: const EdgeInsets.only(top: AppTheme.spacing12),
                     padding: const EdgeInsets.all(AppTheme.spacing12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.05),
+                      color: AppColors.primary.withValues(alpha: 0.05),
                       borderRadius:
                           BorderRadius.circular(AppTheme.radiusMedium),
                       border:
-                          Border.all(color: AppColors.primary.withOpacity(0.2)),
+                          Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
                     ),
                     child: ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -326,7 +326,7 @@ class _Step2AkreditasiState extends ConsumerState<Step2Akreditasi> {
         padding: const EdgeInsets.symmetric(
             horizontal: AppTheme.spacing12, vertical: AppTheme.spacing12),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.textSecondary.withOpacity(0.3)),
+          border: Border.all(color: AppColors.textSecondary.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         ),
         child: Row(

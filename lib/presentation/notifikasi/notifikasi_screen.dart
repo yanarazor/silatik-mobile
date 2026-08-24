@@ -33,10 +33,10 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
                 padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
                 child: Row(
                   children: [
-                    Expanded(
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Text(
                             'Notifikasi',
                             style: TextStyle(
@@ -139,7 +139,7 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
                             boxShadow: [
                               BoxShadow(
                                 color: const Color(0xFF0B2D5C)
-                                    .withOpacity(0.05),
+                                    .withValues(alpha: 0.05),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
@@ -152,7 +152,7 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: color.withOpacity(0.12),
+                                  color: color.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Icon(_iconFor(item.kategori),
@@ -247,9 +247,12 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
   }
 
   IconData _iconFor(String kategori) {
-    if (kategori == 'Tindakan Diperlukan')
+    if (kategori == 'Tindakan Diperlukan') {
       return Icons.assignment_late_outlined;
-    if (kategori == 'Info') return Icons.info_outline_rounded;
+    }
+    if (kategori == 'Info') {
+      return Icons.info_outline_rounded;
+    }
     return Icons.description_outlined;
   }
 

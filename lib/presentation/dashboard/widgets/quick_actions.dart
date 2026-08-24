@@ -60,7 +60,7 @@ class QuickActions extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.12),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                 ),
                 child: Icon(icon, size: 24, color: AppColors.primary),

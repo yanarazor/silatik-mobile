@@ -73,7 +73,7 @@ class Step4Auditor extends ConsumerWidget {
                       const EdgeInsets.symmetric(vertical: AppTheme.spacing24),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: AppColors.textSecondary.withOpacity(0.2),
+                      color: AppColors.textSecondary.withValues(alpha: 0.2),
                       style: BorderStyle.solid,
                     ),
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),

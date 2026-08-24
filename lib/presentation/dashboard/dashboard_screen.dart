@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
+import '../../data/models/notifikasi_model.dart';
 import '../../providers/notifikasi_provider.dart';
 import '../../providers/profile_menu_provider.dart';
 
@@ -41,7 +42,7 @@ class DashboardScreen extends ConsumerWidget {
                     .catchError((_) => <String, dynamic>{}),
                 ref
                     .read(notifikasiProvider.future)
-                    .catchError((_) => const []),
+                    .catchError((_) => <NotifikasiModel>[]),
               ]);
             },
             child: ListView(
@@ -340,7 +341,7 @@ class _LatikSummaryCard extends StatelessWidget {
             border: Border.all(color: const Color(0xFFE4ECF7)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0B2D5C).withOpacity(0.06),
+                color: const Color(0xFF0B2D5C).withValues(alpha: 0.06),
                 blurRadius: 22,
                 offset: const Offset(0, 12),
               ),

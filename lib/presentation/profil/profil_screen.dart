@@ -236,9 +236,9 @@ class ProfilScreen extends ConsumerWidget {
                 future: ref.refresh(latikProfileProvider.future),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState != ConnectionState.done) {
-                    return _SheetFrame(
+                    return const _SheetFrame(
                       title: 'Profil Lembaga',
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 28),
                         child: Center(child: CircularProgressIndicator()),
                       ),
@@ -246,9 +246,9 @@ class ProfilScreen extends ConsumerWidget {
                   }
 
                   if (snapshot.hasError || !snapshot.hasData) {
-                    return _SheetFrame(
+                    return const _SheetFrame(
                       title: 'Profil Lembaga',
-                      child: const Padding(
+                      child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 16),
                         child: Text(
                           'Gagal memuat data dari API.',
@@ -270,8 +270,7 @@ class ProfilScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ...rows.entries
-                            .map((entry) => _SheetRow(entry.key, entry.value))
-                            .toList(),
+                            .map((entry) => _SheetRow(entry.key, entry.value)),
                         const SizedBox(height: 16),
                         FilledButton.icon(
                           onPressed: () =>
@@ -458,18 +457,20 @@ class ProfilScreen extends ConsumerWidget {
       final value = data[key];
       if (value == null) continue;
       final text = value.toString().trim();
-      if (text.isNotEmpty && text != 'null')
-        return text; // This line remains unchanged
+      if (text.isNotEmpty && text != 'null') {
+        return text;
+      }
     }
     return fallback;
   }
 
   String _rolesText(Map<String, dynamic> data) {
     final roles = data['roles'];
-    if (roles is List && roles.isNotEmpty) {
+      if (roles is List && roles.isNotEmpty) {
       return roles.map((role) {
-        if (role is Map)
+        if (role is Map) {
           return (role['name'] ?? role['description'] ?? role).toString();
+        }
         return role.toString();
       }).join(', ');
     }
@@ -603,7 +604,7 @@ class _ProfileHeader extends StatelessWidget {
             color: const Color(0xFFFFB51B),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.18),
+                color: Colors.black.withValues(alpha: 0.18),
                 blurRadius: 13,
                 offset: const Offset(0, 5),
               ),
@@ -652,7 +653,7 @@ class _ProfileHeader extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.78),
+            color: Colors.white.withValues(alpha: 0.78),
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),

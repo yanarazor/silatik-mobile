@@ -41,7 +41,7 @@ class AuditorDetailScreen extends StatelessWidget {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                     ),
                     child: _buildAvatar(theme, auditor),
@@ -338,9 +338,11 @@ class AuditorDetailScreen extends StatelessWidget {
       if (externalOk) return;
       final inAppOk = await launchUrl(uri, mode: LaunchMode.inAppWebView);
       if (!inAppOk) {
+        if (!context.mounted) return;
         _showSnackBar(context, 'Tidak bisa membuka tautan');
       }
     } catch (_) {
+      if (!context.mounted) return;
       _showSnackBar(context, 'Gagal membuka tautan');
     }
   }

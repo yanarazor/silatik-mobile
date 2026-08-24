@@ -172,12 +172,12 @@ class AppTheme {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusXLarge)),
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Colors.black.withValues(alpha: 0.1),
       ),
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         side: BorderSide.none,
-        selectedColor: AppColors.primary.withOpacity(0.13),
+        selectedColor: AppColors.primary.withValues(alpha: 0.13),
         labelStyle: textTheme.labelMedium?.copyWith(fontSize: 13),
       ),
       snackBarTheme: SnackBarThemeData(
@@ -193,8 +193,8 @@ class AppTheme {
         elevation: 4,
         backgroundColor: Colors.white,
       ),
-      bottomSheetTheme: BottomSheetThemeData(
-        shape: const RoundedRectangleBorder(
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedRectangleBorder(
           borderRadius:
               BorderRadius.vertical(top: Radius.circular(radiusXLarge)),
         ),
@@ -204,10 +204,10 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.white,
         elevation: 4,
-        indicatorColor: AppColors.primary.withOpacity(0.13),
-        labelTextStyle: MaterialStateProperty.resolveWith<TextStyle?>(
-            (Set<MaterialState> states) {
-          if (states.contains(MaterialState.selected)) {
+        indicatorColor: AppColors.primary.withValues(alpha: 0.13),
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>(
+            (Set<WidgetState> states) {
+          if (states.contains(WidgetState.selected)) {
             return textTheme.labelSmall?.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.w600,
@@ -215,9 +215,9 @@ class AppTheme {
           }
           return textTheme.labelSmall?.copyWith(color: AppColors.textSecondary);
         }),
-        iconTheme: MaterialStateProperty.resolveWith<IconThemeData?>(
-          (Set<MaterialState> states) {
-            if (states.contains(MaterialState.selected)) {
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData?>(
+          (Set<WidgetState> states) {
+            if (states.contains(WidgetState.selected)) {
               return const IconThemeData(color: AppColors.primary);
             }
             return const IconThemeData(color: AppColors.textSecondary);

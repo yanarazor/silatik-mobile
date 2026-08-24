@@ -52,7 +52,7 @@ class StrInfoCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: 0.35,
                 minHeight: 8,
-                backgroundColor: AppColors.textSecondary.withOpacity(0.2),
+                backgroundColor: AppColors.textSecondary.withValues(alpha: 0.2),
                 valueColor:
                     const AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
