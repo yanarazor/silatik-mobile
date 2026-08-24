@@ -58,7 +58,7 @@
   static const String notificationUnread = 'notification/unread';
   static const String notificationUnreadCount = 'notification/unreadCount';
   static const String notificationMarkAllAsRead = 'notification/markallasread';
-  static const String notificationMarkAsRead = 'notification /markasread'; // + /{ref}
+  static const String notificationMarkAsRead = 'notification/markasread'; // + /{ref}
   static const String notificationDetail = 'notification/detail'; // + /{ref}
   static const String notificationDelete = 'notification/delete'; // + /{ref}
 

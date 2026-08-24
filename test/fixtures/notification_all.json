@@ -1,0 +1,23 @@
+{
+  "code": 200,
+  "success": true,
+  "page": 1,
+  "totalPages": 1,
+  "total": 10,
+  "totalData": 55,
+  "data": [
+    {
+      "id": "157c7fa5-b736-4bec-81a1-4e64f7929364",
+      "type": "App\\Notifications\\AwaitForPaymentNotification",
+      "notifiable_type": "App\\Models\\User",
+      "notifiable_id": 172,
+      "data": {
+        "message": "Mohon segera lakukan pembayaran!",
+        "action": "https://testlatik.brin.go.id//dashboards/transaction/14d97f9"
+      },
+      "read_at": null,
+      "created_at": "2025-07-29T07:26:11.000000Z",
+      "updated_at": "2025-07-29T07:26:11.000000Z"
+    }
+  ]
+}

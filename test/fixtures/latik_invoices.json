@@ -1,0 +1,21 @@
+{
+  "code": 200,
+  "success": true,
+  "message": "sukses",
+  "data": [
+    {
+      "id": 79,
+      "ref": "5884218f-4ea8-4766-8428-4db75ddca2fb",
+      "ref_latik": "3d1bf16c-3b5d-49ba-a2ba-39526a081862",
+      "nama_latik": "Testing DS Silatik",
+      "kode_tagihan": "820250605994414",
+      "tagihan_latik": 0,
+      "tagihan_auditor": 1000000,
+      "tagihan_total": 1000000,
+      "is_new": 3,
+      "str_status": null,
+      "no_str": null,
+      "status": 2
+    }
+  ]
+}

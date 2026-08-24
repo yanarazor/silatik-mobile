@@ -1,0 +1,15 @@
+{
+  "code": 200,
+  "success": true,
+  "message": "sukses",
+  "data": {
+    "ref": "ac88c45b-6741-45c0-a6fb-e8957302ebbe",
+    "username": "venniesadhevanty@gmail.com",
+    "email": "venniesadhevanty@gmail.com",
+    "identity_number": "12345678987654",
+    "phone": "08123456789",
+    "first_name": "Venniesa Dhevanty",
+    "active": 1,
+    "latik_ref": "3d1bf16c-3b5d-49ba-a2ba-39526a081862"
+  }
+}

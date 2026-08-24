@@ -35,6 +35,11 @@ class NotifikasiService {
       final value =
           data['result'] ?? data['data'] ?? data['count'] ?? data['total'];
       if (value is int) return value;
+      if (value is Map) {
+        final nested = value['unread'] ?? value['count'] ?? value['total'];
+        if (nested is int) return nested;
+        return int.tryParse(nested?.toString() ?? '') ?? 0;
+      }
       return int.tryParse(value?.toString() ?? '') ?? 0;
     }
     return 0;

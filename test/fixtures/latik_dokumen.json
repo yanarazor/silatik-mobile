@@ -1,0 +1,27 @@
+{
+  "code": 200,
+  "success": true,
+  "message": "sukses",
+  "data": [
+    {
+      "id": 11,
+      "nama_dokumen": "1. Salinan akta badan hukum",
+      "nomor_required": 1,
+      "tanggal_required": 1,
+      "file_required": 1,
+      "created_at": null,
+      "updated_at": null,
+      "status": 1,
+      "order": 1,
+      "isi": {
+        "id": 440,
+        "ref": "5a86c65b-2cd7-4e1e-99fb-97b3e8062544",
+        "ref_latik": "3d1bf16c-3b5d-49ba-a2ba-39526a081862",
+        "id_dokumen": 11,
+        "nomor": "test",
+        "tanggal": "2025-04-15",
+        "status_verifikasi": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "code": 200,
+  "success": true,
+  "message": "sukses",
+  "data": [
+    {
+      "id": 135,
+      "ref": "2f19d2af-bf7b-43a2-aa9d-829fd7680483",
+      "latik_id": 52,
+      "nama": "Mega Puspitasari",
+      "nik": "1234567899876543",
+      "tempat_lahir": "Bekasi",
+      "tanggal_lahir": "1994-05-12",
+      "alamat": null,
+      "provinsi": "32",
+      "kabupaten": "3216",
+      "kode_post": "17610",
+      "agama": "Islam",
+      "phone": "08511222334",
+      "email": "mega@gmail.com",
+      "skill": null,
+      "str_no": null,
+      "status": 1,
+      "status_aktif": 1,
+      "status_verifikasi": 1,
+      "certificates": []
+    }
+  ]
+}
