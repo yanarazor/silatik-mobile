@@ -24,4 +24,6 @@ class AuthRepository {
       );
 
   Future<Map<String, dynamic>> getMe() => _service.getMe();
+
+  Future<void> logout() => _service.logout();
 }

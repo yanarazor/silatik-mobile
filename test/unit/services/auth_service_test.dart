@@ -118,6 +118,30 @@ void main() {
     });
   });
 
+  group('AuthService.logout', () {
+    test('hits auth/logout endpoint', () async {
+      when(() => mockDio.get(any())).thenAnswer(
+        (_) async => makeResponse({'status': 'success'}),
+      );
+
+      await authService.logout();
+
+      verify(() => mockDio.get('auth/logout')).called(1);
+    });
+
+    test('throws on DioException', () async {
+      when(() => mockDio.get(any())).thenThrow(DioException(
+        requestOptions: RequestOptions(path: 'auth/logout'),
+        response: Response(
+          statusCode: 500,
+          requestOptions: RequestOptions(path: 'auth/logout'),
+        ),
+      ));
+
+      expect(() => authService.logout(), throwsA(isA<DioException>()));
+    });
+  });
+
   group('AuthService.getMe', () {
     test('returns real user data', () async {
       final fixture = loadFixture('user_me.json');

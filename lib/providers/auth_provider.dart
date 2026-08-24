@@ -131,6 +131,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    try {
+      await _repo.logout();
+    } catch (e) {
+      debugPrint('[AUTH_PROVIDER] server logout failed (continuing local): $e');
+    }
     await _storage.deleteToken();
     ApiClient.dio.options.headers.remove('Authorization');
     state = const AuthState();

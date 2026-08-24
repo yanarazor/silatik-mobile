@@ -4,6 +4,7 @@
   static const String register = 'createuser';
   static const String forgotPassword = 'auth/forgot-password';
   static const String changePassword = 'auth/change-password';
+  static const String logout = 'auth/logout';
   static const String userMe = 'user/me';
 
   // LATIK

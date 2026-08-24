@@ -72,6 +72,10 @@ class AuthService {
     });
   }
 
+  Future<void> logout() async {
+    await _dio.get(ApiEndpoints.logout);
+  }
+
   Future<Map<String, dynamic>> getMe() async {
     final response = await _dio.get(ApiEndpoints.userMe);
     return response.data;
