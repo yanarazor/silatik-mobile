@@ -52,6 +52,20 @@ void main() {
       expect(model.tanggalTerbit, DateTime(2024, 6, 15, 10, 30));
       expect(model.berlakuHingga, DateTime(2027, 6, 15, 23, 59, 59));
     });
+
+    test('does not crash on malformed dates', () {
+      final json = {
+        'nomor': 'STR-004',
+        'tanggal_terbit': 'not-a-date',
+        'berlaku_hingga': '',
+      };
+
+      final model = StrModel.fromJson(json);
+
+      expect(model.nomor, 'STR-004');
+      expect(model.tanggalTerbit, isNull);
+      expect(model.berlakuHingga, isNull);
+    });
   });
 
   group('StrModel.toJson', () {

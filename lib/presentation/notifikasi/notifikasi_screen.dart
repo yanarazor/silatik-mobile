@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -261,7 +262,8 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
     if (d.inMinutes < 60) return '${d.inMinutes} menit lalu';
     if (d.inHours < 24) return '${d.inHours} jam lalu';
     if (d.inDays == 1) return 'Kemarin';
-    return '${d.inDays} hari lalu';
+    // return '${d.inDays} hari lalu';
+    return DateFormat('MMM d, yyyy h:mm a').format(waktu);
   }
 
   Future<void> _openAction(String url) async {

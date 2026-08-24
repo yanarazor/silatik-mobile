@@ -153,7 +153,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (data is Map<String, dynamic>) return data;
     final userData = response['user_data'];
     if (userData is Map<String, dynamic>) return userData;
-    return response;
+    debugPrint('[AUTH_PROVIDER] no user data found in response');
+    return null;
   }
 }
 

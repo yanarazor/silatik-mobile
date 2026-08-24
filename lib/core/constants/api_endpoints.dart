@@ -26,6 +26,11 @@
   static const String latikSaveDokumen = 'latik/savedokumen';
   static const String latikGetDokumen = 'latik/dokumen/view';
 
+  // PENGALAMAN LATIK
+  static const String latikSavePengalaman = 'latik/pengalaman';
+  static const String latikUpdatePengalaman = 'latik/pengalaman'; // + /{ref} // TODO: integrate
+  static const String latikDeletePengalaman = 'latik/pengalaman'; // + /{ref}
+
   // STR
   static const String strLatik = 'latik/str_latik';
   static const String strLatikPreview = 'str/latik'; // + /{ref}/preview

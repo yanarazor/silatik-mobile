@@ -110,11 +110,11 @@ class LatikService {
 
   // POST /api/latik/pengalaman
   Future<void> savePengalaman(Map<String, dynamic> data) async {
-    await _dio.post('latik/pengalaman', data: data);
+    await _dio.post(ApiEndpoints.latikSavePengalaman, data: data);
   }
 
   // DELETE /api/latik/pengalaman/{ref}
   Future<void> deletePengalaman(String ref) async {
-    await _dio.delete('latik/pengalaman/$ref');
+    await _dio.delete('${ApiEndpoints.latikDeletePengalaman}/$ref');
   }
 }
