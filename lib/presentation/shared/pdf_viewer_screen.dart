@@ -9,9 +9,14 @@ import '../../core/constants/api_endpoints.dart';
 import '../../providers/auth_provider.dart';
 
 class PdfViewerScreen extends ConsumerStatefulWidget {
-  const PdfViewerScreen({super.key, required this.invoiceRef});
+  const PdfViewerScreen({super.key, this.invoiceRef, this.url})
+      : assert(
+          invoiceRef != null || url != null,
+          'Either invoiceRef or url must be provided',
+        );
 
-  final String invoiceRef;
+  final String? invoiceRef;
+  final String? url;
 
   @override
   ConsumerState<PdfViewerScreen> createState() => _PdfViewerScreenState();
@@ -19,6 +24,8 @@ class PdfViewerScreen extends ConsumerStatefulWidget {
 
 class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   late Future<Uint8List> _bytesFuture;
+
+  bool get _isNetworkUrl => widget.url != null;
 
   @override
   void initState() {
@@ -28,8 +35,14 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
 
   Future<Uint8List> _download() async {
     final dio = ref.read(dioProvider);
+    final String downloadUrl;
+    if (_isNetworkUrl) {
+      downloadUrl = widget.url!;
+    } else {
+      downloadUrl = '${ApiEndpoints.latikInvoice}/${widget.invoiceRef}';
+    }
     final response = await dio.get<List<int>>(
-      '${ApiEndpoints.latikInvoice}/${widget.invoiceRef}',
+      downloadUrl,
       options: Options(
         responseType: ResponseType.bytes,
         headers: {'Accept': 'application/pdf'},
@@ -50,7 +63,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Invoice'),
+        title: Text(_isNetworkUrl ? 'Dokumen' : 'Invoice'),
       ),
       body: FutureBuilder<Uint8List>(
         future: _bytesFuture,

@@ -67,10 +67,14 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
             builder: (_, __) => const RegistrationFlowScreen()),
         GoRoute(
           path: AppRoutes.pdfViewer,
-          builder: (context, state) => PdfViewerScreen(
-            invoiceRef:
-                state.uri.queryParameters['ref']?.trim() ?? '',
-          ),
+          builder: (context, state) {
+            final ref = state.uri.queryParameters['ref']?.trim();
+            final url = state.uri.queryParameters['url']?.trim();
+            return PdfViewerScreen(
+              invoiceRef: ref?.isNotEmpty == true ? ref : null,
+              url: url?.isNotEmpty == true ? url : null,
+            );
+          },
         ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {

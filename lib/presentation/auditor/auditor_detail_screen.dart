@@ -1,7 +1,9 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/auditor_model.dart';
@@ -330,6 +332,10 @@ class AuditorDetailScreen extends StatelessWidget {
     final uri = Uri.tryParse(url);
     if (uri == null) {
       _showSnackBar(context, 'URL tidak valid');
+      return;
+    }
+    if (url.toLowerCase().endsWith('.pdf')) {
+      context.push('${AppRoutes.pdfViewer}?url=${Uri.encodeComponent(url)}');
       return;
     }
     try {
