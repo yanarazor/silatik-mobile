@@ -20,6 +20,7 @@ import 'presentation/notifikasi/notifikasi_screen.dart';
 import 'presentation/profil/profil_screen.dart';
 import 'presentation/registration/registration_flow_screen.dart';
 import 'presentation/shared/app_bottom_nav.dart';
+import 'presentation/shared/pdf_viewer_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/auditor_provider.dart';
 import 'providers/profile_menu_provider.dart';
@@ -64,6 +65,13 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         GoRoute(
             path: AppRoutes.registration,
             builder: (_, __) => const RegistrationFlowScreen()),
+        GoRoute(
+          path: AppRoutes.pdfViewer,
+          builder: (context, state) => PdfViewerScreen(
+            invoiceRef:
+                state.uri.queryParameters['ref']?.trim() ?? '',
+          ),
+        ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             return ScaffoldWithNavBar(navigationShell: navigationShell);

@@ -9,4 +9,5 @@
   static const auditors = '/auditors';
   static const notifications = '/notifications';
   static const profile = '/profile';
+  static const pdfViewer = '/pdf-viewer';
 }

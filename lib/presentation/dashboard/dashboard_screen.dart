@@ -146,7 +146,7 @@ class DashboardScreen extends ConsumerWidget {
                         final actionUrl = item.actionUrl?.trim();
                         return InkWell(
                           onTap: actionUrl != null && actionUrl.isNotEmpty
-                              ? () => _openAction(actionUrl)
+                              ? () => _openAction(context, actionUrl)
                               : null,
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 12),
@@ -246,10 +246,30 @@ class DashboardScreen extends ConsumerWidget {
     return '${d.inDays} hari lalu';
   }
 
-  static Future<void> _openAction(String url) async {
+  static Future<void> _openAction(BuildContext context, String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
+
+    final invoiceRef = _invoiceRefFromUrl(uri);
+    if (invoiceRef != null) {
+      context.push(
+          '${AppRoutes.pdfViewer}?ref=${Uri.encodeQueryComponent(invoiceRef)}');
+      return;
+    }
+
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  static String? _invoiceRefFromUrl(Uri uri) {
+    final segments =
+        uri.pathSegments.where((s) => s.trim().isNotEmpty).toList();
+    for (var i = 0; i < segments.length; i++) {
+      if ((segments[i] == 'invoice' || segments[i] == 'transaction') &&
+          i + 1 < segments.length) {
+        return segments[i + 1];
+      }
+    }
+    return null;
   }
 
   static String _value(

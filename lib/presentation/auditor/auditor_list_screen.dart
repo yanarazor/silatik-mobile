@@ -90,8 +90,7 @@ class AuditorListScreen extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 14),
                   child: _AuditorTile(
                     auditor: auditor,
-                    onTap: () => Navigator.push(
-                      context,
+                    onTap: () => Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute(
                         builder: (_) =>
                             AuditorDetailScreen(auditor: auditor),
