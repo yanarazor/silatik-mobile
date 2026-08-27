@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_routes.dart';
@@ -107,13 +108,7 @@ class ProfilScreen extends ConsumerWidget {
                           _ProfileMenuItem(
                             icon: Icons.help_outline_rounded,
                             title: 'Bantuan & Panduan',
-                            onTap: () =>
-                                _showApiInfoSheet<List<Map<String, dynamic>>>(
-                              context,
-                              title: 'Bantuan & Panduan',
-                              future: ref.refresh(faqProfileProvider.future),
-                              mapper: _mapFaqs,
-                            ),
+                            onTap: () => _showFaqSheet(context, ref),
                           ),
                           const SizedBox(height: 22),
                           _ProfileMenuItem(
@@ -151,6 +146,7 @@ class ProfilScreen extends ConsumerWidget {
     required String title,
     required Future<T> future,
     required Map<String, String> Function(T data) mapper,
+    bool htmlValues = false,
   }) {
     showModalBottomSheet<void>(
       context: context,
@@ -203,8 +199,114 @@ class ProfilScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: rows.entries
-                          .map((entry) => _SheetRow(entry.key, entry.value))
+                          .map((entry) => htmlValues
+                              ? _HtmlSheetRow(entry.key, entry.value)
+                              : _SheetRow(entry.key, entry.value))
                           .toList(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showFaqSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(context).height * 0.82,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: ref.refresh(faqProfileProvider.future),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const _SheetFrame(
+                      title: 'Bantuan & Panduan',
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 28),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    );
+                  }
+
+                  if (snapshot.hasError || !snapshot.hasData) {
+                    return const _SheetFrame(
+                      title: 'Bantuan & Panduan',
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Text(
+                          'Gagal memuat data dari API.',
+                          style: TextStyle(
+                            color: Color(0xFFE53935),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  final data = snapshot.data!;
+                  if (data.isEmpty) {
+                    return const _SheetFrame(
+                      title: 'Bantuan & Panduan',
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Text(
+                          'Belum ada panduan aktif dari API.',
+                          style: TextStyle(
+                            color: Color(0xFF243552),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return _SheetFrame(
+                    title: 'Bantuan & Panduan',
+                    showClose: true,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (var i = 0; i < data.length; i++) ...[
+                          if (i > 0)
+                            const Divider(
+                              height: 1,
+                              color: Color(0xFFE5EAF3),
+                            ),
+                          _FaqItem(
+                            title: _value(data[i], const [
+                              'title',
+                              'judul',
+                              'question',
+                              'pertanyaan',
+                            ], fallback: 'Panduan ${i + 1}'),
+                            body: _value(data[i], const [
+                              'body',
+                              'isi',
+                              'answer',
+                              'jawaban',
+                              'description',
+                            ]),
+                          ),
+                        ],
+                      ],
                     ),
                   );
                 },
@@ -434,23 +536,6 @@ class ProfilScreen extends ConsumerWidget {
     };
   }
 
-  Map<String, String> _mapFaqs(List<Map<String, dynamic>> data) {
-    if (data.isEmpty) {
-      return const {'FAQ': 'Belum ada panduan aktif dari API.'};
-    }
-    return {
-      for (var i = 0; i < data.length && i < 5; i++)
-        _value(data[i], const ['title', 'judul', 'question', 'pertanyaan'],
-            fallback: 'Panduan ${i + 1}'): _stripHtml(_value(data[i], const [
-          'body',
-          'isi',
-          'answer',
-          'jawaban',
-          'description'
-        ])),
-    };
-  }
-
   String _value(Map<String, dynamic> data, List<String> keys,
       {String fallback = '-'}) {
     for (final key in keys) {
@@ -483,27 +568,14 @@ class ProfilScreen extends ConsumerWidget {
     return '-';
   }
 
-  String _stripHtml(String value) {
-    return value
-        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
-        .replaceAll(RegExp(r'</p\s*>', caseSensitive: false), '\n')
-        .replaceAll(RegExp(r'<[^>]*>'), '')
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#39;', "'")
-        .replaceAll(RegExp(r'\n{3,}'), '\n\n')
-        .trim();
-  }
 }
 
 class _SheetFrame extends StatelessWidget {
-  const _SheetFrame({required this.title, required this.child});
+  const _SheetFrame({required this.title, required this.child, this.showClose = false});
 
   final String title;
   final Widget child;
+  final bool showClose;
 
   @override
   Widget build(BuildContext context) {
@@ -521,14 +593,32 @@ class _SheetFrame extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 18),
-        Text(
-          title,
-          style: const TextStyle(
-            color: Color(0xFF0C2D5C),
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-          ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFF0C2D5C),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            if (showClose)
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded),
+                color: const Color(0xFF6E7B91),
+                iconSize: 22,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 36,
+                  minHeight: 36,
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 16),
         child,
@@ -569,6 +659,116 @@ class _SheetRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HtmlSheetRow extends StatelessWidget {
+  const _HtmlSheetRow(this.label, this.html);
+
+  final String label;
+  final String html;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF6E7B91),
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          HtmlWidget(
+            html,
+            textStyle: const TextStyle(
+              color: Color(0xFF243552),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FaqItem extends StatefulWidget {
+  const _FaqItem({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  State<_FaqItem> createState() => _FaqItemState();
+}
+
+class _FaqItemState extends State<_FaqItem> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => setState(() => _expanded = !_expanded),
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: const TextStyle(
+                      color: Color(0xFF0C2D5C),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                AnimatedRotation(
+                  turns: _expanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: const Icon(
+                    Icons.expand_more_rounded,
+                    color: Color(0xFF6E7B91),
+                    size: 22,
+                  ),
+                ),
+              ],
+            ),
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: HtmlWidget(
+                  widget.body,
+                  textStyle: const TextStyle(
+                    color: Color(0xFF243552),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+              crossFadeState: _expanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 200),
+            ),
+          ],
+        ),
       ),
     );
   }
