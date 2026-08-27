@@ -1,30 +1,41 @@
 import 'package:dio/dio.dart';
 
 import '../../core/constants/api_endpoints.dart';
+import '../../core/utils/api_response_utils.dart';
+
+class NotifikasiPageResult<T> {
+  const NotifikasiPageResult({
+    required this.items,
+    required this.page,
+    required this.totalPages,
+    required this.total,
+  });
+
+  final List<T> items;
+  final int page;
+  final int totalPages;
+  final int total;
+}
 
 class NotifikasiService {
   NotifikasiService(this._dio);
 
   final Dio _dio;
 
-  Future<List<dynamic>> getAll() async {
-    final first = await _dio
-        .get(ApiEndpoints.notificationAll, queryParameters: {'page': 1});
-    final items = _extractList(first.data).toList();
-    final totalPages = _extractTotalPages(first.data);
-    if (totalPages > 1) {
-      for (var page = 2; page <= totalPages; page++) {
-        final res = await _dio
-            .get(ApiEndpoints.notificationAll, queryParameters: {'page': page});
-        items.addAll(_extractList(res.data));
-      }
-    }
-    return items;
+  Future<NotifikasiPageResult<dynamic>> getPage({int page = 1}) async {
+    final response = await _dio.get(
+      ApiEndpoints.notificationAll,
+      queryParameters: {'page': page},
+    );
+    return _extractPage(response.data);
   }
 
-  Future<List<dynamic>> getUnread() async {
-    final response = await _dio.get(ApiEndpoints.notificationUnread);
-    return _extractList(response.data);
+  Future<NotifikasiPageResult<dynamic>> getUnreadPage({int page = 1}) async {
+    final response = await _dio.get(
+      ApiEndpoints.notificationUnread,
+      queryParameters: {'page': page},
+    );
+    return _extractPage(response.data);
   }
 
   Future<int> getUnreadCount() async {
@@ -53,19 +64,15 @@ class NotifikasiService {
     await _dio.get('${ApiEndpoints.notificationMarkAsRead}/$ref');
   }
 
-  List<dynamic> _extractList(dynamic data) {
-    if (data is List) return data;
-    if (data is Map<String, dynamic>) {
-      final result = data['result'];
-      if (result is List) return result;
-      if (result is Map<String, dynamic>) {
-        if (result['data'] is List) return result['data'] as List;
-        if (result['items'] is List) return result['items'] as List;
-      }
-      if (data['data'] is List) return data['data'] as List;
-      if (data['items'] is List) return data['items'] as List;
-    }
-    return const [];
+  NotifikasiPageResult<dynamic> _extractPage(dynamic data) {
+    return NotifikasiPageResult<dynamic>(
+      items: extractList(data),
+      page: _extractInt(data, const ['page', 'current_page'], fallback: 1),
+      totalPages: _extractTotalPages(data),
+      total: _extractInt(
+          data, const ['totalData', 'total_data', 'total'],
+          fallback: 0),
+    );
   }
 
   int _extractTotalPages(dynamic data) {
@@ -75,5 +82,17 @@ class NotifikasiService {
       return int.tryParse(value?.toString() ?? '') ?? 1;
     }
     return 1;
+  }
+
+  int _extractInt(dynamic data, List<String> keys, {required int fallback}) {
+    if (data is Map<String, dynamic>) {
+      for (final key in keys) {
+        final value = data[key];
+        if (value is int) return value;
+        final parsed = int.tryParse(value?.toString() ?? '');
+        if (parsed != null) return parsed;
+      }
+    }
+    return fallback;
   }
 }

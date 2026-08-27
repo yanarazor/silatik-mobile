@@ -8,13 +8,15 @@ import '../../core/constants/app_routes.dart';
 import '../../data/models/notifikasi_model.dart';
 import '../../providers/notifikasi_provider.dart';
 import '../../providers/profile_menu_provider.dart';
+import '../shared/blue_header_band.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifAsync = ref.watch(notifikasiProvider);
+    final notifAsync = ref.watch(unreadNotificationProvider);
+    final unreadCountAsync = ref.watch(unreadNotificationCountProvider);
     final latikAsync = ref.watch(latikProfileProvider);
     final latik = latikAsync.valueOrNull ?? const <String, dynamic>{};
     final namaLatik = _value(
@@ -30,18 +32,19 @@ class DashboardScreen extends ConsumerWidget {
 
     return Stack(
       children: [
-        const _BlueHeaderBand(height: 164),
+        const BlueHeaderBand(height: 164),
         SafeArea(
           child: RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(latikProfileProvider);
-              ref.invalidate(notifikasiProvider);
+              ref.invalidate(unreadNotificationProvider);
+              ref.invalidate(unreadNotificationCountProvider);
               await Future.wait([
                 ref
                     .read(latikProfileProvider.future)
                     .catchError((_) => <String, dynamic>{}),
                 ref
-                    .read(notifikasiProvider.future)
+                    .read(unreadNotificationProvider.future)
                     .catchError((_) => <NotifikasiModel>[]),
               ]);
             },
@@ -79,8 +82,16 @@ class DashboardScreen extends ConsumerWidget {
                     IconButton(
                       onPressed: () =>
                           context.go(AppRoutes.notifications),
-                      icon: const Icon(Icons.notifications_rounded),
-                      color: Colors.white,
+                      icon: Badge(
+                        isLabelVisible: (unreadCountAsync.valueOrNull ?? 0) >
+                            0,
+                        label: Text(
+                          '${unreadCountAsync.valueOrNull ?? 0}',
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                        child: const Icon(Icons.notifications_rounded,
+                            color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
@@ -146,7 +157,16 @@ class DashboardScreen extends ConsumerWidget {
                         final actionUrl = item.actionUrl?.trim();
                         return InkWell(
                           onTap: actionUrl != null && actionUrl.isNotEmpty
-                              ? () => _openAction(context, actionUrl)
+                              ? () {
+                                  final uri = Uri.tryParse(actionUrl);
+                                  if (uri != null &&
+                                      _invoiceRefFromUrl(uri) != null) {
+                                    ref
+                                        .read(notifikasiListProvider.notifier)
+                                        .markAsRead(item.id);
+                                  }
+                                  _openAction(context, actionUrl);
+                                }
                               : null,
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 12),
@@ -660,27 +680,6 @@ class _ErrorCard extends StatelessWidget {
             child: const Text('Muat Ulang'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _BlueHeaderBand extends StatelessWidget {
-  const _BlueHeaderBand({required this.height});
-
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height + MediaQuery.paddingOf(context).top,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0057B8), Color(0xFF003D7A)],
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
       ),
     );
   }

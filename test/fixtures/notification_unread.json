@@ -1,0 +1,46 @@
+{
+  "code": 200,
+  "success": true,
+  "message": "Berhasil",
+  "data": [
+    {
+      "id": "693a984f-607c-498f-ab96-57b4404c7292",
+      "type": "App\\Notifications\\AwaitForPaymentNotification",
+      "notifiable_type": "App\\Models\\User",
+      "notifiable_id": 172,
+      "data": {
+        "message": "Mohon segera lakukan pembayaran!",
+        "action": "https://testlatik.brin.go.id//dashboards/transaction/5221e89f-ac05-4396-bf7a-9e0dba996e0f"
+      },
+      "read_at": null,
+      "created_at": "2026-08-27T02:15:49.000000Z",
+      "updated_at": "2026-08-27T02:15:49.000000Z"
+    },
+    {
+      "id": "a1305dfd-d01b-4ccb-bfe0-ed3bff946cd4",
+      "type": "App\\Notifications\\AwaitForPaymentNotification",
+      "notifiable_type": "App\\Models\\User",
+      "notifiable_id": 172,
+      "data": {
+        "message": "Mohon segera lakukan pembayaran!",
+        "action": "https://testlatik.brin.go.id/dashboards/transaction/7f1053e2-3eee-44a0-b99a-4f93b6c44222"
+      },
+      "read_at": null,
+      "created_at": "2025-07-17T04:04:32.000000Z",
+      "updated_at": "2025-07-17T04:04:32.000000Z"
+    },
+    {
+      "id": "613ee450-7ee5-4eb8-b4a7-c06833a349d4",
+      "type": "App\\Notifications\\AwaitForPaymentNotification",
+      "notifiable_type": "App\\Models\\User",
+      "notifiable_id": 172,
+      "data": {
+        "message": "Mohon segera lakukan pembayaran!",
+        "action": "https://testlatik.brin.go.id/dashboards/transaction/cb6ac9dd-8a3d-4249-b36e-1d249da4a35b"
+      },
+      "read_at": null,
+      "created_at": "2025-07-15T09:35:39.000000Z",
+      "updated_at": "2025-07-15T09:35:39.000000Z"
+    }
+  ]
+}

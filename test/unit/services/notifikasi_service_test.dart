@@ -13,76 +13,118 @@ void main() {
     notifikasiService = NotifikasiService(mockDio);
   });
 
-  group('NotifikasiService.getAll', () {
-    test('returns list from single page real response', () async {
+  group('NotifikasiService.getPage', () {
+    test('returns page from real response', () async {
       final fixture = loadFixture('notification_all.json');
       when(() => mockDio.get(any(),
               queryParameters: any(named: 'queryParameters')))
           .thenAnswer((_) async => makeResponse(fixture));
 
-      final result = await notifikasiService.getAll();
-      expect(result, hasLength(1));
-      expect(result.first['id'], '157c7fa5-b736-4bec-81a1-4e64f7929364');
-      expect(result.first['data'], isA<Map>());
+      final result = await notifikasiService.getPage();
+      expect(result.items, hasLength(1));
+      expect(result.page, 1);
+      expect(result.totalPages, 1);
+      expect(result.total, 55);
+      expect(result.items.first['id'], '157c7fa5-b736-4bec-81a1-4e64f7929364');
+      expect(result.items.first['data'], isA<Map>());
+      verify(() => mockDio.get('notification/all',
+              queryParameters: {'page': 1}))
+          .called(1);
     });
 
-    test('paginates through multiple pages', () async {
+    test('requests requested page and exposes pagination metadata', () async {
       when(() => mockDio.get(any(),
               queryParameters: any(named: 'queryParameters')))
-          .thenAnswer((invocation) async {
-        final params = invocation.namedArguments[#queryParameters] as Map;
-        final page = params['page'] as int;
-        if (page == 1) {
-          return makeResponse({
-            'code': 200,
-            'success': true,
-            'totalPages': 2,
-            'data': [
-              {'id': '1'},
-            ],
-          });
-        }
-        return makeResponse({
-          'code': 200,
-          'success': true,
-          'totalPages': 2,
-          'data': [
-            {'id': '2'},
-          ],
-        });
-      });
+          .thenAnswer((_) async => makeResponse({
+                'code': 200,
+                'success': true,
+                'page': 2,
+                'totalPages': 3,
+                'total': 25,
+                'data': [
+                  {'id': '1'},
+                ],
+              }));
 
-      final result = await notifikasiService.getAll();
-      expect(result, hasLength(2));
-      verify(() => mockDio.get(any(),
-              queryParameters: any(named: 'queryParameters')))
-          .called(2);
+      final result = await notifikasiService.getPage(page: 2);
+      expect(result.items, hasLength(1));
+      expect(result.page, 2);
+      expect(result.totalPages, 3);
+      expect(result.total, 25);
+      verify(() => mockDio.get('notification/all',
+              queryParameters: {'page': 2}))
+          .called(1);
     });
 
-    test('returns empty list for empty response', () async {
+    test('returns empty page for empty response', () async {
       when(() => mockDio.get(any(),
               queryParameters: any(named: 'queryParameters')))
           .thenAnswer((_) async =>
               makeResponse({'result': [], 'totalPages': 1}));
 
-      final result = await notifikasiService.getAll();
-      expect(result, isEmpty);
+      final result = await notifikasiService.getPage();
+      expect(result.items, isEmpty);
+      expect(result.totalPages, 1);
     });
   });
 
-  group('NotifikasiService.getUnread', () {
-    test('returns unread notifications list', () async {
-      when(() => mockDio.get(any())).thenAnswer(
-        (_) async => makeResponse({
-          'result': [
-            {'id': '1', 'judul': 'Unread 1'},
-          ],
-        }),
-      );
+  group('NotifikasiService.getUnreadPage', () {
+    test('returns unread notifications from real response (no pagination metadata)', () async {
+      final fixture = loadFixture('notification_unread.json');
+      when(() => mockDio.get(any(),
+              queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((_) async => makeResponse(fixture));
 
-      final result = await notifikasiService.getUnread();
-      expect(result, hasLength(1));
-      verify(() => mockDio.get('notification/unread')).called(1);
+      final result = await notifikasiService.getUnreadPage();
+      expect(result.items, hasLength(3));
+      expect(result.items.first['id'], '693a984f-607c-498f-ab96-57b4404c7292');
+      expect(result.items.first['data'], isA<Map>());
+      expect(result.page, 1);
+      expect(result.totalPages, 1);
+      expect(result.total, 0);
+      verify(() => mockDio.get('notification/unread',
+              queryParameters: {'page': 1}))
+          .called(1);
+    });
+
+    test('sends requested page param, server returns full list anyway', () async {
+      when(() => mockDio.get(any(),
+              queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((_) async => makeResponse({
+                'code': 200,
+                'success': true,
+                'message': 'Berhasil',
+                'data': [
+                  {'id': '1'},
+                ],
+              }));
+
+      final result = await notifikasiService.getUnreadPage(page: 2);
+      expect(result.items, hasLength(1));
+      expect(result.page, 1);
+      expect(result.totalPages, 1);
+      verify(() => mockDio.get('notification/unread',
+              queryParameters: {'page': 2}))
+          .called(1);
+    });
+
+    test('still honors pagination metadata when server provides it', () async {
+      when(() => mockDio.get(any(),
+              queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((_) async => makeResponse({
+                'result': [
+                  {'id': '1', 'judul': 'Unread 1'},
+                ],
+                'page': 1,
+                'totalPages': 2,
+                'total': 15,
+              }));
+
+      final result = await notifikasiService.getUnreadPage();
+      expect(result.items, hasLength(1));
+      expect(result.page, 1);
+      expect(result.totalPages, 2);
+      expect(result.total, 15);
     });
   });
 

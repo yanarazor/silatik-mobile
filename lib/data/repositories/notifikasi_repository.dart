@@ -6,12 +6,27 @@ class NotifikasiRepository {
 
   final NotifikasiService _service;
 
-  Future<List<NotifikasiModel>> getList() async {
-    final rows = await _service.getAll();
-    return rows
-        .whereType<Map>()
-        .map((item) => NotifikasiModel.fromJson(Map<String, dynamic>.from(item)))
-        .toList();
+  Future<NotifikasiPageResult<NotifikasiModel>> getPage({int page = 1}) async {
+    return _mapPage(await _service.getPage(page: page));
+  }
+
+  Future<NotifikasiPageResult<NotifikasiModel>> getUnreadPage(
+      {int page = 1}) async {
+    return _mapPage(await _service.getUnreadPage(page: page));
+  }
+
+  NotifikasiPageResult<NotifikasiModel> _mapPage(
+      NotifikasiPageResult<dynamic> result) {
+    return NotifikasiPageResult<NotifikasiModel>(
+      items: result.items
+          .whereType<Map>()
+          .map((item) =>
+              NotifikasiModel.fromJson(Map<String, dynamic>.from(item)))
+          .toList(),
+      page: result.page,
+      totalPages: result.totalPages,
+      total: result.total,
+    );
   }
 
   Future<int> getUnreadCount() => _service.getUnreadCount();

@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../data/models/auditor_model.dart';
 import '../../providers/auditor_provider.dart';
 import '../registration/steps/step4_auditor.dart';
+import '../shared/blue_header_band.dart';
 import 'auditor_detail_screen.dart';
 
 class AuditorListScreen extends ConsumerWidget {
@@ -19,7 +20,7 @@ class AuditorListScreen extends ConsumerWidget {
 
     return Stack(
       children: [
-        const _BlueHeaderBand(height: 150),
+        const BlueHeaderBand(height: 150),
         SafeArea(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(22, 18, 22, 120),
@@ -103,27 +104,6 @@ class AuditorListScreen extends ConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _BlueHeaderBand extends StatelessWidget {
-  const _BlueHeaderBand({required this.height});
-
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height + MediaQuery.paddingOf(context).top,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0057B8), Color(0xFF003D7A)],
-        ),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
-      ),
     );
   }
 }

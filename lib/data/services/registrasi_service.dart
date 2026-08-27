@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../core/constants/api_endpoints.dart';
+import '../../core/utils/api_response_utils.dart';
 import '../models/registrasi_model.dart';
 
 class RegistrasiService {
@@ -22,7 +23,7 @@ class RegistrasiService {
       'ruang_lingkup': data.ruangLingkup,
     });
 
-    final payload = _extractMap(response.data);
+    final payload = extractMap(response.data);
     final refLatik = _stringValue(payload, 'ref') ??
         _stringValue(payload, 'latik_ref') ??
         _stringValue(payload, 'ref_latik');
@@ -36,21 +37,6 @@ class RegistrasiService {
         _stringValue(payload, 'no_registrasi') ??
         refLatik ??
         'REG-${DateTime.now().millisecondsSinceEpoch}';
-  }
-
-  Map<String, dynamic> _extractMap(dynamic data) {
-    if (data is Map<String, dynamic>) {
-      final result = data['result'];
-      if (result is Map<String, dynamic>) {
-        final nested = result['data'];
-        if (nested is Map<String, dynamic>) return nested;
-        return result;
-      }
-      final nested = data['data'];
-      if (nested is Map<String, dynamic>) return nested;
-      return data;
-    }
-    return const {};
   }
 
   String? _stringValue(Map<String, dynamic> data, String key) {

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'dart:io';
 import '../../core/constants/api_endpoints.dart';
+import '../../core/utils/api_response_utils.dart';
 
 class AuditorService {
   final Dio _dio;
@@ -9,7 +10,7 @@ class AuditorService {
   // GET /api/latik/auditors
   Future<List<dynamic>> getAuditorsByLatik() async {
     final res = await _dio.get(ApiEndpoints.auditorsByLatik);
-    return _extractList(res.data);
+    return extractList(res.data);
   }
 
   // GET /api/latik/auditor/view/{ref}
@@ -62,20 +63,5 @@ class AuditorService {
     await _dio.post(ApiEndpoints.auditorRequestVerif, data: {
       'ref_latik': refLatik,
     });
-  }
-
-  List<dynamic> _extractList(dynamic data) {
-    if (data is List) return data;
-    if (data is Map<String, dynamic>) {
-      final result = data['result'];
-      if (result is List) return result;
-      if (result is Map<String, dynamic>) {
-        if (result['data'] is List) return result['data'] as List;
-        if (result['items'] is List) return result['items'] as List;
-      }
-      if (data['data'] is List) return data['data'] as List;
-      if (data['items'] is List) return data['items'] as List;
-    }
-    return const [];
   }
 }

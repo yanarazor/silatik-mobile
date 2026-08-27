@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/constants/api_endpoints.dart';
+import '../../core/utils/api_response_utils.dart';
 
 class ProfileMenuService {
   ProfileMenuService(this._dio);
@@ -12,12 +13,12 @@ class ProfileMenuService {
 
   Future<Map<String, dynamic>> getLatikProfile({String? latikRef}) async {
     final userResponse = await _dio.get(ApiEndpoints.userMe);
-    final user = _extractMap(userResponse.data);
+    final user = extractMap(userResponse.data);
     final ref = _cleanText(latikRef) ?? _stringValue(user, 'latik_ref');
 
     final latikListResponse = await _dio.get(ApiEndpoints.latikList);
     final latikFromList =
-        _findLatikByRef(_extractList(latikListResponse.data), ref);
+        _findLatikByRef(extractList(latikListResponse.data), ref);
 
     final response = await _dio.get(ApiEndpoints.latikProfile);
     final profile = _extractLatikRecord(response.data, ref);
@@ -43,45 +44,15 @@ class ProfileMenuService {
 
   Future<Map<String, dynamic>> getUserProfile() async {
     final response = await _dio.get(ApiEndpoints.userMe);
-    return _extractMap(response.data);
+    return extractMap(response.data);
   }
 
   Future<List<Map<String, dynamic>>> getFaqs() async {
     final response = await _dio.get(ApiEndpoints.faqs);
-    return _extractList(response.data)
+    return extractList(response.data)
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList();
-  }
-
-  Map<String, dynamic> _extractMap(dynamic data) {
-    if (data is Map<String, dynamic>) {
-      final result = data['result'];
-      if (result is Map<String, dynamic>) {
-        final nested = result['data'];
-        if (nested is Map<String, dynamic>) return nested;
-        return result;
-      }
-      final nested = data['data'];
-      if (nested is Map<String, dynamic>) return nested;
-      return data;
-    }
-    return const {};
-  }
-
-  List<dynamic> _extractList(dynamic data) {
-    if (data is List) return data;
-    if (data is Map<String, dynamic>) {
-      final result = data['result'];
-      if (result is List) return result;
-      if (result is Map<String, dynamic>) {
-        if (result['data'] is List) return result['data'] as List;
-        if (result['items'] is List) return result['items'] as List;
-      }
-      if (data['data'] is List) return data['data'] as List;
-      if (data['items'] is List) return data['items'] as List;
-    }
-    return const [];
   }
 
   bool _hasRegistrationNumber(Map<String, dynamic> data) {
@@ -118,8 +89,8 @@ class ProfileMenuService {
   }
 
   Map<String, dynamic> _extractLatikRecord(dynamic data, String? ref) {
-    final map = _extractMap(data);
-    final list = _extractList(data);
+    final map = extractMap(data);
+    final list = extractList(data);
     if (list.isNotEmpty) {
       final selected = _findLatikByRef(list, ref);
       return _flattenLatikMap(selected);
