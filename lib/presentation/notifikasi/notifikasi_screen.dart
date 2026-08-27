@@ -348,7 +348,7 @@ class _NotificationCard extends ConsumerWidget {
       return;
     }
 
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
   }
 
   String? _invoiceRefFromUrl(Uri uri) {

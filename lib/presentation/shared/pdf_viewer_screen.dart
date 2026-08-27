@@ -8,6 +8,14 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../../core/constants/api_endpoints.dart';
 import '../../providers/auth_provider.dart';
 
+final _externalDioProvider = Provider<Dio>((ref) => Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {'Accept': 'application/pdf'},
+      ),
+    ));
+
 class PdfViewerScreen extends ConsumerStatefulWidget {
   const PdfViewerScreen({super.key, this.invoiceRef, this.url})
       : assert(
@@ -34,15 +42,24 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   }
 
   Future<Uint8List> _download() async {
-    final dio = ref.read(dioProvider);
-    final String downloadUrl;
     if (_isNetworkUrl) {
-      downloadUrl = widget.url!;
-    } else {
-      downloadUrl = '${ApiEndpoints.latikInvoice}/${widget.invoiceRef}';
+      final externalDio = ref.read(_externalDioProvider);
+      final response = await externalDio.get<List<int>>(
+        widget.url!,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {'Accept': 'application/pdf'},
+        ),
+      );
+      final bytes = response.data;
+      if (bytes == null || bytes.isEmpty) {
+        throw StateError('PDF kosong');
+      }
+      return Uint8List.fromList(bytes);
     }
+    final dio = ref.read(dioProvider);
     final response = await dio.get<List<int>>(
-      downloadUrl,
+      '${ApiEndpoints.latikInvoice}/${widget.invoiceRef}',
       options: Options(
         responseType: ResponseType.bytes,
         headers: {'Accept': 'application/pdf'},
