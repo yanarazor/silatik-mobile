@@ -152,6 +152,7 @@ class Step4Auditor extends ConsumerWidget {
 void showAuditorSheet(BuildContext context, WidgetRef ref) {
   showModalBottomSheet(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     builder: (_) => AuditorFormSheet(
         onSave: (a) => ref.read(auditorProvider.notifier).add(a)),

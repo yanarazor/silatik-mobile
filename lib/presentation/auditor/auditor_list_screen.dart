@@ -22,82 +22,96 @@ class AuditorListScreen extends ConsumerWidget {
       children: [
         const BlueHeaderBand(height: 150),
         SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(22, 18, 22, 120),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Kelola Auditor',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Kelola Auditor',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${displayAuditors.length} auditor terdaftar',
-                          style: const TextStyle(
-                            color: Color(0xDDEAF2FF),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                          const SizedBox(height: 4),
+                          Text(
+                            '${displayAuditors.length} auditor terdaftar',
+                            style: const TextStyle(
+                              color: Color(0xDDEAF2FF),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  FilledButton.icon(
-                    onPressed: () => showAuditorSheet(context, ref),
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('Tambah'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      textStyle: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w800),
+                    FilledButton.icon(
+                      onPressed: () => showAuditorSheet(context, ref),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text('Tambah'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        textStyle: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w800),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Cari auditor...',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFFE4ECF7)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Cari auditor...',
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: Color(0xFFE4ECF7)),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              ...displayAuditors.map(
-                (auditor) => Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: _AuditorTile(
-                    auditor: auditor,
-                    onTap: () => Navigator.of(context, rootNavigator: true).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            AuditorDetailScreen(auditor: auditor),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 120),
+                  children: [
+                    ...displayAuditors.map(
+                      (auditor) => Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _AuditorTile(
+                          auditor: auditor,
+                          onTap: () =>
+                              Navigator.of(context, rootNavigator: true).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  AuditorDetailScreen(auditor: auditor),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],
