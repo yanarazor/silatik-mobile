@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/provinces.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/models/lembaga_model.dart';
+import '../../../data/models/master_data_model.dart';
+import '../../../providers/master_data_provider.dart';
 import '../../../providers/registrasi_provider.dart';
 
 class Step1DataLembaga extends ConsumerStatefulWidget {
@@ -32,6 +33,22 @@ class _Step1DataLembagaState extends ConsumerState<Step1DataLembaga> {
     'website': FormControl<String>(),
   });
   bool _prefilled = false;
+  bool _syncingProvinsi = false;
+
+  @override
+  void initState() {
+    super.initState();
+    form.control('provinsi').valueChanges.listen((value) {
+      if (_syncingProvinsi) return;
+      form.control('kota').value = null;
+      setState(() {});
+    });
+    ref.listenManual(provinsiListProvider, (previous, next) {
+      final data = next.valueOrNull;
+      if (data == null) return;
+      _resolveProvinsiNameToId(data);
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -133,24 +150,9 @@ class _Step1DataLembagaState extends ConsumerState<Step1DataLembaga> {
                     ],
                   ),
                   _buildLabel('Provinsi', textTheme: textTheme),
-                  ReactiveDropdownField<String>(
-                    formControlName: 'provinsi',
-                    decoration: const InputDecoration(
-                      hintText: 'Pilih Provinsi',
-                      prefixIcon: Icon(Icons.map_outlined),
-                    ),
-                    items: provinces
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                  ),
+                  _buildProvinsiDropdown(),
                   _buildLabel('Kota/Kabupaten', textTheme: textTheme),
-                  ReactiveTextField(
-                    formControlName: 'kota',
-                    decoration: const InputDecoration(
-                      hintText: 'Contoh: Jakarta Pusat',
-                      prefixIcon: Icon(Icons.location_city_outlined),
-                    ),
-                  ),
+                  _buildKabupatenDropdown(),
                   _buildLabel('Alamat Lengkap', textTheme: textTheme),
                   ReactiveTextField(
                     formControlName: 'alamat',
@@ -213,7 +215,7 @@ class _Step1DataLembagaState extends ConsumerState<Step1DataLembaga> {
                 ),
               ),
               const SizedBox(width: AppTheme.spacing16),
-              Expanded(
+                  Expanded(
                 child: ElevatedButton(
                   onPressed: () {
                     form.markAllAsTouched();
@@ -248,13 +250,26 @@ class _Step1DataLembagaState extends ConsumerState<Step1DataLembaga> {
                       _showErrorSnackBar(context, 'Kode pos minimal 5 digit');
                       return;
                     }
+                    
+                    final provinsiId =
+                        form.control('provinsi').value?.toString() ?? '';
+                    final provinsiList =
+                        ref.read(provinsiListProvider).valueOrNull ?? const [];
+                    String provinsiName = provinsiId;
+                    for (final p in provinsiList) {
+                      if (p.id == provinsiId) {
+                        provinsiName = p.nama;
+                        break;
+                      }
+                    }
+                    
                     ref.read(registrasiProvider.notifier).setLembaga(
                           LembagaModel(
                             nama: form.control('nama').value,
                             nib: form.control('nib').value,
                             badanHukum: form.control('badan').value ?? '',
                             alamat: form.control('alamat').value,
-                            provinsi: form.control('provinsi').value,
+                            provinsi: provinsiName,
                             kota: form.control('kota').value,
                             kodePos: kodePos,
                             telepon: form.control('telepon').value,
@@ -271,6 +286,121 @@ class _Step1DataLembagaState extends ConsumerState<Step1DataLembaga> {
           ),
         ],
       ),
+    );
+  }
+
+  void _resolveProvinsiNameToId(List<ProvinsiModel> provinsiList) {
+    final raw = form.control('provinsi').value?.toString();
+    if (raw == null || raw.isEmpty) return;
+    if (provinsiList.any((p) => p.id == raw)) return;
+    final matches = provinsiList.where((p) => p.nama == raw).toList();
+    if (matches.isEmpty) return;
+    _syncingProvinsi = true;
+    form.control('provinsi').value = matches.first.id;
+    _syncingProvinsi = false;
+  }
+
+  Widget _buildProvinsiDropdown() {
+    final provinsiAsync = ref.watch(provinsiListProvider);
+    return provinsiAsync.when(
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ),
+      error: (error, stack) => InputDecorator(
+        decoration: const InputDecoration(
+          hintText: 'Gagal memuat provinsi',
+          prefixIcon: Icon(Icons.map_outlined),
+          errorText: 'Tap untuk coba lagi',
+        ),
+        child: GestureDetector(
+          onTap: () => ref.invalidate(provinsiListProvider),
+          child: const SizedBox(height: 48),
+        ),
+      ),
+      data: (provinsiList) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _resolveProvinsiNameToId(provinsiList);
+        });
+        return ReactiveDropdownField<String>(
+          formControlName: 'provinsi',
+          decoration: const InputDecoration(
+            hintText: 'Pilih Provinsi',
+            prefixIcon: Icon(Icons.map_outlined),
+          ),
+          items: provinsiList
+              .map((e) => DropdownMenuItem(value: e.id, child: Text(e.nama)))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  String? _effectiveProvinsiId() {
+    final raw = form.control('provinsi').value?.toString();
+    if (raw == null || raw.isEmpty) return null;
+    final provinsiList = ref.read(provinsiListProvider).valueOrNull;
+    if (provinsiList == null) return null;
+    if (provinsiList.any((p) => p.id == raw)) return raw;
+    final matches = provinsiList.where((p) => p.nama == raw).toList();
+    return matches.isEmpty ? null : matches.first.id;
+  }
+
+  Widget _buildKabupatenDropdown() {
+    final provinsiId = _effectiveProvinsiId();
+    if (provinsiId == null || provinsiId.isEmpty) {
+      return ReactiveDropdownField<String>(
+        formControlName: 'kota',
+        decoration: const InputDecoration(
+          hintText: 'Pilih Kota/Kabupaten',
+          prefixIcon: Icon(Icons.location_city_outlined),
+        ),
+        items: const [],
+      );
+    }
+
+    final kabupatenAsync = ref.watch(kabupatenListProvider(provinsiId));
+    return kabupatenAsync.when(
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ),
+      error: (error, stack) => InputDecorator(
+        decoration: const InputDecoration(
+          hintText: 'Gagal memuat kabupaten',
+          prefixIcon: Icon(Icons.location_city_outlined),
+          errorText: 'Tap untuk coba lagi',
+        ),
+        child: GestureDetector(
+          onTap: () => ref.invalidate(kabupatenListProvider(provinsiId)),
+          child: const SizedBox(height: 48),
+        ),
+      ),
+      data: (kabupatenList) {
+        return ReactiveDropdownField<String>(
+          formControlName: 'kota',
+          decoration: const InputDecoration(
+            hintText: 'Pilih Kota/Kabupaten',
+            prefixIcon: Icon(Icons.location_city_outlined),
+          ),
+          items: kabupatenList
+              .map((e) => DropdownMenuItem(value: e.nama, child: Text(e.nama)))
+              .toList(),
+        );
+      },
     );
   }
 
