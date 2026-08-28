@@ -19,6 +19,7 @@ import 'presentation/dashboard/dashboard_screen.dart';
 import 'presentation/notifikasi/notifikasi_screen.dart';
 import 'presentation/profil/profil_screen.dart';
 import 'presentation/registration/registration_flow_screen.dart';
+import 'presentation/dokumen/dokumen_screen.dart';
 import 'presentation/shared/app_bottom_nav.dart';
 import 'presentation/shared/pdf_viewer_screen.dart';
 import 'providers/auth_provider.dart';
@@ -75,6 +76,10 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
               url: url?.isNotEmpty == true ? url : null,
             );
           },
+        ),
+        GoRoute(
+          path: AppRoutes.dokumen,
+          builder: (_, __) => const DokumenScreen(),
         ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {

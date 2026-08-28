@@ -118,7 +118,7 @@ class DashboardScreen extends ConsumerWidget {
                     _QuickAction(
                       icon: Icons.description_outlined,
                       label: 'Dokumen',
-                      onTap: () => context.push(AppRoutes.registration),
+                      onTap: () => context.push(AppRoutes.dokumen),
                     ),
                     const SizedBox(width: 18),
                     _QuickAction(

@@ -10,4 +10,5 @@
   static const notifications = '/notifications';
   static const profile = '/profile';
   static const pdfViewer = '/pdf-viewer';
+  static const dokumen = '/dokumen';
 }
