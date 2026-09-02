@@ -26,6 +26,7 @@ import 'providers/auth_provider.dart';
 import 'providers/auditor_provider.dart';
 import 'providers/profile_menu_provider.dart';
 import 'providers/registrasi_provider.dart';
+import 'core/auth/access_control.dart';
 
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -123,6 +124,15 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         if (!auth.isLoggedIn && !publicRoutes.contains(location)) {
           return AppRoutes.login;
         }
+        if (auth.isLoggedIn && !AccessControl.canUseMobile(auth.user)) {
+          return AppRoutes.login;
+        }
+        final requiredPermission = _requiredPermission(location);
+        if (auth.isLoggedIn &&
+            requiredPermission != null &&
+            !AccessControl.hasPermission(auth.user, requiredPermission)) {
+          return AppRoutes.dashboard;
+        }
         if (auth.isLoggedIn &&
             (location == AppRoutes.login ||
                 location == AppRoutes.register ||
@@ -132,6 +142,16 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         return null;
       },
     );
+  }
+
+  String? _requiredPermission(String location) {
+    if (location == AppRoutes.dashboard) return AccessControl.dashboardView;
+    if (location == AppRoutes.registration ||
+        location == AppRoutes.dokumen ||
+        location == AppRoutes.auditors) {
+      return AccessControl.latikProfile;
+    }
+    return null;
   }
 
   @override

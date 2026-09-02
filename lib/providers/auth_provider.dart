@@ -6,6 +6,7 @@ import '../data/services/auth_service.dart';
 import '../data/services/storage_service.dart';
 import '../data/services/api_client.dart';
 import '../core/utils/api_error_handler.dart';
+import '../core/auth/access_control.dart';
 
 class AuthState {
   final bool isLoggedIn;
@@ -50,6 +51,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       try {
         final res = await _repo.getMe();
         final user = _extractUser(res);
+        if (!AccessControl.canUseMobile(user)) {
+          await logout();
+          return;
+        }
         state = state.copyWith(isLoggedIn: true, token: token, user: user);
       } catch (e) {
         await logout();
@@ -66,6 +71,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final result = res['result'];
       final token = result?['access_token'];
       final user = _extractUser(res);
+
+      if (!AccessControl.canUseMobile(user)) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Akun tidak memiliki akses ke aplikasi mobile',
+        );
+        return;
+      }
 
       if (token != null) {
         await _storage.saveToken(token);
