@@ -161,7 +161,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final storageProvider = Provider((ref) => StorageService());
 final dioProvider = Provider((ref) {
   final dio = ApiClient.dio;
-  final hasAuthInterceptor = dio.interceptors.any((i) => i is QueuedInterceptorsWrapper);
+  final hasAuthInterceptor =
+      dio.interceptors.any((i) => i is QueuedInterceptorsWrapper);
   if (!hasAuthInterceptor) {
     dio.interceptors.add(
       QueuedInterceptorsWrapper(
@@ -184,8 +185,11 @@ final dioProvider = Provider((ref) {
   }
   return dio;
 });
-final authServiceProvider = Provider((ref) => AuthService(ref.watch(dioProvider)));
-final authRepositoryProvider = Provider((ref) => AuthRepository(ref.watch(authServiceProvider)));
+final authServiceProvider =
+    Provider((ref) => AuthService(ref.watch(dioProvider)));
+final authRepositoryProvider =
+    Provider((ref) => AuthRepository(ref.watch(authServiceProvider)));
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(
-  (ref) => AuthNotifier(ref.watch(authRepositoryProvider), ref.watch(storageProvider)),
+  (ref) => AuthNotifier(
+      ref.watch(authRepositoryProvider), ref.watch(storageProvider)),
 );
