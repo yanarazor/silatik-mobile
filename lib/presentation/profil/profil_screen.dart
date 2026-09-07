@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_menu_provider.dart';
 import '../../providers/registrasi_provider.dart';
+import '../shared/menu_group.dart';
 
 class ProfilScreen extends ConsumerWidget {
   const ProfilScreen({super.key});
@@ -14,117 +17,115 @@ class ProfilScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final topInset = MediaQuery.paddingOf(context).top;
+    // debugPrint('[topInset] ${topInset}');
     final user = ref.watch(authProvider).user;
+    final profileAsync = ref.watch(latikProfileProvider);
+
     final displayName = _stringValue(user, 'first_name') ??
         _stringValue(user, 'username') ??
         'Pengguna SILATIK';
-    final email = _stringValue(user, 'email') ??
-        _stringValue(user, 'username') ??
-        _stringValue(user, 'external_email') ??
-        '-';
-    final avatarUrl =
-        _stringValue(user, 'avatar_url') ?? _stringValue(user, 'photo_url');
+    final avatarUrl = profileAsync.maybeWhen(
+          data: (d) => _stringValue(d, 'photo'),
+          orElse: () => null,
+        ) ??
+        _stringValue(user, 'avatar_url') ??
+        _stringValue(user, 'photo_url');
     final isActive = user?['active'] == 1 || user?['active'] == true;
+    final lembagaName = profileAsync.maybeWhen(
+      data: (d) => _value(d, const ['nama', 'name', 'nama_latik']),
+      orElse: () => null,
+    );
+    final registrationNumber = profileAsync.maybeWhen(
+      data: (d) => _value(d, const [
+        'no_pendaftaran',
+        'nomor_registrasi',
+        'registration_number',
+      ]),
+      orElse: () => null,
+    );
 
     return ColoredBox(
-      color: Colors.white,
+      color: AppColors.background,
       child: SafeArea(
         top: false,
         bottom: false,
         child: ListView(
-          padding: EdgeInsets.zero,
+          padding: const EdgeInsets.only(bottom: 120),
           children: [
-            SizedBox(
-              height: 700 + topInset,
-              child: Stack(
-                clipBehavior: Clip.none,
+            _ProfileHeader(
+              topInset: topInset,
+              name: displayName,
+              avatarUrl: avatarUrl,
+              isActive: isActive,
+              lembagaName: lembagaName,
+              registrationNumber: registrationNumber,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
                 children: [
-                  Container(
-                    height: 260 + topInset,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF004CA5),
-                          Color(0xFF003676),
-                        ],
+                  MenuGroup(
+                    items: [
+                      MenuItemData(
+                        icon: Icons.apartment_outlined,
+                        label: 'Profil Lembaga',
+                        onTap: () => _showLatikProfileSheet(context, ref),
                       ),
-                    ),
-                    child: _ProfileHeader(
-                      topInset: topInset,
-                      name: displayName,
-                      email: email,
-                      avatarUrl: avatarUrl,
-                      isActive: isActive,
-                    ),
-                  ),
-                  Positioned(
-                    top: 230 + topInset,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(22),
+                      MenuItemData(
+                        icon: Icons.person_outline_rounded,
+                        label: 'Data Pengguna',
+                        onTap: () => _showApiInfoSheet(
+                          context,
+                          title: 'Data Pengguna',
+                          future: ref.read(userProfileProvider.future),
+                          mapper: _mapUserProfile,
                         ),
                       ),
-                      child: Column(
-                        children: [
-                          _ProfileMenuItem(
-                            icon: Icons.apartment_outlined,
-                            title: 'Profil Lembaga',
-                            onTap: () => _showLatikProfileSheet(
-                              context,
-                              ref,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _ProfileMenuItem(
-                            icon: Icons.person_outline_rounded,
-                            title: 'Pengguna',
-                            onTap: () => _showApiInfoSheet(
-                              context,
-                              title: 'Pengguna',
-                              future: ref.refresh(userProfileProvider.future),
-                              mapper: _mapUserProfile,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _ProfileMenuItem(
-                            icon: Icons.settings_outlined,
-                            title: 'Pengaturan',
-                            onTap: () => _showApiInfoSheet(
-                              context,
-                              title: 'Pengaturan',
-                              future: ref.refresh(userProfileProvider.future),
-                              mapper: _mapSettings,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _ProfileMenuItem(
-                            icon: Icons.help_outline_rounded,
-                            title: 'Bantuan & Panduan',
-                            onTap: () => _showFaqSheet(context, ref),
-                          ),
-                          const SizedBox(height: 22),
-                          _ProfileMenuItem(
-                            icon: Icons.logout_rounded,
-                            title: 'Keluar',
-                            isLogout: true,
-                            onTap: () async {
-                              await ref.read(authProvider.notifier).logout();
-                              if (!context.mounted) return;
-                              context.go(AppRoutes.login);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
+                      // MenuItemData(
+                      //   icon: Icons.description_outlined,
+                      //   label: 'Dokumen & Berkas',
+                      //   onTap: () => context.push(AppRoutes.dokumen),
+                      // ),
+                    ],
                   ),
+                  const SizedBox(height: 14),
+                  MenuGroup(
+                    items: [
+                      MenuItemData(
+                        icon: Icons.help_outline_rounded,
+                        label: 'Pusat Bantuan',
+                        iconBgColor: const Color(0xFFF3F4F6),
+                        iconColor: AppColors.textSecondary,
+                        onTap: () => _showFaqSheet(context, ref),
+                      ),
+                      MenuItemData(
+                        icon: Icons.settings_outlined,
+                        label: 'Pengaturan',
+                        iconBgColor: const Color(0xFFF3F4F6),
+                        iconColor: AppColors.textSecondary,
+                        onTap: () => _showApiInfoSheet(
+                          context,
+                          title: 'Pengaturan',
+                          future: ref.read(userProfileProvider.future),
+                          mapper: _mapSettings,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  MenuGroup(
+                    items: [
+                      MenuItemData(
+                        icon: Icons.logout_rounded,
+                        label: 'Keluar',
+                        isDestructive: true,
+                        trailing: const SizedBox.shrink(),
+                        onTap: () => _confirmLogout(context, ref),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const _AppVersionFooter(),
                 ],
               ),
             ),
@@ -141,12 +142,51 @@ class ProfilScreen extends ConsumerWidget {
     return text.isEmpty ? null : text;
   }
 
+  static String _value(
+    Map<String, dynamic> data,
+    List<String> keys, {
+    String fallback = '-',
+  }) {
+    for (final key in keys) {
+      final value = data[key];
+      if (value == null) continue;
+      final text = value.toString().trim();
+      if (text.isNotEmpty && text != 'null') return text;
+    }
+    return fallback;
+  }
+
+  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    final ok = await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Konfirmasi'),
+            content: const Text('Yakin ingin keluar dari akun?'),
+            actions: [
+              TextButton(
+                onPressed: () =>
+                    Navigator.of(context, rootNavigator: true).pop(false),
+                child: const Text('Batal'),
+              ),
+              TextButton(
+                onPressed: () =>
+                    Navigator.of(context, rootNavigator: true).pop(true),
+                child: const Text('Keluar'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!ok) return;
+    await ref.read(authProvider.notifier).logout();
+    if (context.mounted) context.go(AppRoutes.login);
+  }
+
   void _showApiInfoSheet<T>(
     BuildContext context, {
     required String title,
     required Future<T> future,
     required Map<String, String> Function(T data) mapper,
-    bool htmlValues = false,
   }) {
     showModalBottomSheet<void>(
       context: context,
@@ -175,7 +215,6 @@ class ProfilScreen extends ConsumerWidget {
                       ),
                     );
                   }
-
                   if (snapshot.hasError || !snapshot.hasData) {
                     return _SheetFrame(
                       title: title,
@@ -184,7 +223,7 @@ class ProfilScreen extends ConsumerWidget {
                         child: Text(
                           'Gagal memuat data dari API.',
                           style: TextStyle(
-                            color: Color(0xFFE53935),
+                            color: AppColors.error,
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
                           ),
@@ -192,16 +231,13 @@ class ProfilScreen extends ConsumerWidget {
                       ),
                     );
                   }
-
                   final rows = mapper(snapshot.data as T);
                   return _SheetFrame(
                     title: title,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: rows.entries
-                          .map((entry) => htmlValues
-                              ? _HtmlSheetRow(entry.key, entry.value)
-                              : _SheetRow(entry.key, entry.value))
+                          .map((e) => _SheetRow(e.key, e.value))
                           .toList(),
                     ),
                   );
@@ -231,7 +267,7 @@ class ProfilScreen extends ConsumerWidget {
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
               child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: ref.refresh(faqProfileProvider.future),
+                future: ref.read(faqProfileProvider.future),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState != ConnectionState.done) {
                     return const _SheetFrame(
@@ -242,7 +278,6 @@ class ProfilScreen extends ConsumerWidget {
                       ),
                     );
                   }
-
                   if (snapshot.hasError || !snapshot.hasData) {
                     return const _SheetFrame(
                       title: 'Bantuan & Panduan',
@@ -251,7 +286,7 @@ class ProfilScreen extends ConsumerWidget {
                         child: Text(
                           'Gagal memuat data dari API.',
                           style: TextStyle(
-                            color: Color(0xFFE53935),
+                            color: AppColors.error,
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
                           ),
@@ -259,7 +294,6 @@ class ProfilScreen extends ConsumerWidget {
                       ),
                     );
                   }
-
                   final data = snapshot.data!;
                   if (data.isEmpty) {
                     return const _SheetFrame(
@@ -269,7 +303,7 @@ class ProfilScreen extends ConsumerWidget {
                         child: Text(
                           'Belum ada panduan aktif dari API.',
                           style: TextStyle(
-                            color: Color(0xFF243552),
+                            color: AppColors.textPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
@@ -277,7 +311,6 @@ class ProfilScreen extends ConsumerWidget {
                       ),
                     );
                   }
-
                   return _SheetFrame(
                     title: 'Bantuan & Panduan',
                     showClose: true,
@@ -286,10 +319,7 @@ class ProfilScreen extends ConsumerWidget {
                       children: [
                         for (var i = 0; i < data.length; i++) ...[
                           if (i > 0)
-                            const Divider(
-                              height: 1,
-                              color: Color(0xFFE5EAF3),
-                            ),
+                            const Divider(height: 1, color: Color(0xFFE5EAF3)),
                           _FaqItem(
                             title: _value(data[i], const [
                               'title',
@@ -327,6 +357,7 @@ class ProfilScreen extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
+        final profileAsync = ref.read(latikProfileProvider);
         return SafeArea(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -334,37 +365,29 @@ class ProfilScreen extends ConsumerWidget {
             ),
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
-              child: FutureBuilder<Map<String, dynamic>>(
-                future: ref.refresh(latikProfileProvider.future),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState != ConnectionState.done) {
-                    return const _SheetFrame(
-                      title: 'Profil Lembaga',
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 28),
-                        child: Center(child: CircularProgressIndicator()),
+              child: profileAsync.when(
+                loading: () => const _SheetFrame(
+                  title: 'Profil Lembaga',
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 28),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+                error: (_, __) => const _SheetFrame(
+                  title: 'Profil Lembaga',
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      'Gagal memuat data dari API.',
+                      style: TextStyle(
+                        color: AppColors.error,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
                       ),
-                    );
-                  }
-
-                  if (snapshot.hasError || !snapshot.hasData) {
-                    return const _SheetFrame(
-                      title: 'Profil Lembaga',
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Text(
-                          'Gagal memuat data dari API.',
-                          style: TextStyle(
-                            color: Color(0xFFE53935),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  final data = snapshot.data!;
+                    ),
+                  ),
+                ),
+                data: (data) {
                   final rows = _mapLatikProfile(data);
                   return _SheetFrame(
                     title: 'Profil Lembaga',
@@ -372,7 +395,7 @@ class ProfilScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ...rows.entries
-                            .map((entry) => _SheetRow(entry.key, entry.value)),
+                            .map((e) => _SheetRow(e.key, e.value)),
                         const SizedBox(height: 16),
                         FilledButton.icon(
                           onPressed: () =>
@@ -431,7 +454,7 @@ class ProfilScreen extends ConsumerWidget {
                 const Text(
                   'Edit Profil Lembaga',
                   style: TextStyle(
-                    color: Color(0xFF0C2D5C),
+                    color: AppColors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
                   ),
@@ -439,7 +462,8 @@ class ProfilScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 TextField(
                   controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Nama Lembaga'),
+                  decoration:
+                      const InputDecoration(labelText: 'Nama Lembaga'),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -536,22 +560,9 @@ class ProfilScreen extends ConsumerWidget {
     };
   }
 
-  String _value(Map<String, dynamic> data, List<String> keys,
-      {String fallback = '-'}) {
-    for (final key in keys) {
-      final value = data[key];
-      if (value == null) continue;
-      final text = value.toString().trim();
-      if (text.isNotEmpty && text != 'null') {
-        return text;
-      }
-    }
-    return fallback;
-  }
-
   String _rolesText(Map<String, dynamic> data) {
     final roles = data['roles'];
-      if (roles is List && roles.isNotEmpty) {
+    if (roles is List && roles.isNotEmpty) {
       return roles.map((role) {
         if (role is Map) {
           return (role['name'] ?? role['description'] ?? role).toString();
@@ -567,11 +578,189 @@ class ProfilScreen extends ConsumerWidget {
     if (permissions is List) return '${permissions.length} akses';
     return '-';
   }
+}
 
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({
+    required this.topInset,
+    required this.name,
+    required this.isActive,
+    this.avatarUrl,
+    this.lembagaName,
+    this.registrationNumber,
+  });
+
+  final double topInset;
+  final String name;
+  final String? avatarUrl;
+  final bool isActive;
+  final String? lembagaName;
+  final String? registrationNumber;
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = _initials(name);
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(top: topInset + 12, bottom: 20),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, Color(0xFF002B5C)],
+        ),
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          const Positioned(
+            bottom: -20,
+            right: -20,
+            child: Opacity(
+              opacity: 0.08,
+              child: Icon(
+                Icons.circle_outlined,
+                size: 160,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFB51B),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 13,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                clipBehavior: Clip.antiAlias,
+                child: avatarUrl == null
+                    ? Text(
+                        initials,
+                        style: const TextStyle(
+                          color: Color(0xFF18233D),
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      )
+                    : Image.network(
+                        avatarUrl!,
+                        width: 72,
+                        height: 72,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Text(
+                          initials,
+                          style: const TextStyle(
+                            color: Color(0xFF18233D),
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  name,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (lembagaName != null) ...[
+                const SizedBox(height: 2),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    lembagaName!,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.75),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+              if (registrationNumber != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  registrationNumber!,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 14),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? const Color(0xFF7BD38C)
+                      : const Color(0xFFF3B23F),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Text(
+                  isActive ? 'AKUN AKTIF' : 'AKUN NONAKTIF',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _initials(String value) {
+    final words = value
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .toList();
+    if (words.isEmpty) return 'SL';
+    if (words.length == 1) {
+      final w = words.first;
+      return w.substring(0, w.length < 2 ? w.length : 2).toUpperCase();
+    }
+    return '${words.first[0]}${words.last[0]}'.toUpperCase();
+  }
 }
 
 class _SheetFrame extends StatelessWidget {
-  const _SheetFrame({required this.title, required this.child, this.showClose = false});
+  const _SheetFrame({
+    required this.title,
+    required this.child,
+    this.showClose = false,
+  });
 
   final String title;
   final Widget child;
@@ -600,7 +789,7 @@ class _SheetFrame extends StatelessWidget {
               child: Text(
                 title,
                 style: const TextStyle(
-                  color: Color(0xFF0C2D5C),
+                  color: AppColors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
                 ),
@@ -610,7 +799,7 @@ class _SheetFrame extends StatelessWidget {
               IconButton(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close_rounded),
-                color: const Color(0xFF6E7B91),
+                color: AppColors.textSecondary,
                 iconSize: 22,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(
@@ -643,7 +832,7 @@ class _SheetRow extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              color: Color(0xFF6E7B91),
+              color: AppColors.textSecondary,
               fontSize: 13,
               fontWeight: FontWeight.w800,
             ),
@@ -652,44 +841,7 @@ class _SheetRow extends StatelessWidget {
           Text(
             value,
             style: const TextStyle(
-              color: Color(0xFF243552),
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              height: 1.35,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HtmlSheetRow extends StatelessWidget {
-  const _HtmlSheetRow(this.label, this.html);
-
-  final String label;
-  final String html;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF6E7B91),
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 6),
-          HtmlWidget(
-            html,
-            textStyle: const TextStyle(
-              color: Color(0xFF243552),
+              color: AppColors.textPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w700,
               height: 1.35,
@@ -730,7 +882,7 @@ class _FaqItemState extends State<_FaqItem> {
                   child: Text(
                     widget.title,
                     style: const TextStyle(
-                      color: Color(0xFF0C2D5C),
+                      color: AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                     ),
@@ -742,7 +894,7 @@ class _FaqItemState extends State<_FaqItem> {
                   duration: const Duration(milliseconds: 200),
                   child: const Icon(
                     Icons.expand_more_rounded,
-                    color: Color(0xFF6E7B91),
+                    color: AppColors.textSecondary,
                     size: 22,
                   ),
                 ),
@@ -755,7 +907,7 @@ class _FaqItemState extends State<_FaqItem> {
                 child: HtmlWidget(
                   widget.body,
                   textStyle: const TextStyle(
-                    color: Color(0xFF243552),
+                    color: AppColors.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     height: 1.45,
@@ -774,181 +926,30 @@ class _FaqItemState extends State<_FaqItem> {
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
-    required this.topInset,
-    required this.name,
-    required this.email,
-    required this.avatarUrl,
-    required this.isActive,
-  });
-
-  final double topInset;
-  final String name;
-  final String email;
-  final String? avatarUrl;
-  final bool isActive;
+class _AppVersionFooter extends StatelessWidget {
+  const _AppVersionFooter();
 
   @override
   Widget build(BuildContext context) {
-    final initials = _initials(name);
+    final style = Theme.of(context).textTheme.bodySmall;
+    final year = DateTime.now().year;
 
-    return Column(
-      children: [
-        SizedBox(height: topInset + 32),
-        Container(
-          width: 82,
-          height: 82,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFFFFB51B),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.18),
-                blurRadius: 13,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          clipBehavior: Clip.antiAlias,
-          child: avatarUrl == null
-              ? Text(
-                  initials,
-                  style: const TextStyle(
-                    color: Color(0xFF18233D),
-                    fontSize: 25,
-                    fontWeight: FontWeight.w800,
-                  ),
-                )
-              : Image.network(
-                  avatarUrl!,
-                  width: 82,
-                  height: 82,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Text(
-                    initials,
-                    style: const TextStyle(
-                      color: Color(0xFF18233D),
-                      fontSize: 25,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 21,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          email,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.78),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 7),
-          decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF7BD38C) : const Color(0xFFF3B23F),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Text(
-            isActive ? 'AKUN AKTIF' : 'AKUN NONAKTIF',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final version = snapshot.data?.version ?? '...';
+        // final buildNumber = snapshot.data?.buildNumber ?? '';
+        return Column(
+          children: [
+            Text('Versi $version (Mobile)', style: style),
+            const SizedBox(height: 4),
+            Text(
+              '© $year | Direktorat Alih dan Sistem Audit Teknologi',
+              style: style,
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _initials(String value) {
-    final words = value
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((word) => word.isNotEmpty)
-        .toList();
-    if (words.isEmpty) return 'SL';
-    if (words.length == 1) {
-      final word = words.first;
-      return word.substring(0, word.length < 2 ? word.length : 2).toUpperCase();
-    }
-    return '${words.first[0]}${words.last[0]}'.toUpperCase();
-  }
-}
-
-class _ProfileMenuItem extends StatelessWidget {
-  const _ProfileMenuItem({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.isLogout = false,
-  });
-
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-  final bool isLogout;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isLogout ? const Color(0xFFE53935) : const Color(0xFF4A5876);
-
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          height: 54,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE5EAF3)),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: isLogout
-                        ? const Color(0xFFE53935)
-                        : const Color(0xFF243552),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              if (!isLogout)
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: Color(0xFFA7B0C3),
-                  size: 23,
-                ),
-            ],
-          ),
-        ),
-      ),
+          ],
+        );
+      },
     );
   }
 }
