@@ -35,6 +35,16 @@ class AuditorModel {
   final String suratPermohonanUrl;
   final String pengangkatanUrl;
 
+  /// Raw numeric values from the API. These are the codes the labels above
+  /// are derived from; they power list filters and status chips.
+  final int? status;
+  final int? statusAktif;
+  final int? statusVerifikasi;
+  final int? strStatus;
+  final String strNo;
+  final DateTime? strTanggalAwal;
+  final int auditorExtCount;
+
   const AuditorModel({
     required this.id,
     required this.nama,
@@ -71,6 +81,13 @@ class AuditorModel {
     required this.pernyataanIntegritasUrl,
     required this.suratPermohonanUrl,
     required this.pengangkatanUrl,
+    this.status,
+    this.statusAktif,
+    this.statusVerifikasi,
+    this.strStatus,
+    this.strNo = '',
+    this.strTanggalAwal,
+    this.auditorExtCount = 0,
   });
 
   factory AuditorModel.fromJson(Map<String, dynamic> json) {
@@ -212,7 +229,24 @@ class AuditorModel {
           (json['pernyataan_integritas_file'] ?? '').toString(),
       suratPermohonanUrl: (json['surat_permohonan_file'] ?? '').toString(),
       pengangkatanUrl: (json['pengangkatan_file'] ?? '').toString(),
+      status: _toInt(json['status']),
+      statusAktif: _toInt(json['status_aktif'] ?? json['active']),
+      statusVerifikasi: _toInt(json['status_verifikasi']),
+      strStatus: _toInt(json['str_status']),
+      strNo: (json['str_no'] ?? '').toString(),
+      strTanggalAwal: _parseDate(json['str_tanggal_awal']),
+      auditorExtCount:
+          _toInt(json['auditor_ext_count']) ?? (json['auditor_ext'] is List
+              ? (json['auditor_ext'] as List).length
+              : 0),
     );
+  }
+
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    if (text.isEmpty || text == 'null') return null;
+    return int.tryParse(text);
   }
 
   static DateTime? _parseDate(dynamic value) {
@@ -229,8 +263,8 @@ class AuditorModel {
 
   static String _statusLabel(dynamic status) {
     final code = int.tryParse((status ?? '').toString());
-    if (code == 1) return 'Auditor TIK Tetap';
-    return 'Auditor TIK Tidak Tetap';
+    if (code == 1) return 'Auditor Tetap';
+    return 'Auditor Tidak Tetap';
   }
 
   static String _activeLabel(dynamic active) {
@@ -266,9 +300,6 @@ class AuditorModel {
         'tanggal_berakhir': tanggalBerakhir?.toIso8601String(),
         'kompetensi': kompetensi,
         'certificates': certificates.map((item) => item.toJson()).toList(),
-        'status': statusLabel,
-        'active': activeLabel,
-        'status_verifikasi': verificationLabel,
         'str_tanggal_akhir': strTanggalAkhir?.toIso8601String(),
         'file_path': filePath,
         'file_name': fileName,
@@ -281,6 +312,13 @@ class AuditorModel {
         'pernyataan_integritas_file': pernyataanIntegritasUrl,
         'surat_permohonan_file': suratPermohonanUrl,
         'pengangkatan_file': pengangkatanUrl,
+        'status': status,
+        'status_aktif': statusAktif,
+        'status_verifikasi': statusVerifikasi,
+        'str_status': strStatus,
+        'str_no': strNo,
+        'str_tanggal_awal': strTanggalAwal?.toIso8601String(),
+        'auditor_ext_count': auditorExtCount,
       };
 }
 

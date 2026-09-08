@@ -17,7 +17,7 @@ class AppBottomNav extends StatelessWidget {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Container(
-      margin: EdgeInsets.fromLTRB(22, 0, 22, 14 + bottomInset),
+      margin: const EdgeInsets.fromLTRB(22, 0, 22, 20),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,

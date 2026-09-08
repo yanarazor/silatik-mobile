@@ -40,7 +40,7 @@ class _Step1DataLembagaState extends ConsumerState<Step1DataLembaga> {
     super.initState();
     form.control('provinsi').valueChanges.listen((value) {
       if (_syncingProvinsi) return;
-      form.control('kota').value = null;
+      form.control('kota').reset();
       setState(() {});
     });
     ref.listenManual(provinsiListProvider, (previous, next) {
