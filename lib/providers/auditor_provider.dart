@@ -16,11 +16,23 @@ class AuditorNotifier extends StateNotifier<List<AuditorModel>> {
 
   void add(AuditorModel auditor) => state = [...state, auditor];
   void setAll(List<AuditorModel> auditors) => state = auditors;
-  void update(AuditorModel auditor) => state = [for (final a in state) if (a.id == auditor.id) auditor else a];
+  void update(AuditorModel auditor) => state = [
+        for (final a in state)
+          if (a.id == auditor.id) auditor else a
+      ];
   void remove(String id) => state = state.where((e) => e.id != id).toList();
 }
 
-final auditorServiceProvider = Provider((ref) => AuditorService(ref.watch(dioProvider)));
-final auditorRepoProvider = Provider((ref) => AuditorRepository(ref.watch(auditorServiceProvider)));
-final auditorProvider = StateNotifierProvider<AuditorNotifier, List<AuditorModel>>((ref) => AuditorNotifier(ref.watch(auditorRepoProvider)));
-final auditorListProvider = FutureProvider<List<AuditorModel>>((ref) => ref.watch(auditorRepoProvider).getAuditors());
+final auditorServiceProvider =
+    Provider((ref) => AuditorService(ref.watch(dioProvider)));
+final auditorRepoProvider =
+    Provider((ref) => AuditorRepository(ref.watch(auditorServiceProvider)));
+final auditorProvider =
+    StateNotifierProvider<AuditorNotifier, List<AuditorModel>>(
+        (ref) => AuditorNotifier(ref.watch(auditorRepoProvider)));
+final auditorListProvider = FutureProvider<List<AuditorModel>>(
+    (ref) => ref.watch(auditorRepoProvider).getAuditors());
+
+final auditorDocsProvider = FutureProvider.autoDispose
+    .family<List<AuditorDocument>, String>((ref, auditorRef) =>
+        ref.watch(auditorRepoProvider).getDocuments(auditorRef));

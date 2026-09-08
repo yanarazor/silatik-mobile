@@ -16,8 +16,8 @@ void main() {
   group('AuditorService.getAuditorsByLatik', () {
     test('returns list from real API response', () async {
       final fixture = loadFixture('latik_auditors.json');
-      when(() => mockDio.get(any())).thenAnswer((_) async =>
-          makeResponse(fixture));
+      when(() => mockDio.get(any()))
+          .thenAnswer((_) async => makeResponse(fixture));
 
       final result = await auditorService.getAuditorsByLatik();
       expect(result, hasLength(1));
@@ -114,6 +114,43 @@ void main() {
       final result = await auditorService.getAuditorDetail('A1');
       expect(result['nama'], 'Budi');
       verify(() => mockDio.get('latik/auditor/view/A1')).called(1);
+    });
+  });
+
+  group('AuditorService.getAuditorDocuments', () {
+    test('fetches dokumen list via POST with ref query', () async {
+      when(() => mockDio.post(any(),
+          queryParameters: any(named: 'queryParameters'))).thenAnswer(
+        (_) async => makeResponse({
+          'code': 200,
+          'success': true,
+          'message': 'Berhasil',
+          'data': [
+            {
+              'id': 7,
+              'nama_dokumen': 'KTP',
+              'field': 'ktp_file',
+              'status_verifikasi': null,
+              'url_ktp_file': 'https://cdn.example.com/ktp.pdf',
+            },
+          ],
+        }),
+      );
+
+      final result = await auditorService.getAuditorDocuments('A1');
+      expect(result, hasLength(1));
+      expect(result.first['nama_dokumen'], 'KTP');
+      verify(() => mockDio.post('auditor/dokumen/view',
+          queryParameters: {'ref': 'A1'})).called(1);
+    });
+
+    test('returns empty list when envelope is empty', () async {
+      when(() => mockDio.post(any(),
+              queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((_) async => makeResponse({'success': true, 'data': []}));
+
+      final result = await auditorService.getAuditorDocuments('A1');
+      expect(result, isEmpty);
     });
   });
 

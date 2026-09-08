@@ -255,4 +255,114 @@ void main() {
       expect(json['file_url'], 'https://example.com/cert.pdf');
     });
   });
+
+  group('AuditorDocument.fromJson', () {
+    test('parses flat row with dynamic url_<field> key', () {
+      final doc = AuditorDocument.fromJson({
+        'id': 7,
+        'nama_dokumen': 'KTP Elektronik',
+        'field': 'ktp_file',
+        'nomor': '6308104812007696',
+        'status_verifikasi': 1,
+        'url_ktp_file': 'https://cdn.example.com/ktp.pdf',
+      });
+
+      expect(doc.nama, 'KTP Elektronik');
+      expect(doc.nomor, '6308104812007696');
+      expect(doc.field, 'ktp_file');
+      expect(doc.statusVerifikasi, 1);
+      expect(doc.url, 'https://cdn.example.com/ktp.pdf');
+    });
+
+    test('reads nested isi/o_dokumen containers and note', () {
+      final doc = AuditorDocument.fromJson({
+        'o_dokumen': {'nama_dokumen': 'Surat Permohonan'},
+        'isi': {
+          'url_dokumen': '/storage/permohonan.pdf',
+          'status_verifikasi': 0,
+          'catatan_verifikasi': 'nomor tidak terbaca',
+        },
+      });
+
+      expect(doc.nama, 'Surat Permohonan');
+      expect(doc.url, '/storage/permohonan.pdf');
+      expect(doc.statusVerifikasi, 0);
+      expect(doc.catatanVerifikasi, 'nomor tidak terbaca');
+    });
+
+    test('defaults safely on empty json', () {
+      final doc = AuditorDocument.fromJson(const {});
+
+      expect(doc.id, '');
+      expect(doc.nama, '');
+      expect(doc.field, '');
+      expect(doc.statusVerifikasi, isNull);
+      expect(doc.url, '');
+    });
+  });
+
+  group('AuditorModel auditor_ext parsing', () {
+    test('parses extension history with nested invoice', () {
+      final model = AuditorModel.fromJson({
+        'ref': 'A1',
+        'nama': 'Mega',
+        'auditor_ext': [
+          {
+            'id': 77,
+            'ref': 'ext-77',
+            'auditor_ref': 'A1',
+            'latik_ext': 'latik-ext-1',
+            'status': 3,
+            'status_verifikasi': 1,
+            'catatan_verifikasi': null,
+            'str_tanggal_awal': '2025-06-17',
+            'str_tanggal_akhir': null,
+            'paid_ext_invoice': [
+              {
+                'kode_tagihan': '820250710996326',
+                'kode': 'A22025061282302',
+                'tagihan_total': 1500000,
+                'status': 2,
+              },
+            ],
+          },
+          {
+            'ref': 'ext-98',
+            'auditor_ref': 'A1',
+            'latik_ext': 'latik-ext-2',
+            'status': 1,
+            'status_verifikasi': 0,
+            'catatan_verifikasi':
+                'Menunggu verifikasi final berkas perpanjangan',
+            'str_tanggal_awal': '2025-08-01',
+            'paid_ext_invoice': [],
+          },
+        ],
+      });
+
+      expect(model.auditorExtCount, 2);
+      expect(model.auditorExt, hasLength(2));
+      final done = model.auditorExt.first;
+      expect(done.ref, 'ext-77');
+      expect(done.status, 3);
+      expect(done.strTanggalAwal, DateTime(2025, 6, 17));
+      expect(done.strTanggalAkhir, isNull);
+      expect(done.invoice, isNotNull);
+      expect(done.invoice!.kodeTagihan, '820250710996326');
+      expect(done.invoice!.tagihanTotal, 1500000);
+      expect(done.invoice!.status, 2);
+
+      final inProgress = model.auditorExt[1];
+      expect(inProgress.status, 1);
+      expect(inProgress.catatanVerifikasi,
+          'Menunggu verifikasi final berkas perpanjangan');
+      expect(inProgress.invoice, isNull);
+    });
+
+    test('defaults to empty ext list when absent', () {
+      final model = AuditorModel.fromJson({'ref': 'A1'});
+      expect(model.auditorExt, isEmpty);
+      expect(model.auditorExtCount, 0);
+    });
+  });
 }

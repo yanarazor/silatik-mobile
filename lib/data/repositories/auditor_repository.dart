@@ -21,7 +21,18 @@ class AuditorRepository {
     return AuditorModel.fromJson(Map<String, dynamic>.from(payload));
   }
 
-  Future<Map<String, dynamic>> save(Map<String, dynamic> data) => _service.saveAuditor(data);
-  Future<void> update(Map<String, dynamic> data) => _service.updateAuditor(data);
+  Future<List<AuditorDocument>> getDocuments(String ref) async {
+    final rows = await _service.getAuditorDocuments(ref);
+    return rows
+        .whereType<Map>()
+        .map(
+            (item) => AuditorDocument.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Future<Map<String, dynamic>> save(Map<String, dynamic> data) =>
+      _service.saveAuditor(data);
+  Future<void> update(Map<String, dynamic> data) =>
+      _service.updateAuditor(data);
   Future<void> delete(String ref) => _service.deleteAuditor(ref);
 }

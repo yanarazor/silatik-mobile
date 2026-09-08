@@ -35,6 +35,15 @@ class AuditorService {
     await _dio.delete('${ApiEndpoints.auditorDelete}/$ref');
   }
 
+  // POST /api/auditor/dokumen/view?ref={ref}
+  Future<List<dynamic>> getAuditorDocuments(String ref) async {
+    final res = await _dio.post(
+      ApiEndpoints.auditorDokumenView,
+      queryParameters: {'ref': ref},
+    );
+    return extractList(res.data);
+  }
+
   // POST /api/auditor/savedokumen (multipart)
   Future<void> saveDokumenAuditor({
     required String refAuditor,
