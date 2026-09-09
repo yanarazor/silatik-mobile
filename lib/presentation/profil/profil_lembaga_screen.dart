@@ -842,6 +842,17 @@ class _ValueRow extends StatelessWidget {
           ),
         );
 
+    final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: content),
+        if (trailing != null) ...[
+          const SizedBox(width: 6),
+          trailing!,
+        ],
+      ],
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Column(
@@ -856,16 +867,16 @@ class _ValueRow extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: content),
-              if (trailing != null) ...[
-                const SizedBox(width: 6),
-                trailing!,
-              ],
-            ],
-          ),
+          onTap != null
+              ? InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: row,
+                  ),
+                )
+              : row,
         ],
       ),
     );
@@ -1279,7 +1290,9 @@ String _pick(Map<String, dynamic> data, List<String> keys) {
 }
 
 void _launchUrl(String url, {bool mailto = false}) {
-  final target = mailto && !url.startsWith('mailto:') ? 'mailto:$url' : url;
+  var target = url.trim();
+  if (mailto && !target.startsWith('mailto:')) target = 'mailto:$target';
+  if (!mailto && !target.contains('://')) target = 'https://$target';
   final uri = Uri.tryParse(target);
   if (uri == null) return;
   final scheme = uri.scheme;
