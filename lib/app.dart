@@ -17,6 +17,7 @@ import 'presentation/auth/activation_notice_screen.dart';
 import 'presentation/auth/register_screen.dart';
 import 'presentation/dashboard/dashboard_screen.dart';
 import 'presentation/notifikasi/notifikasi_screen.dart';
+import 'presentation/profil/profil_lembaga_screen.dart';
 import 'presentation/profil/profil_screen.dart';
 import 'presentation/registration/registration_flow_screen.dart';
 import 'presentation/dokumen/dokumen_screen.dart';
@@ -81,6 +82,10 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         GoRoute(
           path: AppRoutes.dokumen,
           builder: (_, __) => const DokumenScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.profilLembaga,
+          builder: (_, __) => const ProfilLembagaScreen(),
         ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
@@ -148,6 +153,7 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
     if (location == AppRoutes.dashboard) return AccessControl.dashboardView;
     if (location == AppRoutes.registration ||
         location == AppRoutes.dokumen ||
+        location == AppRoutes.profilLembaga ||
         location == AppRoutes.auditors) {
       return AccessControl.latikProfile;
     }

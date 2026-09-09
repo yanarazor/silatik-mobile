@@ -8,7 +8,6 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_menu_provider.dart';
-import '../../providers/registrasi_provider.dart';
 import '../shared/menu_group.dart';
 
 class ProfilScreen extends ConsumerWidget {
@@ -69,7 +68,7 @@ class ProfilScreen extends ConsumerWidget {
                       MenuItemData(
                         icon: Icons.apartment_outlined,
                         label: 'Profil Lembaga',
-                        onTap: () => _showLatikProfileSheet(context, ref),
+                        onTap: () => context.push(AppRoutes.profilLembaga),
                       ),
                       MenuItemData(
                         icon: Icons.person_outline_rounded,
@@ -321,12 +320,15 @@ class ProfilScreen extends ConsumerWidget {
                           if (i > 0)
                             const Divider(height: 1, color: Color(0xFFE5EAF3)),
                           _FaqItem(
-                            title: _value(data[i], const [
-                              'title',
-                              'judul',
-                              'question',
-                              'pertanyaan',
-                            ], fallback: 'Panduan ${i + 1}'),
+                            title: _value(
+                                data[i],
+                                const [
+                                  'title',
+                                  'judul',
+                                  'question',
+                                  'pertanyaan',
+                                ],
+                                fallback: 'Panduan ${i + 1}'),
                             body: _value(data[i], const [
                               'body',
                               'isi',
@@ -346,196 +348,6 @@ class ProfilScreen extends ConsumerWidget {
         );
       },
     );
-  }
-
-  void _showLatikProfileSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        final profileAsync = ref.read(latikProfileProvider);
-        return SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.82,
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
-              child: profileAsync.when(
-                loading: () => const _SheetFrame(
-                  title: 'Profil Lembaga',
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 28),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ),
-                error: (_, __) => const _SheetFrame(
-                  title: 'Profil Lembaga',
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: Text(
-                      'Gagal memuat data dari API.',
-                      style: TextStyle(
-                        color: AppColors.error,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-                data: (data) {
-                  final rows = _mapLatikProfile(data);
-                  return _SheetFrame(
-                    title: 'Profil Lembaga',
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ...rows.entries
-                            .map((e) => _SheetRow(e.key, e.value)),
-                        const SizedBox(height: 16),
-                        FilledButton.icon(
-                          onPressed: () =>
-                              _showLatikEditSheet(context, ref, data),
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          label: const Text('Edit Profil Lembaga'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showLatikEditSheet(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> data,
-  ) {
-    final nameCtrl = TextEditingController(
-        text: _value(data, const ['name', 'nama', 'nama_latik']));
-    final nibCtrl = TextEditingController(
-        text: _value(data, const ['no_nib', 'nib', 'nomor_nib']));
-    final emailCtrl = TextEditingController(
-        text: _value(data, const ['email', 'email_latik']));
-    final phoneCtrl = TextEditingController(
-        text: _value(data, const ['phone', 'telepon', 'no_hp']));
-    final addressCtrl =
-        TextEditingController(text: _value(data, const ['address', 'alamat']));
-    final refLatik = _value(data, const ['ref', 'latik_ref', 'ref_latik']);
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              22,
-              18,
-              22,
-              24 + MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Edit Profil Lembaga',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: nameCtrl,
-                  decoration:
-                      const InputDecoration(labelText: 'Nama Lembaga'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: nibCtrl,
-                  decoration: const InputDecoration(labelText: 'NIB'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: emailCtrl,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: phoneCtrl,
-                  decoration: const InputDecoration(labelText: 'Telepon'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: addressCtrl,
-                  decoration: const InputDecoration(labelText: 'Alamat'),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 18),
-                FilledButton(
-                  onPressed: () async {
-                    final payload = <String, dynamic>{
-                      if (refLatik.isNotEmpty) 'ref': refLatik,
-                      'name': nameCtrl.text.trim(),
-                      'no_nib': nibCtrl.text.trim(),
-                      'email': emailCtrl.text.trim(),
-                      'phone': phoneCtrl.text.trim(),
-                      'address': addressCtrl.text.trim(),
-                    };
-                    try {
-                      await ref
-                          .read(latikServiceProvider)
-                          .updateProfile(payload);
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Profil lembaga diperbarui')),
-                        );
-                      }
-                    } catch (_) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Gagal memperbarui profil')),
-                        );
-                      }
-                    }
-                  },
-                  child: const Text('Simpan'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Map<String, String> _mapLatikProfile(Map<String, dynamic> data) {
-    return {
-      'Nama': _value(data, const ['nama', 'name', 'nama_latik', 'first_name']),
-      'NIB': _value(data, const ['nib', 'nomor_nib', 'no_nib']),
-      'Email': _value(data, const ['email', 'email_latik']),
-      'Telepon': _value(data, const ['telepon', 'phone', 'no_hp']),
-      'Alamat': _value(data, const ['alamat', 'address']),
-      'Status': _value(data, const ['status', 'status_verifikasi', 'active']),
-    };
   }
 
   Map<String, String> _mapUserProfile(Map<String, dynamic> data) {
@@ -741,11 +553,8 @@ class _ProfileHeader extends StatelessWidget {
   }
 
   String _initials(String value) {
-    final words = value
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((w) => w.isNotEmpty)
-        .toList();
+    final words =
+        value.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
     if (words.isEmpty) return 'SL';
     if (words.length == 1) {
       final w = words.first;

@@ -11,4 +11,5 @@
   static const profile = '/profile';
   static const pdfViewer = '/pdf-viewer';
   static const dokumen = '/dokumen';
+  static const profilLembaga = '/profil-lembaga';
 }
