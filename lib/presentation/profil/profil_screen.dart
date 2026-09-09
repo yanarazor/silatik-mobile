@@ -73,12 +73,7 @@ class ProfilScreen extends ConsumerWidget {
                       MenuItemData(
                         icon: Icons.person_outline_rounded,
                         label: 'Data Pengguna',
-                        onTap: () => _showApiInfoSheet(
-                          context,
-                          title: 'Data Pengguna',
-                          future: ref.read(userProfileProvider.future),
-                          mapper: _mapUserProfile,
-                        ),
+                        onTap: () => context.push(AppRoutes.dataPengguna),
                       ),
                       // MenuItemData(
                       //   icon: Icons.description_outlined,
@@ -348,16 +343,6 @@ class ProfilScreen extends ConsumerWidget {
         );
       },
     );
-  }
-
-  Map<String, String> _mapUserProfile(Map<String, dynamic> data) {
-    return {
-      'Nama': _value(data, const ['first_name', 'name', 'nama']),
-      'Username': _value(data, const ['username']),
-      'Email': _value(data, const ['email', 'external_email']),
-      'No. HP': _value(data, const ['phone', 'no_hp']),
-      'Role': _rolesText(data),
-    };
   }
 
   Map<String, String> _mapSettings(Map<String, dynamic> data) {

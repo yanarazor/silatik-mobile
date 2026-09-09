@@ -2,6 +2,43 @@ enum IdentityType { ktp, passport }
 
 enum Gender { male, female }
 
+// ponytail: label maps mirror RegisterStateIdentityTypeEnum / RegisterStateGenderEnum
+extension IdentityTypeX on IdentityType {
+  String get label => switch (this) {
+        IdentityType.ktp => 'KTP',
+        IdentityType.passport => 'Paspor',
+      };
+}
+
+extension GenderX on Gender {
+  String get label => switch (this) {
+        Gender.male => 'Laki-laki',
+        Gender.female => 'Perempuan',
+      };
+}
+
+// ponytail: tolerates the numeric codes (1/2) and any textual variant the
+// backend might send; null when the value is absent or not an identity type.
+IdentityType? identityTypeFromRaw(Object? raw) {
+  final t = raw.toString().trim().toLowerCase();
+  if (t.isEmpty || t == 'null') return null;
+  return switch (t) {
+    '1' || 'ktp' || 'e-ktp' || 'kartu tanda penduduk' => IdentityType.ktp,
+    '2' || 'passport' || 'paspor' => IdentityType.passport,
+    _ => null,
+  };
+}
+
+Gender? genderFromRaw(Object? raw) {
+  final t = raw.toString().trim().toLowerCase();
+  if (t.isEmpty || t == 'null') return null;
+  return switch (t) {
+    '1' || 'male' || 'l' || 'laki-laki' || 'laki' => Gender.male,
+    '2' || 'female' || 'p' || 'perempuan' => Gender.female,
+    _ => null,
+  };
+}
+
 enum DocumentVerificationStatus { unverified, valid, invalid }
 
 enum LatikVerificationStatus {

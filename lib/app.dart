@@ -17,6 +17,7 @@ import 'presentation/auth/activation_notice_screen.dart';
 import 'presentation/auth/register_screen.dart';
 import 'presentation/dashboard/dashboard_screen.dart';
 import 'presentation/notifikasi/notifikasi_screen.dart';
+import 'presentation/profil/data_pengguna_screen.dart';
 import 'presentation/profil/profil_lembaga_screen.dart';
 import 'presentation/profil/profil_screen.dart';
 import 'presentation/registration/registration_flow_screen.dart';
@@ -86,6 +87,10 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         GoRoute(
           path: AppRoutes.profilLembaga,
           builder: (_, __) => const ProfilLembagaScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.dataPengguna,
+          builder: (_, __) => const DataPenggunaScreen(),
         ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
