@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
+import '../../core/utils/api_response_utils.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_menu_provider.dart';
 import '../shared/menu_group.dart';
@@ -129,26 +130,15 @@ class ProfilScreen extends ConsumerWidget {
     );
   }
 
-  static String? _stringValue(Map<String, dynamic>? data, String key) {
-    final value = data?[key];
-    if (value == null) return null;
-    final text = value.toString().trim();
-    return text.isEmpty ? null : text;
-  }
+  static String? _stringValue(Map<String, dynamic>? data, String key) =>
+      data == null ? null : meaningfulString(data[key]);
 
   static String _value(
     Map<String, dynamic> data,
     List<String> keys, {
     String fallback = '-',
-  }) {
-    for (final key in keys) {
-      final value = data[key];
-      if (value == null) continue;
-      final text = value.toString().trim();
-      if (text.isNotEmpty && text != 'null') return text;
-    }
-    return fallback;
-  }
+  }) =>
+      pickString(data, keys, fallback: fallback)!;
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
     final ok = await showDialog<bool>(

@@ -1,3 +1,5 @@
+import '../../core/utils/api_response_utils.dart';
+
 /// Satu dokumen kelengkapan LATIK dari array `dokumen_kelengkapan`
 /// di dalam response GET /latik/profile.
 ///
@@ -116,15 +118,8 @@ class ProfilDokumen {
   static Map<String, dynamic>? _mapOrNull(Object? value) =>
       value is Map ? Map<String, dynamic>.from(value) : null;
 
-  static String _pick(Map<String, dynamic> data, List<String> keys) {
-    for (final key in keys) {
-      final raw = data[key];
-      if (raw == null) continue;
-      final text = raw.toString().trim();
-      if (text.isNotEmpty && text != 'null') return text;
-    }
-    return '';
-  }
+  static String _pick(Map<String, dynamic> data, List<String> keys) =>
+      pickString(data, keys, fallback: '')!;
 
   // Backend kadang memakai key dinamis `url_<field>` untuk file tiap dokumen.
   static String _dynamicUrlField(List<Map<String, dynamic>> sources) {

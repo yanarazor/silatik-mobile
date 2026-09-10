@@ -1,3 +1,5 @@
+import '../../core/utils/api_response_utils.dart';
+
 class DokumenModel {
   final int id;
   final String ref;
@@ -21,7 +23,7 @@ class DokumenModel {
     final fileName = (json['filename'] ?? '').toString();
 
     return DokumenModel(
-      id: int.tryParse((json['id'] ?? '').toString()) ?? 0,
+      id: parseInt(json['id']) ?? 0,
       ref: (json['ref'] ?? '').toString(),
       judul: (json['judul'] ?? json['nama'] ?? json['title'] ?? '').toString(),
       linkEksternal: linkExt.isNotEmpty ? linkExt : null,

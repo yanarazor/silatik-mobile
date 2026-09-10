@@ -22,7 +22,7 @@ class AppFormatters {
   }
 
   static String maskNik(String nik) {
-    if (nik.length <= 8) return '****';
-    return '${nik.substring(0, 4)} •••• ${nik.substring(nik.length - 4)}';
+    if (nik.length <= 4) return '****';
+    return '****${nik.substring(nik.length - 4)}';
   }
 }

@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/api_response_utils.dart';
 import '../../core/utils/formatters.dart';
 import '../../providers/auditor_provider.dart';
 import '../../providers/profile_menu_provider.dart';
@@ -429,7 +430,7 @@ class _IdentityCard extends StatelessWidget {
                       runSpacing: 6,
                       children: [
                         for (final b in badges.isEmpty
-                            ? [_PillSpec('Belum Terverifikasi', _amber)]
+                            ? [const _PillSpec('Belum Terverifikasi', _amber)]
                             : badges)
                           _Pill(spec: b),
                       ],
@@ -615,11 +616,11 @@ class _InfoSection extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (rows.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text(
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: const Text(
                 'Belum ada data informasi lembaga.',
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 13,
                 ),
@@ -1216,33 +1217,13 @@ String _periodText(DateTime? start, DateTime? end) {
 
 int? _intValue(Map<String, dynamic> data, List<String> keys) {
   for (final key in keys) {
-    final raw = data[key];
-    if (raw is num) return raw.toInt();
-    if (raw is String) {
-      final parsed = int.tryParse(raw.trim());
-      if (parsed != null) return parsed;
-    }
+    final parsed = parseInt(data[key]);
+    if (parsed != null) return parsed;
   }
   return null;
 }
 
-DateTime? _date(String value) {
-  if (value.isEmpty) return null;
-  final parsed = DateTime.tryParse(value);
-  if (parsed != null) return parsed;
-  // ponytail: format dd-mm-yyyy / dd/mm/yyyy yang mungkin dikirim backend
-  final dateOnly =
-      RegExp(r'^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$').firstMatch(value.trim());
-  if (dateOnly != null) {
-    final day = int.parse(dateOnly.group(1)!);
-    final month = int.parse(dateOnly.group(2)!);
-    final year = int.parse(dateOnly.group(3)!);
-    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-      return DateTime(year, month, day);
-    }
-  }
-  return null;
-}
+DateTime? _date(String value) => parseFlexibleDate(value);
 
 String _text(String value) => value.trim();
 
@@ -1266,28 +1247,8 @@ bool _hasProfileData(Map<String, dynamic> data) {
   return _deepPick(data, keys).isNotEmpty;
 }
 
-String _deepPick(Map<String, dynamic> data, List<String> keys) {
-  final direct = _pick(data, keys);
-  if (direct.isNotEmpty) return direct;
-  for (final nestedKey in const ['o_latik', 'latik', 'latik_data', 'str']) {
-    final nested = data[nestedKey];
-    if (nested is Map) {
-      final found = _pick(Map<String, dynamic>.from(nested), keys);
-      if (found.isNotEmpty) return found;
-    }
-  }
-  return '';
-}
-
-String _pick(Map<String, dynamic> data, List<String> keys) {
-  for (final key in keys) {
-    final value = data[key];
-    if (value == null) continue;
-    final text = value.toString().trim();
-    if (text.isNotEmpty && text != 'null') return text;
-  }
-  return '';
-}
+String _deepPick(Map<String, dynamic> data, List<String> keys) =>
+    pickString(data, keys, deep: true, fallback: '')!;
 
 void _launchUrl(String url, {bool mailto = false}) {
   var target = url.trim();

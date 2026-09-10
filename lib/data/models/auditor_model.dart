@@ -1,3 +1,5 @@
+import '../../core/utils/api_response_utils.dart';
+
 class AuditorModel {
   final String id;
   final String nama;
@@ -230,9 +232,7 @@ class AuditorModel {
       filePath:
           (json['file_path'] ?? json['path'] ?? certFileUrl ?? '').toString(),
       fileName: (json['file_name'] ?? json['filename'] ?? '').toString(),
-      fileSize:
-          int.tryParse((json['file_size'] ?? json['size'] ?? 0).toString()) ??
-              0,
+      fileSize: parseInt(json['file_size'] ?? json['size']) ?? 0,
       ktpFileUrl: (json['ktp_file'] ?? '').toString(),
       sertifikatKompetensiUrl:
           (json['sertifikat_kompetensi_file'] ?? '').toString(),
@@ -257,17 +257,9 @@ class AuditorModel {
     );
   }
 
-  static int? _toInt(dynamic value) {
-    if (value == null) return null;
-    final text = value.toString().trim();
-    if (text.isEmpty || text == 'null') return null;
-    return int.tryParse(text);
-  }
+  static int? _toInt(dynamic value) => parseInt(value);
 
-  static DateTime? _parseDate(dynamic value) {
-    if (value == null) return null;
-    return DateTime.tryParse(value.toString());
-  }
+  static DateTime? _parseDate(dynamic value) => parseFlexibleDate(value);
 
   static DateTime? _parseYear(String? value) {
     if (value == null) return null;
@@ -422,20 +414,10 @@ class AuditorDocument {
     );
   }
 
-  static String _pick(Map<String, dynamic> data, List<String> keys) {
-    for (final key in keys) {
-      final raw = data[key];
-      if (raw == null) continue;
-      final text = raw.toString().trim();
-      if (text.isNotEmpty && text != 'null') return text;
-    }
-    return '';
-  }
+  static String _pick(Map<String, dynamic> data, List<String> keys) =>
+      pickString(data, keys, fallback: '')!;
 
-  static int? _toInt(String value) {
-    if (value.isEmpty) return null;
-    return int.tryParse(value);
-  }
+  static int? _toInt(String value) => parseInt(value);
 }
 
 /// Riwayat perpanjangan auditor (auditor_ext dari /latik/auditors).
@@ -486,10 +468,7 @@ class AuditorExtension {
     );
   }
 
-  static int? _toInt(dynamic value) {
-    if (value == null) return null;
-    return int.tryParse(value.toString().trim());
-  }
+  static int? _toInt(dynamic value) => parseInt(value);
 
   Map<String, dynamic> toJson() => {
         'ref': ref,
@@ -526,10 +505,7 @@ class AuditorExtInvoice {
     );
   }
 
-  static int? _toInt(dynamic value) {
-    if (value == null) return null;
-    return int.tryParse(value.toString().trim());
-  }
+  static int? _toInt(dynamic value) => parseInt(value);
 
   Map<String, dynamic> toJson() => {
         'kode_tagihan': kodeTagihan,

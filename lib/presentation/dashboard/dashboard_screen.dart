@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
+import '../../core/utils/api_response_utils.dart';
 import '../../data/models/notifikasi_model.dart';
 import '../../providers/notifikasi_provider.dart';
 import '../../providers/profile_menu_provider.dart';
@@ -296,15 +297,8 @@ class DashboardScreen extends ConsumerWidget {
     Map<String, dynamic> data,
     List<String> keys, {
     String fallback = '-',
-  }) {
-    for (final key in keys) {
-      final value = data[key];
-      if (value == null) continue;
-      final text = value.toString().trim();
-      if (text.isNotEmpty && text != 'null') return text;
-    }
-    return fallback;
-  }
+  }) =>
+      pickString(data, keys, fallback: fallback)!;
 }
 
 class _LatikSummaryCard extends StatelessWidget {

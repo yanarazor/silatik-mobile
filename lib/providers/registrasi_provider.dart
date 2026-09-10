@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/utils/api_response_utils.dart';
 import '../data/models/auditor_model.dart';
 import '../data/models/lembaga_model.dart';
 import '../data/models/registrasi_model.dart';
@@ -374,10 +375,7 @@ class RegistrasiNotifier extends StateNotifier<RegistrasiState> {
     );
   }
 
-  DateTime? _parseDate(String? value) {
-    if (value == null || value.trim().isEmpty) return null;
-    return DateTime.tryParse(value.trim());
-  }
+  DateTime? _parseDate(String? value) => parseFlexibleDate(value);
 
   FileItem? _fileFromUrl(String? url) {
     if (url == null || url.trim().isEmpty) return null;

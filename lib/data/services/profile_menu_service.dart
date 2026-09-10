@@ -1,10 +1,76 @@
-import 'dart:math';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/constants/api_endpoints.dart';
 import '../../core/utils/api_response_utils.dart';
+
+/// Keys under which the backend may expose the institution registration
+/// number. The canonical field (per the web frontend `SelfLatikOrganization`
+/// contract) is `no_pendaftaran`; the remaining entries are tolerated
+/// fallbacks for older/variant responses.
+const List<String> kRegistrationNumberKeys = [
+  'no_pendaftaran',
+  'nomor_registrasi',
+  'no_registrasi',
+  'registration_number',
+  'kode_registrasi',
+  'kode_register',
+  'no_register',
+  'nomor_register',
+  'registration_code',
+  'no_urut_ext',
+  'no_urut',
+];
+
+/// The registration-number fields that consumers read from the assembled
+/// profile map. Populated only when a real value is present.
+const List<String> kRegistrationNumberOutputKeys = [
+  'no_pendaftaran',
+  'nomor_registrasi',
+  'registration_number',
+];
+
+/// Extracts a registration number from a latik profile [data] map, or returns
+/// `null` when none is present. Never fabricates a value.
+///
+/// Resolution order:
+/// 1. Any [kRegistrationNumberKeys] directly on [data].
+/// 2. The same keys on the nested `o_latik` record (the real nesting key per
+///    the web contract).
+/// 3. The same keys on any row of an `exts` list.
+///
+/// Exposed as a top-level function so it can be unit-tested without a Dio
+/// client or a [ProfileMenuService] instance.
+String? extractRegistrationNumber(Map<String, dynamic> data) {
+  String? scan(Map<String, dynamic> source) {
+    for (final key in kRegistrationNumberKeys) {
+      final value = meaningfulString(source[key]);
+      if (value != null) return value;
+    }
+    return null;
+  }
+
+  final direct = scan(data);
+  if (direct != null) return direct;
+
+  final nested = data['o_latik'];
+  if (nested is Map) {
+    final fromNested = scan(Map<String, dynamic>.from(nested));
+    if (fromNested != null) return fromNested;
+  }
+
+  final exts = data['exts'];
+  if (exts is List) {
+    for (final row in exts.whereType<Map>()) {
+      final fromExt = scan(Map<String, dynamic>.from(row));
+      if (fromExt != null) return fromExt;
+    }
+  }
+
+  return null;
+}
 
 class ProfileMenuService {
   ProfileMenuService(this._dio);
@@ -29,7 +95,7 @@ class ProfileMenuService {
         latikFromList,
         profile,
       ]);
-      return _ensureRegistrationNumber(merged);
+      return _applyRegistrationNumber(merged);
     }
 
     final viewResponse = await _dio.get('${ApiEndpoints.latikViewMain}/$ref');
@@ -39,7 +105,7 @@ class ProfileMenuService {
       profile,
       _extractLatikRecord(viewResponse.data, ref),
     ]);
-    return _ensureRegistrationNumber(merged);
+    return _applyRegistrationNumber(merged);
   }
 
   Future<Map<String, dynamic>> getUserProfile() async {
@@ -56,7 +122,7 @@ class ProfileMenuService {
   }
 
   bool _hasRegistrationNumber(Map<String, dynamic> data) {
-    return _findRegistrationNumber(data) != null;
+    return extractRegistrationNumber(data) != null;
   }
 
   Map<String, dynamic> _flattenLatikMap(Map<String, dynamic> data) {
@@ -98,19 +164,10 @@ class ProfileMenuService {
     return _flattenLatikMap(map);
   }
 
-  String? _stringValue(Map<String, dynamic> data, String key) {
-    final value = data[key];
-    if (value == null) return null;
-    final text = value.toString().trim();
-    return text.isEmpty || text == 'null' ? null : text;
-  }
+  String? _stringValue(Map<String, dynamic> data, String key) =>
+      meaningfulString(data[key]);
 
-  String? _cleanText(String? value) {
-    if (value == null) return null;
-    final text = value.toString().trim();
-    if (text.isEmpty) return null;
-    return text.toLowerCase() == 'null' ? null : text;
-  }
+  String? _cleanText(String? value) => meaningfulString(value);
 
   Map<String, dynamic> _mergePreferNonEmpty(List<Map<String, dynamic>> parts) {
     final merged = <String, dynamic>{};
@@ -135,76 +192,21 @@ class ProfileMenuService {
     return true;
   }
 
-  Map<String, dynamic> _ensureRegistrationNumber(Map<String, dynamic> data) {
-    final reg = _findRegistrationNumber(data) ?? _generateRegistrationNumber();
+  /// Copies a real registration number (if any) into the output keys consumers
+  /// read. When the response has no registration number, the fields are left
+  /// absent — never fabricated.
+  Map<String, dynamic> _applyRegistrationNumber(Map<String, dynamic> data) {
+    final reg = extractRegistrationNumber(data);
     if (reg != null) {
-      data['no_pendaftaran'] = reg;
-      data['nomor_registrasi'] = reg;
-      data['registration_number'] = reg;
+      for (final key in kRegistrationNumberOutputKeys) {
+        data[key] = reg;
+      }
     }
     if (kDebugMode) {
-      const debugKeys = [
-        'no_pendaftaran',
-        'nomor_registrasi',
-        'no_registrasi',
-        'registration_number',
-        'kode_registrasi',
-        'kode_register',
-        'no_register',
-        'nomor_register',
-        'registration_code',
-        'no_urut_ext',
-        'no_urut',
-      ];
-      final raw = {
-        for (final key in debugKeys) key: data[key],
-      };
       debugPrint('[LATIK] registration_number=$reg');
-      debugPrint('[LATIK] registration raw values: $raw');
+      debugPrint('[LATIK] merged json: ${jsonEncode(data)}');
       debugPrint('[LATIK] available keys: ${data.keys.toList()}');
     }
     return data;
-  }
-
-  String? _generateRegistrationNumber() {
-    const length = 13;
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final rand = Random.secure();
-    final buffer = StringBuffer();
-    for (var i = 0; i < length; i++) {
-      buffer.write(chars[rand.nextInt(chars.length)]);
-    }
-    return buffer.toString();
-  }
-
-  String? _findRegistrationNumber(Map<String, dynamic> data) {
-    const keys = [
-      'no_pendaftaran',
-      'nomor_registrasi',
-      'no_registrasi',
-      'registration_number',
-      'kode_registrasi',
-      'kode_register',
-      'no_register',
-      'nomor_register',
-      'registration_code',
-      'no_urut_ext',
-      'no_urut',
-    ];
-    for (final key in keys) {
-      final direct = _stringValue(data, key);
-      if (direct != null) return direct;
-    }
-    final exts = data['exts'];
-    if (exts is List) {
-      for (final row in exts.whereType<Map>()) {
-        final item = Map<String, dynamic>.from(row);
-        for (final key in keys) {
-          final v = _stringValue(item, key);
-          if (v != null) return v;
-        }
-      }
-    }
-    return null;
   }
 }

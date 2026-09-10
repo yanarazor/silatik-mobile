@@ -38,8 +38,8 @@ void main() {
       expect(AppFormatters.maskNik('3201234567890001'), '****0001');
     });
 
-    test('masks a short NIK (4+ chars)', () {
-      expect(AppFormatters.maskNik('1234'), '****1234');
+    test('fully masks a 4-character NIK (nothing revealed)', () {
+      expect(AppFormatters.maskNik('1234'), '****');
     });
 
     test('returns "****" when NIK has less than 4 characters', () {
@@ -54,12 +54,21 @@ void main() {
       expect(AppFormatters.maskNik('abc'), '****');
     });
 
-    test('masks correctly with exactly 4 characters', () {
-      expect(AppFormatters.maskNik('abcd'), '****abcd');
+    test('fully masks a value of exactly 4 characters', () {
+      expect(AppFormatters.maskNik('abcd'), '****');
     });
 
     test('masks a 10-character NIK showing last 4', () {
       expect(AppFormatters.maskNik('1234567890'), '****7890');
+    });
+
+    test('reveals only the last 4 at the 5-character boundary', () {
+      expect(AppFormatters.maskNik('12345'), '****2345');
+    });
+
+    test('never reveals the leading digits of a NIK', () {
+      final masked = AppFormatters.maskNik('3201234567890001');
+      expect(masked.contains('3201'), isFalse);
     });
   });
 }

@@ -39,10 +39,6 @@ class RegistrasiService {
         'REG-${DateTime.now().millisecondsSinceEpoch}';
   }
 
-  String? _stringValue(Map<String, dynamic> data, String key) {
-    final value = data[key];
-    if (value == null) return null;
-    final text = value.toString().trim();
-    return text.isEmpty ? null : text;
-  }
+  String? _stringValue(Map<String, dynamic> data, String key) =>
+      meaningfulString(data[key]);
 }

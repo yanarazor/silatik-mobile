@@ -48,10 +48,9 @@ class NotifikasiService {
       if (value is int) return value;
       if (value is Map) {
         final nested = value['unread'] ?? value['count'] ?? value['total'];
-        if (nested is int) return nested;
-        return int.tryParse(nested?.toString() ?? '') ?? 0;
+        return parseInt(nested) ?? 0;
       }
-      return int.tryParse(value?.toString() ?? '') ?? 0;
+      return parseInt(value) ?? 0;
     }
     return 0;
   }
@@ -78,8 +77,7 @@ class NotifikasiService {
   int _extractTotalPages(dynamic data) {
     if (data is Map<String, dynamic>) {
       final value = data['totalPages'] ?? data['total_pages'] ?? data['pages'];
-      if (value is int) return value;
-      return int.tryParse(value?.toString() ?? '') ?? 1;
+      return parseInt(value) ?? 1;
     }
     return 1;
   }
@@ -87,9 +85,7 @@ class NotifikasiService {
   int _extractInt(dynamic data, List<String> keys, {required int fallback}) {
     if (data is Map<String, dynamic>) {
       for (final key in keys) {
-        final value = data[key];
-        if (value is int) return value;
-        final parsed = int.tryParse(value?.toString() ?? '');
+        final parsed = parseInt(data[key]);
         if (parsed != null) return parsed;
       }
     }

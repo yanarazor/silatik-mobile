@@ -72,7 +72,7 @@ void main() {
       expect(model.kompetensi, ['Keamanan Jaringan', 'Audit TI']);
       expect(model.certificates, hasLength(1));
       expect(model.certificates.first.nama, 'Cert A');
-      expect(model.statusLabel, 'Auditor TIK Tetap');
+      expect(model.statusLabel, 'Auditor Tetap');
       expect(model.activeLabel, 'Aktif');
       expect(model.verificationLabel, 'Sudah Verifikasi');
       expect(model.strTanggalAkhir, DateTime(2025, 12, 31));
@@ -126,7 +126,7 @@ void main() {
       expect(model.nomorSertifikasi, 'SERT-002');
       expect(model.lembagaPenerbit, 'KAN');
       expect(model.kompetensi, ['Forensik Digital']);
-      expect(model.statusLabel, 'Auditor TIK Tidak Tetap');
+      expect(model.statusLabel, 'Auditor Tidak Tetap');
       expect(model.activeLabel, 'Tidak Aktif');
       expect(model.verificationLabel, 'Belum Verifikasi');
     });
@@ -144,7 +144,7 @@ void main() {
       expect(model.alamat, '');
       expect(model.kompetensi, isEmpty);
       expect(model.certificates, isEmpty);
-      expect(model.statusLabel, 'Auditor TIK Tidak Tetap');
+      expect(model.statusLabel, 'Auditor Tidak Tetap');
       expect(model.activeLabel, 'Tidak Aktif');
       expect(model.verificationLabel, 'Belum Verifikasi');
       expect(model.fileSize, 0);
@@ -212,7 +212,7 @@ void main() {
         tanggalBerakhir: null,
         kompetensi: ['Audit TI'],
         certificates: [],
-        statusLabel: 'Auditor TIK Tetap',
+        statusLabel: 'Auditor Tetap',
         activeLabel: 'Aktif',
         verificationLabel: 'Sudah Verifikasi',
         strTanggalAkhir: null,

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/api_response_utils.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/profil_dokumen.dart';
 import '../../providers/profile_menu_provider.dart';
@@ -418,17 +419,8 @@ class _DocCard extends StatelessWidget {
   }
 
   static String _tanggalText(String raw) {
-    final date = DateTime.tryParse(raw.trim());
-    if (date != null) return AppFormatters.formatShortDate(date);
-    // ponytail: format dd-mm-yyyy / dd/mm/yyyy yang mungkin dikirim backend
-    final m = RegExp(r'^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$')
-        .firstMatch(raw.trim());
-    if (m != null) {
-      final parsed = DateTime(
-          int.parse(m.group(3)!), int.parse(m.group(2)!), int.parse(m.group(1)!));
-      return AppFormatters.formatShortDate(parsed);
-    }
-    return raw.trim();
+    final date = parseFlexibleDate(raw);
+    return date != null ? AppFormatters.formatShortDate(date) : raw.trim();
   }
 }
 

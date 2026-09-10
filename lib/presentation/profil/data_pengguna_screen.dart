@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/enums.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/api_response_utils.dart';
 import '../../providers/profile_menu_provider.dart';
 
 const _cardBorder = Color(0xFFE5EAF3);
@@ -602,13 +603,5 @@ class _UserData {
     ];
   }
 
-  String _pick(List<String> keys) {
-    for (final key in keys) {
-      final value = data[key];
-      if (value == null) continue;
-      final text = value.toString().trim();
-      if (text.isNotEmpty && text != 'null') return text;
-    }
-    return '';
-  }
+  String _pick(List<String> keys) => pickString(data, keys, fallback: '')!;
 }

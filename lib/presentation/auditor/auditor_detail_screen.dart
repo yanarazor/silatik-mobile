@@ -172,7 +172,7 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
 
   Widget _buildNikRow() {
     final nik = _auditor.nik;
-    final nikText = _showNik ? nik : _maskNik(nik);
+    final nikText = _showNik ? nik : AppFormatters.maskNik(nik);
     return Row(
       children: [
         Flexible(
@@ -206,13 +206,6 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
         ],
       ],
     );
-  }
-
-  String _maskNik(String nik) {
-    final middle = nik.length - 8;
-    if (middle <= 0) return '••••';
-    return '${nik.substring(0, 4)}${'•' * middle}'
-        '${nik.substring(nik.length - 4)}';
   }
 
   Widget _buildHeaderChips() {
