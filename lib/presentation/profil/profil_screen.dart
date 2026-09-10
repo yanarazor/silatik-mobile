@@ -75,11 +75,11 @@ class ProfilScreen extends ConsumerWidget {
                         label: 'Data Pengguna',
                         onTap: () => context.push(AppRoutes.dataPengguna),
                       ),
-                      // MenuItemData(
-                      //   icon: Icons.description_outlined,
-                      //   label: 'Dokumen & Berkas',
-                      //   onTap: () => context.push(AppRoutes.dokumen),
-                      // ),
+                      MenuItemData(
+                        icon: Icons.description_outlined,
+                        label: 'Dokumen & Berkas',
+                        onTap: () => context.push(AppRoutes.dokumenBerkas),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 14),
