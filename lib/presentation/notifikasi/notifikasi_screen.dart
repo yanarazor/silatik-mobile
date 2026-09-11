@@ -9,6 +9,18 @@ import '../../core/constants/app_routes.dart';
 import '../../data/models/notifikasi_model.dart';
 import '../../providers/notifikasi_provider.dart';
 import '../shared/blue_header_band.dart';
+import '../shared/header_filter_pills.dart';
+import '../shared/header_title.dart';
+
+const _cardRadius = 16.0;
+const _borderColor = Color(0xFFE2E8F0);
+const _dividerColor = Color(0xFFF1F5F9);
+const _iconSurface = Color(0xFFEBF3FA);
+const _titleColor = Color(0xFF1A1A2E);
+const _bodyColor = Color(0xFF475569);
+const _mutedColor = Color(0xFF64748B);
+const _timeColor = Color(0xFF94A3B8);
+const _unreadDot = Color(0xFF2563EB);
 
 class NotifikasiScreen extends ConsumerStatefulWidget {
   const NotifikasiScreen({super.key});
@@ -18,10 +30,8 @@ class NotifikasiScreen extends ConsumerStatefulWidget {
 }
 
 class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
-  String filter = 'Semua';
+  NotifikasiSource _source = NotifikasiSource.all;
   final _scrollController = ScrollController();
-
-  static const _filters = ['Semua', 'Belum Dibaca', 'Info'];
 
   @override
   void initState() {
@@ -45,110 +55,63 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
     }
   }
 
-  void _setFilter(String value) {
-    if (filter == value) return;
-    ref.read(notifikasiListProvider.notifier).setSource(_sourceFor(value));
+  void _setSource(NotifikasiSource value) {
+    if (_source == value) return;
+    ref.read(notifikasiListProvider.notifier).setSource(value);
     if (_scrollController.hasClients) _scrollController.jumpTo(0);
-    setState(() => filter = value);
-  }
-
-  NotifikasiSource _sourceFor(String value) =>
-      value == 'Belum Dibaca' ? NotifikasiSource.unread : NotifikasiSource.all;
-
-  List<NotifikasiModel> _filteredItems(List<NotifikasiModel> items) {
-    if (filter == 'Info') {
-      return items.where((item) => item.kategori == 'Info').toList();
-    }
-    return items;
+    setState(() => _source = value);
   }
 
   @override
   Widget build(BuildContext context) {
     final listState = ref.watch(notifikasiListProvider);
-    final unreadCountAsync = ref.watch(unreadNotificationCountProvider);
+    final unreadCount = ref.watch(unreadNotificationCountProvider).valueOrNull;
 
     return Stack(
       children: [
-        const BlueHeaderBand(height: 140),
+        const BlueHeaderBand(height: 150),
         SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
-                child: Row(
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Notifikasi',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Kelola notifikasi Anda',
-                            style: TextStyle(
-                              color: Color(0xDDEAF2FF),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
+                    HeaderTitle(
+                      title: 'Notifikasi',
+                      subtitle: 'Kelola dan pantau pemberitahuan Anda',
+                      trailing: IconButton(
+                        onPressed: () => context.go(AppRoutes.dashboard),
+                        icon: const Icon(Icons.close_rounded),
+                        color: Colors.white,
+                        tooltip: 'Tutup',
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => context.go(AppRoutes.dashboard),
-                      icon: const Icon(Icons.close_rounded),
-                      color: Colors.white,
+                    const SizedBox(height: 14),
+                    HeaderFilterPills<NotifikasiSource>(
+                      selected: _source,
+                      onSelected: _setSource,
+                      options: [
+                        // No badge on "Semua": the total across all pages is
+                        // not exposed to this screen, and the fetched count
+                        // would undercount.
+                        const HeaderFilterOption(
+                          value: NotifikasiSource.all,
+                          label: 'Semua',
+                        ),
+                        HeaderFilterOption(
+                          value: NotifikasiSource.unread,
+                          label: 'Belum Dibaca',
+                          count: unreadCount,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 42,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 22),
-                  itemCount: _filters.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (_, index) {
-                    final item = _filters[index];
-                    final selected = filter == item;
-                    final label = item == 'Belum Dibaca' &&
-                            unreadCountAsync.valueOrNull != null
-                        ? 'Belum Dibaca (${unreadCountAsync.valueOrNull})'
-                        : item;
-                    return ChoiceChip(
-                      label: Text(label),
-                      selected: selected,
-                      onSelected: (_) => _setFilter(item),
-                      showCheckmark: false,
-                      selectedColor: AppColors.primary,
-                      backgroundColor: Colors.white,
-                      labelStyle: TextStyle(
-                        color: selected
-                            ? Colors.white
-                            : const Color(0xFF243552),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      side: BorderSide(
-                        color: selected
-                            ? AppColors.primary
-                            : const Color(0xFFE4ECF7),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Expanded(
                 child: listState.isLoading && listState.items.isEmpty
                     ? const Center(child: CircularProgressIndicator())
@@ -176,31 +139,43 @@ class _NotifikasiScreenState extends ConsumerState<NotifikasiScreen> {
   }
 
   Widget _buildList(NotifikasiListState listState) {
-    final items = _filteredItems(listState.items);
-    WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _autoLoadMoreIfNeeded(listState));
+    final items = listState.items;
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _autoLoadMoreIfNeeded(listState));
     final itemCount =
         items.isEmpty ? 1 : items.length + (listState.hasMore ? 1 : 0);
 
     return ListView.separated(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(22, 8, 22, 120),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 120),
       itemCount: itemCount,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (_, index) {
         if (index < items.length) return _NotificationCard(item: items[index]);
         if (items.isEmpty) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 48),
+            padding: const EdgeInsets.symmetric(vertical: 56),
             child: Center(
               child: listState.hasMore
                   ? const CircularProgressIndicator()
-                  : const Text('Belum ada notifikasi untuk filter ini.'),
+                  : Text(
+                      _source == NotifikasiSource.unread
+                          ? 'Semua notifikasi sudah dibaca.'
+                          : 'Belum ada notifikasi.',
+                      style: const TextStyle(
+                        color: _mutedColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           );
         }
-        return const SizedBox(height: 8);
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12),
+          child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
+        );
       },
     );
   }
@@ -224,104 +199,158 @@ class _NotificationCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final color = item.kategori == 'Tindakan Diperlukan'
-        ? AppColors.accent
-        : (item.kategori == 'Info' ? AppColors.primary : AppColors.success);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE4ECF7)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0B2D5C).withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              item.kategori == 'Tindakan Diperlukan'
-                  ? Icons.assignment_late_outlined
-                  : (item.kategori == 'Info'
-                      ? Icons.info_outline_rounded
-                      : Icons.description_outlined),
-              color: color,
-              size: 22,
+    final unread = !item.isRead;
+    final hasAction = (item.actionUrl ?? '').trim().isNotEmpty;
+
+    return Material(
+      // Read cards sit slightly translucent over the page background so they
+      // recede without introducing a second surface color.
+      color: unread ? Colors.white : Colors.white.withValues(alpha: 0.72),
+      borderRadius: BorderRadius.circular(_cardRadius),
+      elevation: unread ? 1.5 : 0,
+      shadowColor: const Color(0x140B2D5C),
+      child: InkWell(
+        onTap: () => _handleTap(context, ref),
+        borderRadius: BorderRadius.circular(_cardRadius),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(_cardRadius),
+            border: Border.all(
+              color:
+                  unread ? _borderColor : _borderColor.withValues(alpha: 0.5),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.judul,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF1C2638),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _iconSurface,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    Text(
-                      _timeAgo(item.waktu),
-                      style: const TextStyle(
-                        color: Color(0xFF8A96AA),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    child: Icon(
+                      Icons.description_outlined,
+                      size: 21,
+                      color: unread
+                          ? AppColors.primary
+                          : AppColors.primary.withValues(alpha: 0.7),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  item.isi,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF5B6880),
-                    fontSize: 12,
-                    height: 1.35,
                   ),
-                ),
-                if (item.actionUrl != null && item.actionUrl!.trim().isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: () => _openAction(context, ref, item),
-                      icon: const Icon(Icons.open_in_new, size: 16),
-                      label: const Text('Buka'),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        foregroundColor: AppColors.primary,
-                        textStyle: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 12),
-                      ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Timestamp and unread dot ride the title's first line
+                        // and end flush with the card edge. The title is the
+                        // flexible half, so a long absolute date truncates the
+                        // title instead of overlapping it.
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.judul,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: unread ? _titleColor : _bodyColor,
+                                  fontSize: 14,
+                                  height: 1.3,
+                                  fontWeight: unread
+                                      ? FontWeight.w800
+                                      : FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Padding(
+                              // Nudges the 11px label onto the title's cap line.
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    _timeAgo(item.waktu),
+                                    style: const TextStyle(
+                                      color: _timeColor,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  if (unread) ...[
+                                    const SizedBox(width: 6),
+                                    Semantics(
+                                      label: 'Belum dibaca',
+                                      child: Container(
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(0xFFEFF6FF),
+                                        ),
+                                        child: Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: _unreadDot,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (item.isi.trim().isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            item.isi,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: unread ? _bodyColor : _mutedColor,
+                              fontSize: 12.5,
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 ],
+              ),
+              if (hasAction) ...[
+                const SizedBox(height: 14),
+                const Divider(height: 1, thickness: 1, color: _dividerColor),
+                const SizedBox(height: 11),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Buka',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Icon(Icons.open_in_new_rounded,
+                        size: 15, color: AppColors.primary),
+                  ],
+                ),
               ],
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -334,20 +363,23 @@ class _NotificationCard extends ConsumerWidget {
     return DateFormat('MMM d, yyyy h:mm a').format(waktu);
   }
 
-  Future<void> _openAction(
-      BuildContext context, WidgetRef ref, NotifikasiModel item) async {
-    final url = item.actionUrl ?? '';
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
+  Future<void> _handleTap(BuildContext context, WidgetRef ref) async {
+    if (!item.isRead) {
+      ref.read(notifikasiListProvider.notifier).markAsRead(item.id);
+    }
+
+    final uri = Uri.tryParse((item.actionUrl ?? '').trim());
+    if (uri == null || uri.toString().isEmpty) return;
 
     final invoiceRef = _invoiceRefFromUrl(uri);
     if (invoiceRef != null) {
-      ref.read(notifikasiListProvider.notifier).markAsRead(item.id);
       context.push(
           '${AppRoutes.pdfViewer}?ref=${Uri.encodeQueryComponent(invoiceRef)}');
       return;
     }
 
+    // Relative or schemeless action URLs cannot be launched externally.
+    if (!uri.hasScheme) return;
     await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
   }
 
@@ -378,9 +410,9 @@ class _ErrorRetry extends StatelessWidget {
           const Text(
             'Gagal memuat notifikasi',
             style: TextStyle(
-              color: Color(0xFF1C2638),
+              color: _titleColor,
               fontSize: 14,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 8),

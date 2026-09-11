@@ -7,6 +7,8 @@ import '../../data/models/auditor_model.dart';
 import '../../providers/auditor_provider.dart';
 import '../registration/steps/step4_auditor.dart';
 import '../shared/blue_header_band.dart';
+import '../shared/header_filter_pills.dart';
+import '../shared/header_title.dart';
 import 'auditor_detail_screen.dart';
 
 enum _Filter { semua, aktif, verifikasi, tidakAktif }
@@ -88,49 +90,24 @@ class _AuditorListScreenState extends ConsumerState<AuditorListScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Kelola Auditor',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${all.length} auditor terdaftar',
-                      style: const TextStyle(
-                        color: Color(0xDDEAF2FF),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+          HeaderTitle(
+            title: 'Kelola Auditor',
+            subtitle: '${all.length} auditor terdaftar',
+            trailing: FilledButton.icon(
+              onPressed: () => showAuditorSheet(context, ref),
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Tambah'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.primaryLight,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                textStyle:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24)),
               ),
-              FilledButton.icon(
-                onPressed: () => showAuditorSheet(context, ref),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Tambah'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: AppColors.primaryLight,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  textStyle: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w800),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24)),
-                ),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 14),
           _buildSearchField(),
@@ -161,7 +138,9 @@ class _AuditorListScreenState extends ConsumerState<AuditorListScreen> {
         decoration: InputDecoration(
           hintText: 'Cari auditor',
           hintStyle: const TextStyle(
-              color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w500),
+              color: Color(0xFF94A3B8),
+              fontSize: 12,
+              fontWeight: FontWeight.w500),
           prefixIcon: const Icon(Icons.search_rounded,
               size: 18, color: Color(0xFF94A3B8)),
           suffixIcon: _searchCtrl.text.isNotEmpty
@@ -188,8 +167,8 @@ class _AuditorListScreenState extends ConsumerState<AuditorListScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide:
-                BorderSide(color: AppColors.primaryLight.withValues(alpha: 0.4)),
+            borderSide: BorderSide(
+                color: AppColors.primaryLight.withValues(alpha: 0.4)),
           ),
         ),
       ),
@@ -197,61 +176,24 @@ class _AuditorListScreenState extends ConsumerState<AuditorListScreen> {
   }
 
   Widget _buildFilterPills(Map<_Filter, int> counts) {
-    final labels = {
+    const labels = {
       _Filter.semua: 'Semua',
       _Filter.aktif: 'Aktif',
       _Filter.verifikasi: 'Belum Verifikasi',
       _Filter.tidakAktif: 'Tidak Aktif',
     };
 
-    return SizedBox(
-      height: 28,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _Filter.values.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          final item = _Filter.values[i];
-          final selected = _filter == item;
-          final count = counts[item] ?? 0;
-          return GestureDetector(
-            onTap: () {
-              if (_filter != item) setState(() => _filter = item);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: selected
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: selected
-                    ? null
-                    : Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Text(
-                '${labels[item]} ($count)',
-                style: TextStyle(
-                  color: selected
-                      ? AppColors.primaryLight
-                      : Colors.white.withValues(alpha: 0.9),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+    return HeaderFilterPills<_Filter>(
+      selected: _filter,
+      onSelected: (value) => setState(() => _filter = value),
+      options: [
+        for (final item in _Filter.values)
+          HeaderFilterOption(
+            value: item,
+            label: labels[item]!,
+            count: counts[item] ?? 0,
+          ),
+      ],
     );
   }
 
@@ -314,11 +256,9 @@ class _AuditorListScreenState extends ConsumerState<AuditorListScreen> {
                 padding: const EdgeInsets.only(bottom: 14),
                 child: _AuditorCard(
                   auditor: filtered[i],
-                  onTap: () =>
-                      Navigator.of(context, rootNavigator: true).push(
+                  onTap: () => Navigator.of(context, rootNavigator: true).push(
                     MaterialPageRoute(
-                      builder: (_) =>
-                          AuditorDetailScreen(auditor: filtered[i]),
+                      builder: (_) => AuditorDetailScreen(auditor: filtered[i]),
                     ),
                   ),
                 ),
@@ -421,7 +361,7 @@ class _AuditorCard extends StatelessWidget {
                 const Spacer(),
                 GestureDetector(
                   onTap: onTap,
-                  child: Row(
+                  child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
@@ -432,7 +372,7 @@ class _AuditorCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(width: 2),
+                      SizedBox(width: 2),
                       Icon(
                         Icons.chevron_right_rounded,
                         size: 16,
@@ -451,8 +391,7 @@ class _AuditorCard extends StatelessWidget {
 
   Widget _buildAvatar(String initials) {
     final url = auditor.fotoUrl.trim();
-    final colorIdx =
-        auditor.nama.hashCode.abs() % _avatarGradients.length;
+    final colorIdx = auditor.nama.hashCode.abs() % _avatarGradients.length;
     final gradient = _avatarGradients[colorIdx];
 
     final avatar = Container(
@@ -522,7 +461,6 @@ class _AuditorCard extends StatelessWidget {
           letterSpacing: 1,
         ),
       );
-
 }
 
 class _StatusBadge extends StatelessWidget {
@@ -596,22 +534,16 @@ class _RoleChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isTetap
-            ? const Color(0xFFEFF6FF)
-            : const Color(0xFFF1F5F9),
+        color: isTetap ? const Color(0xFFEFF6FF) : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: isTetap
-              ? const Color(0xFFBFDBFE)
-              : const Color(0xFFE2E8F0),
+          color: isTetap ? const Color(0xFFBFDBFE) : const Color(0xFFE2E8F0),
         ),
       ),
       child: Text(
         auditor.statusLabel,
         style: TextStyle(
-          color: isTetap
-              ? const Color(0xFF1D4ED8)
-              : const Color(0xFF475569),
+          color: isTetap ? const Color(0xFF1D4ED8) : const Color(0xFF475569),
           fontSize: 10,
           fontWeight: FontWeight.w700,
         ),
