@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/enums.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/api_response_utils.dart';
+import '../../data/models/user_profile.dart';
 import '../../providers/profile_menu_provider.dart';
 
 const _cardBorder = Color(0xFFE5EAF3);
@@ -52,20 +51,19 @@ class DataPenggunaScreen extends ConsumerWidget {
             ],
           ),
         ),
-        data: (data) => _UserProfileView(data: data),
+        data: (data) => _UserProfileView(info: data),
       ),
     );
   }
 }
 
 class _UserProfileView extends StatelessWidget {
-  const _UserProfileView({required this.data});
+  const _UserProfileView({required this.info});
 
-  final Map<String, dynamic> data;
+  final UserProfile info;
 
   @override
   Widget build(BuildContext context) {
-    final info = _UserData(data);
     final fields = <Widget>[];
     void addField(String label, String value, {bool mono = false}) {
       if (value.isEmpty) return;
@@ -82,17 +80,17 @@ class _UserProfileView extends StatelessWidget {
       fields.add(widget);
     }
 
-    addField('Nama Lengkap', info.name);
+    addField('Nama Lengkap', info.displayName);
     addField('Username', info.username, mono: true);
-    addField('Email', info.email);
+    addField('Email', info.displayEmail);
     addField('Nomor Handphone / WhatsApp', info.phone);
     addField('Nomor Identitas', info.identityNumber, mono: true);
-    if (info.identityType.isNotEmpty) {
-      addWidget(_IdentityTypeRow(value: info.identityType));
+    if (info.identityTypeLabel.isNotEmpty) {
+      addWidget(_IdentityTypeRow(value: info.identityTypeLabel));
     }
-    addField('Jenis Kelamin', info.gender);
+    addField('Jenis Kelamin', info.genderLabel);
 
-    final accessChildren = info.accessChildren();
+    final accessChildren = _accessChildren(info);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -114,11 +112,11 @@ class _UserProfileView extends StatelessWidget {
 class _IdentityCard extends StatelessWidget {
   const _IdentityCard({required this.info});
 
-  final _UserData info;
+  final UserProfile info;
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = info.isActive ? _activeColor : _inactiveColor;
+    final statusColor = info.active ? _activeColor : _inactiveColor;
     final avatarUrl = info.avatarUrl;
     final initials = info.initials;
     const initialsStyle = TextStyle(
@@ -191,7 +189,7 @@ class _IdentityCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            info.fullName,
+            info.displayName.isEmpty ? '-' : info.displayName,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -202,10 +200,10 @@ class _IdentityCard extends StatelessWidget {
               height: 1.25,
             ),
           ),
-          if (info.email.isNotEmpty) ...[
+          if (info.displayEmail.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              info.email,
+              info.displayEmail,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -224,7 +222,7 @@ class _IdentityCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(99),
             ),
             child: Text(
-              info.isActive ? 'AKUN AKTIF' : 'AKUN NONAKTIF',
+              info.active ? 'AKUN AKTIF' : 'AKUN NONAKTIF',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,
@@ -437,93 +435,10 @@ class _RoleChip extends StatelessWidget {
   }
 }
 
-class _UserData {
-  _UserData(this.data);
-
-  final Map<String, dynamic> data;
-
-  String get name {
-    final first = _pick(const ['first_name', 'name', 'full_name', 'nama']);
-    final last = _pick(const ['last_name']);
-    if (first.isEmpty) return last;
-    if (last.isEmpty) return first;
-    return '$first $last';
-  }
-
-  String get fullName {
-    if (name.isNotEmpty) return name;
-    return username.isNotEmpty ? username : '-';
-  }
-
-  String? get avatarUrl {
-    final url = _pick(const ['photo_url', 'avatar_url']);
-    return url.isEmpty ? null : url;
-  }
-
-  String get username => _pick(const ['username']);
-
-  String get email => _pick(const ['email', 'external_email']);
-
-  String get phone =>
-      _pick(const ['phone', 'no_hp', 'no_hp_wa', 'handphone']);
-
-  String get identityNumber =>
-      _pick(const ['identity_number', 'no_identitas', 'nomor_identitas', 'nik']);
-
-  String get identityType {
-    final value = data['identity_type'];
-    return identityTypeFromRaw(value)?.label ?? '';
-  }
-
-  String get gender {
-    final value = data['sex'];
-    return genderFromRaw(value)?.label ?? '';
-  }
-
-  bool get isActive {
-    final value = data['active'];
-    return value == 1 || value == true || value == '1';
-  }
-
-  String get initials {
-    final words =
-        fullName.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
-    if (words.isEmpty) return 'SL';
-    if (words.length == 1) {
-      final w = words.first;
-      return w.substring(0, w.length < 2 ? w.length : 2).toUpperCase();
-    }
-    return '${words.first[0]}${words.last[0]}'.toUpperCase();
-  }
-
-  List<String> get roles {
-    final raw = data['roles'];
-    if (raw is! List) return const [];
-    final roles = <String>[];
-    for (final role in raw) {
-      if (role is Map) {
-        final name = (role['name'] ?? role['role_name'] ?? '').toString();
-        final label = name.trim().isNotEmpty
-            ? name
-            : (role['description'] ?? '').toString();
-        if (label.trim().isNotEmpty) roles.add(label.trim());
-      } else if (role != null && role.toString().trim().isNotEmpty) {
-        roles.add(role.toString().trim());
-      }
-    }
-    return roles;
-  }
-
-  int? get permissionCount {
-    final raw = data['permissions'] ?? data['permission'];
-    if (raw is List) return raw.length;
-    return null;
-  }
-
-  List<Widget> accessChildren() {
-    final roles = this.roles;
-    final permissions = permissionCount;
-    if (roles.isEmpty && permissions == null) return const [];
+List<Widget> _accessChildren(UserProfile info) {
+  final roles = info.roleLabels;
+  final permissions = info.permissionCount;
+  if (roles.isEmpty && permissions == 0) return const [];
 
     return [
       if (roles.isNotEmpty) ...[
@@ -542,9 +457,9 @@ class _UserData {
           children: [for (final r in roles) _RoleChip(label: r)],
         ),
       ],
-      if (roles.isNotEmpty && permissions != null)
+      if (roles.isNotEmpty && permissions > 0)
         const Divider(height: 21, color: _cardDivider),
-      if (permissions != null)
+      if (permissions > 0)
         Row(
           children: [
             const Expanded(
@@ -602,6 +517,3 @@ class _UserData {
         ),
     ];
   }
-
-  String _pick(List<String> keys) => pickString(data, keys, fallback: '')!;
-}

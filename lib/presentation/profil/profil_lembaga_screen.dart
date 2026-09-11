@@ -4,8 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/api_response_utils.dart';
 import '../../core/utils/formatters.dart';
+import '../../data/models/latik_profile.dart';
 import '../../providers/auditor_provider.dart';
 import '../../providers/profile_menu_provider.dart';
 import '../../providers/registrasi_provider.dart';
@@ -56,7 +56,7 @@ class ProfilLembagaScreen extends ConsumerWidget {
           ),
         ),
         data: (data) {
-          if (!_hasProfileData(data)) {
+          if (data.isEmpty) {
             return _EmptyProfileState(
               onRetry: () => ref.invalidate(latikProfileProvider),
             );
@@ -85,22 +85,14 @@ class ProfilLembagaScreen extends ConsumerWidget {
   void _showEditSheet(
     BuildContext context,
     WidgetRef ref,
-    Map<String, dynamic> data,
+    LatikProfile data,
   ) {
-    final nameCtrl = TextEditingController(
-        text: _deepPick(data, const ['name', 'nama', 'nama_latik']));
-    final nibCtrl = TextEditingController(
-        text: _deepPick(
-            data, const ['no_nib', 'nib', 'nomor_nib', 'no_nib_latik']));
-    final emailCtrl = TextEditingController(
-        text:
-            _deepPick(data, const ['email', 'email_latik', 'email_institusi']));
-    final phoneCtrl = TextEditingController(
-        text: _deepPick(
-            data, const ['phone', 'telepon', 'no_hp', 'telepon_kantor']));
-    final addressCtrl = TextEditingController(
-        text: _deepPick(data, const ['address', 'alamat', 'alamat_latik']));
-    final refLatik = _deepPick(data, const ['ref', 'latik_ref', 'ref_latik']);
+    final nameCtrl = TextEditingController(text: data.namaLatik);
+    final nibCtrl = TextEditingController(text: data.noNib);
+    final emailCtrl = TextEditingController(text: data.email);
+    final phoneCtrl = TextEditingController(text: data.phone);
+    final addressCtrl = TextEditingController(text: data.alamat);
+    final refLatik = data.latikRef;
 
     showModalBottomSheet<void>(
       context: context,
@@ -334,35 +326,17 @@ class _EditFooter extends StatelessWidget {
 class _IdentityCard extends StatelessWidget {
   const _IdentityCard({required this.data});
 
-  final Map<String, dynamic> data;
+  final LatikProfile data;
 
   @override
   Widget build(BuildContext context) {
-    final nama = _text(_deepPick(data, const [
-      'nama_latik',
-      'nama_latik_perusahaan',
-      'name',
-      'nama',
-      'first_name'
-    ]));
-    final regNumber = _text(_deepPick(data, const [
-      'no_pendaftaran',
-      'nomor_registrasi',
-      'no_registrasi',
-      'registration_number',
-      'kode_registrasi',
-      'kode_register',
-      'no_register',
-      'nomor_register',
-      'registration_code',
-      'no_urut_ext',
-      'no_urut'
-    ]));
     final str = _strInfo(data);
     final badges = _statusBadges(data, str);
 
-    final displayName = nama.isEmpty ? 'Nama Lembaga Belum Diisi' : nama;
-    final displayReg = regNumber.isEmpty ? 'Belum Terdaftar' : regNumber;
+    final displayName =
+        data.namaLatik.isEmpty ? 'Nama Lembaga Belum Diisi' : data.namaLatik;
+    final displayReg =
+        data.noPendaftaran.isEmpty ? 'Belum Terdaftar' : data.noPendaftaran;
 
     return _Card(
       child: Column(
@@ -513,42 +487,13 @@ class _StrCard extends StatelessWidget {
 class _StatsRow extends StatelessWidget {
   const _StatsRow({required this.data, required this.auditorCount});
 
-  final Map<String, dynamic> data;
+  final LatikProfile data;
   final int auditorCount;
 
   @override
   Widget build(BuildContext context) {
-    final count = _intValue(data, const [
-          'jumlah_auditor',
-          'total_auditor',
-          'jumlah',
-          'total_auditors',
-          'auditor_count'
-        ]) ??
-        auditorCount;
-
-    final akreditasiText = _text(_deepPick(data, const [
-      'nama_status_kan',
-      'status_akreditasi_kan',
-      'status_kan',
-      'akreditasi_kan',
-      'status_akreditasi'
-    ]));
-    final punyaKan = _deepPick(data, const [
-      'nomor_kan',
-      'no_kan',
-      'nomor_sertifikat_kan',
-      'nomor_sertifikat',
-      'file_cer_kan',
-      'file_kan',
-      'sertifikat_kan',
-      'file_sertifikat_kan',
-      'ruang_lingkup_kan',
-      'ruang_lingkup_akreditasi'
-    ]).isNotEmpty;
-    final akreditasiValue = akreditasiText.isNotEmpty
-        ? akreditasiText
-        : (punyaKan ? 'Terdaftar' : '-');
+    final count = data.auditorCount > 0 ? data.auditorCount : auditorCount;
+    final akreditasiValue = data.akreditasiValue;
 
     return Row(
       children: [
@@ -580,7 +525,7 @@ class _StatsRow extends StatelessWidget {
 class _InfoSection extends StatelessWidget {
   const _InfoSection({required this.data});
 
-  final Map<String, dynamic> data;
+  final LatikProfile data;
 
   @override
   Widget build(BuildContext context) {
@@ -637,28 +582,14 @@ class _InfoSection extends StatelessWidget {
   }
 
   List<Widget> _buildRows() {
-    final nama = _text(_deepPick(data, const [
-      'nama_latik',
-      'nama_latik_perusahaan',
-      'name',
-      'nama',
-      'first_name'
-    ]));
-    final email = _text(
-        _deepPick(data, const ['email', 'email_latik', 'email_institusi']));
-    final telepon = _text(
-        _deepPick(data, const ['telepon', 'phone', 'no_hp', 'telepon_kantor']));
-    final alamat = _fullAddress(data);
-    final website = _text(_deepPick(
-        data, const ['website', 'url_website', 'situs', 'website_latik']));
-    final npwp = _text(
-        _deepPick(data, const ['npwp', 'nomor_npwp', 'no_npwp', 'npwp_latik']));
-    final nib = _text(
-        _deepPick(data, const ['no_nib_latik', 'nib', 'nomor_nib', 'no_nib']));
-    final scopes = latikScopeLabels(data['lingkup_pendaftaran'] ??
-        data['ruang_lingkup_latik'] ??
-        data['ruang_lingkup'] ??
-        data['scope']);
+    final nama = data.namaLatik;
+    final email = data.email;
+    final telepon = data.phone;
+    final alamat = data.fullAddress;
+    final website = data.website;
+    final npwp = data.noNpwp;
+    final nib = data.noNib;
+    final scopes = latikScopeLabels(data.scopeSource);
 
     final rows = <Widget>[];
     if (nama.isNotEmpty) {
@@ -1038,38 +969,16 @@ class _StrInfo {
 
 // ponytail: status/semantics diturunkan dari teks+kode (lihat enums.dart);
 // kalau backend mengirim status yang belum dikenal, label kembali ke teks aslinya.
-_StrInfo? _strInfo(Map<String, dynamic> data) {
-  final no = _text(
-      _deepPick(data, const ['nomor_str', 'no_str', 'str_number', 'str_no']));
-  final rawStart = _deepPick(data, const [
-    'str_tanggal_awal',
-    'tgl_terbit_str',
-    'tanggal_terbit_str',
-    'tanggal_terbit',
-    'str_mulai',
-    'berlaku_mulai'
-  ]);
-  final rawEnd = _deepPick(data, const [
-    'str_tanggal_akhir',
-    'tgl_berakhir_str',
-    'tanggal_berakhir_str',
-    'tanggal_berakhir',
-    'masa_berlaku_sampai',
-    'expired_at',
-    'str_akhir',
-    'berlaku_sampai'
-  ]);
-  final start = _date(rawStart);
-  final end = _date(rawEnd);
+_StrInfo? _strInfo(LatikProfile data) {
+  final no = data.noStr;
+  final start = data.strTanggalAwal;
+  final end = data.strTanggalAkhir;
   if (no.isEmpty && start == null && end == null) return null;
 
   final expired = end != null && !end.isAfter(DateTime.now());
-  final rawStatus = _deepPick(data, const [
-    'str_status',
-    'status_str',
-    'nama_status_str',
-    'status_aktif_str'
-  ]).toLowerCase();
+  final rawStatus =
+      (data.strStatus.isNotEmpty ? data.strStatus : data.namaStatusStr)
+          .toLowerCase();
   final isNonaktif = expired ||
       rawStatus.contains('nonaktif') ||
       rawStatus.contains('kadaluarsa') ||
@@ -1103,26 +1012,16 @@ _StrInfo? _strInfo(Map<String, dynamic> data) {
   );
 }
 
-const _registrationStatusKeys = [
-  'nama_status',
-  'nama_status_str',
-  'status_verifikasi',
-  'status',
-  'status_latik',
-  'verification_status',
-];
-
 // ponytail: status/semantik diturunkan dari teks+kode (mirror enums.dart);
 // status baru yang tak dikenal jatuh ke label teks apa adanya.
-List<_PillSpec> _statusBadges(Map<String, dynamic> data, _StrInfo? str) {
+List<_PillSpec> _statusBadges(LatikProfile data, _StrInfo? str) {
   if (str?.statusSpec.label == 'Aktif') {
     return const [
       _PillSpec('Terverifikasi', _green),
       _PillSpec('Valid', _green),
     ];
   }
-  final rawStatus =
-      _deepPick(data, _registrationStatusKeys).trim().toLowerCase();
+  final rawStatus = data.statusText.trim().toLowerCase();
   if (rawStatus.isNotEmpty &&
       (rawStatus == '4' ||
           rawStatus.contains('aktif') ||
@@ -1179,32 +1078,6 @@ String? _statusLabel(String rawStatus) {
   return null;
 }
 
-String _fullAddress(Map<String, dynamic> data) {
-  final parts = [
-    _text(_deepPick(data,
-        const ['alamat_latik', 'alamat', 'address', 'alamat_perusahaan'])),
-    _text(_deepPick(data, const [
-      'nama_kabupaten',
-      'kota',
-      'city_name',
-      'kabupaten_alamat_latik',
-      'kabupaten',
-      'city'
-    ])),
-    _text(_deepPick(data, const [
-      'nama_provinsi',
-      'provinsi',
-      'province_name',
-      'provinsi_alamat_latik',
-      'province'
-    ])),
-  ].where((p) => p.isNotEmpty).toList();
-  if (parts.isEmpty) return '';
-  final zip = _text(_deepPick(data, const ['kode_pos', 'postal_code']));
-  final joined = parts.join(', ');
-  return zip.isEmpty ? joined : '$joined $zip';
-}
-
 String _periodText(DateTime? start, DateTime? end) {
   if (start != null && end != null) {
     return '${AppFormatters.formatShortDate(start)} – '
@@ -1214,41 +1087,6 @@ String _periodText(DateTime? start, DateTime? end) {
   if (start != null) return 'sejak ${AppFormatters.formatShortDate(start)}';
   return '';
 }
-
-int? _intValue(Map<String, dynamic> data, List<String> keys) {
-  for (final key in keys) {
-    final parsed = parseInt(data[key]);
-    if (parsed != null) return parsed;
-  }
-  return null;
-}
-
-DateTime? _date(String value) => parseFlexibleDate(value);
-
-String _text(String value) => value.trim();
-
-bool _hasProfileData(Map<String, dynamic> data) {
-  const keys = [
-    'nama_latik',
-    'nama_latik_perusahaan',
-    'name',
-    'nama',
-    'email',
-    'email_latik',
-    'email_institusi',
-    'alamat_latik',
-    'alamat',
-    'address',
-    'no_nib_latik',
-    'nib',
-    'nomor_nib',
-    'no_nib',
-  ];
-  return _deepPick(data, keys).isNotEmpty;
-}
-
-String _deepPick(Map<String, dynamic> data, List<String> keys) =>
-    pickString(data, keys, deep: true, fallback: '')!;
 
 void _launchUrl(String url, {bool mailto = false}) {
   var target = url.trim();

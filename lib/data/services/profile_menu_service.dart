@@ -1,10 +1,10 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../core/constants/api_endpoints.dart';
 import '../../core/utils/api_response_utils.dart';
+import '../models/faq.dart';
+import '../models/latik_profile.dart';
+import '../models/user_profile.dart';
 
 /// Keys under which the backend may expose the institution registration
 /// number. The canonical field (per the web frontend `SelfLatikOrganization`
@@ -22,14 +22,6 @@ const List<String> kRegistrationNumberKeys = [
   'registration_code',
   'no_urut_ext',
   'no_urut',
-];
-
-/// The registration-number fields that consumers read from the assembled
-/// profile map. Populated only when a real value is present.
-const List<String> kRegistrationNumberOutputKeys = [
-  'no_pendaftaran',
-  'nomor_registrasi',
-  'registration_number',
 ];
 
 /// Extracts a registration number from a latik profile [data] map, or returns
@@ -77,7 +69,7 @@ class ProfileMenuService {
 
   final Dio _dio;
 
-  Future<Map<String, dynamic>> getLatikProfile({String? latikRef}) async {
+  Future<LatikProfile> getLatikProfile({String? latikRef}) async {
     final userResponse = await _dio.get(ApiEndpoints.userMe);
     final user = extractMap(userResponse.data);
     final ref = _cleanText(latikRef) ?? _stringValue(user, 'latik_ref');
@@ -95,7 +87,7 @@ class ProfileMenuService {
         latikFromList,
         profile,
       ]);
-      return _applyRegistrationNumber(merged);
+      return LatikProfile.fromJson(merged);
     }
 
     final viewResponse = await _dio.get('${ApiEndpoints.latikViewMain}/$ref');
@@ -105,19 +97,19 @@ class ProfileMenuService {
       profile,
       _extractLatikRecord(viewResponse.data, ref),
     ]);
-    return _applyRegistrationNumber(merged);
+    return LatikProfile.fromJson(merged);
   }
 
-  Future<Map<String, dynamic>> getUserProfile() async {
+  Future<UserProfile> getUserProfile() async {
     final response = await _dio.get(ApiEndpoints.userMe);
-    return extractMap(response.data);
+    return UserProfile.fromJson(extractMap(response.data));
   }
 
-  Future<List<Map<String, dynamic>>> getFaqs() async {
+  Future<List<Faq>> getFaqs() async {
     final response = await _dio.get(ApiEndpoints.faqs);
     return extractList(response.data)
         .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
+        .map((item) => Faq.fromJson(Map<String, dynamic>.from(item)))
         .toList();
   }
 
@@ -192,21 +184,4 @@ class ProfileMenuService {
     return true;
   }
 
-  /// Copies a real registration number (if any) into the output keys consumers
-  /// read. When the response has no registration number, the fields are left
-  /// absent — never fabricated.
-  Map<String, dynamic> _applyRegistrationNumber(Map<String, dynamic> data) {
-    final reg = extractRegistrationNumber(data);
-    if (reg != null) {
-      for (final key in kRegistrationNumberOutputKeys) {
-        data[key] = reg;
-      }
-    }
-    if (kDebugMode) {
-      debugPrint('[LATIK] registration_number=$reg');
-      debugPrint('[LATIK] merged json: ${jsonEncode(data)}');
-      debugPrint('[LATIK] available keys: ${data.keys.toList()}');
-    }
-    return data;
-  }
 }

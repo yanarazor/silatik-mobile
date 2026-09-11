@@ -6,7 +6,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
-import '../../core/utils/api_response_utils.dart';
+import '../../data/models/faq.dart';
+import '../../data/models/user_profile.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_menu_provider.dart';
 import '../shared/menu_group.dart';
@@ -18,29 +19,19 @@ class ProfilScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final topInset = MediaQuery.paddingOf(context).top;
     // debugPrint('[topInset] ${topInset}');
-    final user = ref.watch(authProvider).user;
+    final user = UserProfile.fromJson(ref.watch(authProvider).user ?? const {});
     final profileAsync = ref.watch(latikProfileProvider);
 
-    final displayName = _stringValue(user, 'first_name') ??
-        _stringValue(user, 'username') ??
-        'Pengguna SILATIK';
-    final avatarUrl = profileAsync.maybeWhen(
-          data: (d) => _stringValue(d, 'photo'),
-          orElse: () => null,
-        ) ??
-        _stringValue(user, 'avatar_url') ??
-        _stringValue(user, 'photo_url');
-    final isActive = user?['active'] == 1 || user?['active'] == true;
+    final displayName =
+        user.displayName.isNotEmpty ? user.displayName : 'Pengguna SILATIK';
+    final avatarUrl = user.avatarUrl;
+    final isActive = user.active;
     final lembagaName = profileAsync.maybeWhen(
-      data: (d) => _value(d, const ['nama', 'name', 'nama_latik']),
+      data: (d) => d.namaLatik.isEmpty ? null : d.namaLatik,
       orElse: () => null,
     );
     final registrationNumber = profileAsync.maybeWhen(
-      data: (d) => _value(d, const [
-        'no_pendaftaran',
-        'nomor_registrasi',
-        'registration_number',
-      ]),
+      data: (d) => d.noPendaftaran.isEmpty ? null : d.noPendaftaran,
       orElse: () => null,
     );
 
@@ -129,16 +120,6 @@ class ProfilScreen extends ConsumerWidget {
       ),
     );
   }
-
-  static String? _stringValue(Map<String, dynamic>? data, String key) =>
-      data == null ? null : meaningfulString(data[key]);
-
-  static String _value(
-    Map<String, dynamic> data,
-    List<String> keys, {
-    String fallback = '-',
-  }) =>
-      pickString(data, keys, fallback: fallback)!;
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
     final ok = await showDialog<bool>(
@@ -250,7 +231,7 @@ class ProfilScreen extends ConsumerWidget {
             ),
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
-              child: FutureBuilder<List<Map<String, dynamic>>>(
+              child: FutureBuilder<List<Faq>>(
                 future: ref.read(faqProfileProvider.future),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState != ConnectionState.done) {
@@ -305,22 +286,10 @@ class ProfilScreen extends ConsumerWidget {
                           if (i > 0)
                             const Divider(height: 1, color: Color(0xFFE5EAF3)),
                           _FaqItem(
-                            title: _value(
-                                data[i],
-                                const [
-                                  'title',
-                                  'judul',
-                                  'question',
-                                  'pertanyaan',
-                                ],
-                                fallback: 'Panduan ${i + 1}'),
-                            body: _value(data[i], const [
-                              'body',
-                              'isi',
-                              'answer',
-                              'jawaban',
-                              'description',
-                            ]),
+                            title: data[i].title.isEmpty
+                                ? 'Panduan ${i + 1}'
+                                : data[i].title,
+                            body: data[i].body,
                           ),
                         ],
                       ],
@@ -335,35 +304,15 @@ class ProfilScreen extends ConsumerWidget {
     );
   }
 
-  Map<String, String> _mapSettings(Map<String, dynamic> data) {
+  Map<String, String> _mapSettings(UserProfile user) {
+    final roles = user.roleLabels;
     return {
-      'Status Akun': _value(data, const ['active']) == '1' ||
-              _value(data, const ['active']).toLowerCase() == 'true'
-          ? 'Aktif'
-          : 'Nonaktif',
-      'Role': _rolesText(data),
-      'Permission': _permissionsCount(data),
-      'Tipe Identitas': _value(data, const ['identity_type']),
+      'Status Akun': user.active ? 'Aktif' : 'Nonaktif',
+      'Role': roles.isEmpty ? '-' : roles.join(', '),
+      'Permission':
+          user.permissionCount == 0 ? '-' : '${user.permissionCount} akses',
+      'Tipe Identitas': user.identityTypeLabel,
     };
-  }
-
-  String _rolesText(Map<String, dynamic> data) {
-    final roles = data['roles'];
-    if (roles is List && roles.isNotEmpty) {
-      return roles.map((role) {
-        if (role is Map) {
-          return (role['name'] ?? role['description'] ?? role).toString();
-        }
-        return role.toString();
-      }).join(', ');
-    }
-    return '-';
-  }
-
-  String _permissionsCount(Map<String, dynamic> data) {
-    final permissions = data['permissions'] ?? data['permission'];
-    if (permissions is List) return '${permissions.length} akses';
-    return '-';
   }
 }
 

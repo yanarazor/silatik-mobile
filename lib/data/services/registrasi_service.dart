@@ -24,21 +24,16 @@ class RegistrasiService {
     });
 
     final payload = extractMap(response.data);
-    final refLatik = _stringValue(payload, 'ref') ??
-        _stringValue(payload, 'latik_ref') ??
-        _stringValue(payload, 'ref_latik');
+    final refLatik =
+        pickString(payload, const ['ref', 'latik_ref', 'ref_latik']);
 
     if (refLatik != null) {
       await _dio.post(ApiEndpoints.latikRequestVerif, data: {'ref_latik': refLatik});
     }
 
-    return _stringValue(payload, 'nomor_referensi') ??
-        _stringValue(payload, 'reference_number') ??
-        _stringValue(payload, 'no_registrasi') ??
+    return pickString(payload,
+            const ['nomor_referensi', 'reference_number', 'no_registrasi']) ??
         refLatik ??
         'REG-${DateTime.now().millisecondsSinceEpoch}';
   }
-
-  String? _stringValue(Map<String, dynamic> data, String key) =>
-      meaningfulString(data[key]);
 }

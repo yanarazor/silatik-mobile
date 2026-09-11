@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
-import '../../core/utils/api_response_utils.dart';
+import '../../data/models/latik_profile.dart';
 import '../../data/models/notifikasi_model.dart';
 import '../../providers/notifikasi_provider.dart';
 import '../../providers/profile_menu_provider.dart';
@@ -19,17 +19,9 @@ class DashboardScreen extends ConsumerWidget {
     final notifAsync = ref.watch(unreadNotificationProvider);
     final unreadCountAsync = ref.watch(unreadNotificationCountProvider);
     final latikAsync = ref.watch(latikProfileProvider);
-    final latik = latikAsync.valueOrNull ?? const <String, dynamic>{};
-    final namaLatik = _value(
-        latik,
-        const [
-          'nama_latik',
-          'nama_latik_perusahaan',
-          'nama',
-          'name',
-          'first_name'
-        ],
-        fallback: 'LATIK');
+    final latik = latikAsync.valueOrNull;
+    final namaLatik =
+        (latik?.namaLatik.isNotEmpty ?? false) ? latik!.namaLatik : 'LATIK';
 
     return Stack(
       children: [
@@ -43,7 +35,7 @@ class DashboardScreen extends ConsumerWidget {
               await Future.wait([
                 ref
                     .read(latikProfileProvider.future)
-                    .catchError((_) => <String, dynamic>{}),
+                    .catchError((_) => const LatikProfile()),
                 ref
                     .read(unreadNotificationProvider.future)
                     .catchError((_) => <NotifikasiModel>[]),
@@ -293,66 +285,24 @@ class DashboardScreen extends ConsumerWidget {
     return null;
   }
 
-  static String _value(
-    Map<String, dynamic> data,
-    List<String> keys, {
-    String fallback = '-',
-  }) =>
-      pickString(data, keys, fallback: fallback)!;
 }
+
+String _orDash(String value) => value.isEmpty ? '-' : value;
 
 class _LatikSummaryCard extends StatelessWidget {
   const _LatikSummaryCard({required this.data});
 
-  final Map<String, dynamic> data;
+  final LatikProfile data;
 
   @override
   Widget build(BuildContext context) {
-    final nomorStr = DashboardScreen._value(
-        data, const ['nomor_str', 'no_str', 'str_number']);
-    final nomorRegistrasi = DashboardScreen._value(
-      data,
-      const [
-        'no_pendaftaran',
-        'nomor_registrasi',
-        'no_registrasi',
-        'registration_number',
-        'kode_registrasi',
-        'kode_register',
-        'kode',
-        'no_register',
-        'nomor_register',
-        'registration_code'
-      ],
-    );
-    final namaLatik = DashboardScreen._value(
-      data,
-      const [
-        'nama_latik',
-        'nama_latik_perusahaan',
-        'nama',
-        'name',
-        'first_name'
-      ],
-    );
-    final fallbackStatus = nomorStr == '-' ? 'Data LATIK' : 'STR Aktif';
-    final status = DashboardScreen._value(
-      data,
-      const [
-        'nama_status',
-        'nama_status_str',
-        'status_verifikasi',
-        'status',
-        'status_latik',
-        'verification_status'
-      ],
-      fallback: fallbackStatus,
-    );
-    final statusText = status.toLowerCase();
-    final isVerified = statusText.contains('terverifikasi') ||
-        statusText.contains('sudah verifikasi') ||
-        statusText.contains('aktif') ||
-        statusText.contains('approved');
+    final nomorStr = data.noStr.isEmpty ? '-' : data.noStr;
+    final nomorRegistrasi =
+        data.noPendaftaran.isEmpty ? '-' : data.noPendaftaran;
+    final namaLatik = data.namaLatik.isEmpty ? '-' : data.namaLatik;
+    final fallbackStatus = data.noStr.isEmpty ? 'Data LATIK' : 'STR Aktif';
+    final status = data.statusText.isEmpty ? fallbackStatus : data.statusText;
+    final isVerified = data.isVerified;
     final statusIcon =
         isVerified ? Icons.check_circle_rounded : Icons.hourglass_top_rounded;
     final statusColor = isVerified ? const Color(0xFF25B45B) : AppColors.accent;
@@ -428,7 +378,7 @@ class _LatikSummaryCard extends StatelessWidget {
     );
   }
 
-  void _showLatikDetail(BuildContext context, Map<String, dynamic> data) {
+  void _showLatikDetail(BuildContext context, LatikProfile data) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -468,90 +418,18 @@ class _LatikSummaryCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _InfoLine(
-                    label: 'Nomor Registrasi',
-                    value: DashboardScreen._value(data, const [
-                      'no_pendaftaran',
-                      'nomor_registrasi',
-                      'no_registrasi',
-                      'registration_number',
-                      'kode_registrasi',
-                      'kode_register',
-                      'kode',
-                      'no_register',
-                      'nomor_register',
-                      'registration_code'
-                    ]),
-                  ),
+                      label: 'Nomor Registrasi', value: _orDash(data.noPendaftaran)),
                   _InfoLine(
-                      label: 'Status Verifikasi',
-                      value: DashboardScreen._value(data, const [
-                        'nama_status',
-                        'nama_status_str',
-                        'status_verifikasi',
-                        'status',
-                        'status_latik',
-                        'verification_status'
-                      ])),
+                      label: 'Status Verifikasi', value: _orDash(data.statusText)),
+                  _InfoLine(label: 'Nomor STR', value: _orDash(data.noStr)),
+                  _InfoLine(label: 'Nomor NIB', value: _orDash(data.noNib)),
+                  _InfoLine(label: 'Nomor NPWP', value: _orDash(data.noNpwp)),
+                  _InfoLine(label: 'Nama LATIK', value: _orDash(data.namaLatik)),
+                  _InfoLine(label: 'Email', value: _orDash(data.email)),
+                  _InfoLine(label: 'Alamat LATIK', value: _orDash(data.alamat)),
+                  _InfoLine(label: 'Provinsi', value: _orDash(data.provinsi)),
                   _InfoLine(
-                      label: 'Nomor STR',
-                      value: DashboardScreen._value(
-                          data, const ['nomor_str', 'no_str', 'str_number'])),
-                  _InfoLine(
-                      label: 'Nomor NIB',
-                      value: DashboardScreen._value(data, const [
-                        'nib',
-                        'nomor_nib',
-                        'no_nib',
-                        'no_nib_latik'
-                      ])),
-                  _InfoLine(
-                      label: 'Nomor NPWP',
-                      value: DashboardScreen._value(data, const [
-                        'npwp',
-                        'nomor_npwp',
-                        'no_npwp',
-                        'npwp_latik'
-                      ])),
-                  _InfoLine(
-                      label: 'Nama LATIK',
-                      value: DashboardScreen._value(data, const [
-                        'nama_latik',
-                        'nama_latik_perusahaan',
-                        'nama',
-                        'name',
-                        'first_name'
-                      ])),
-                  _InfoLine(
-                      label: 'Email',
-                      value: DashboardScreen._value(
-                          data, const ['email', 'email_latik'])),
-                  _InfoLine(
-                      label: 'Alamat LATIK',
-                      value: DashboardScreen._value(data, const [
-                        'alamat_latik',
-                        'alamat',
-                        'address',
-                        'alamat_perusahaan'
-                      ])),
-                  _InfoLine(
-                      label: 'Provinsi',
-                      value: DashboardScreen._value(data, const [
-                        'nama_provinsi',
-                        'province_name',
-                        'provinsi_alamat_latik',
-                        'province',
-                        'provinsi'
-                      ])),
-                  _InfoLine(
-                      label: 'Kabupaten/Kota',
-                      value: DashboardScreen._value(data, const [
-                        'nama_kabupaten',
-                        'city_name',
-                        'kabupaten_alamat_latik',
-                        'kota',
-                        'city',
-                        'kabupaten'
-                      ])),
+                      label: 'Kabupaten/Kota', value: _orDash(data.kabupaten)),
                 ],
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/utils/api_response_utils.dart';
 import '../data/models/auditor_model.dart';
+import '../data/models/latik_profile.dart';
 import '../data/models/lembaga_model.dart';
 import '../data/models/registrasi_model.dart';
 import '../data/repositories/auditor_repository.dart';
@@ -95,8 +96,8 @@ class RegistrasiNotifier extends StateNotifier<RegistrasiState> {
 
     final profile =
         await _profileMenuService.getLatikProfile(latikRef: latikRef);
-    final dokumen = await _mapDocuments(profile);
-    final akreditasi = _mapAkreditasi(profile);
+    final dokumen = await _mapDocuments(profile.raw);
+    final akreditasi = _mapAkreditasi(profile.raw);
     final auditors = await _auditorRepo.getAuditors();
 
     state = state.copyWith(
@@ -117,30 +118,18 @@ class RegistrasiNotifier extends StateNotifier<RegistrasiState> {
     _initializedFromApi = true;
   }
 
-  LembagaModel _mapLembaga(Map<String, dynamic> p) {
-    String value(List<String> keys) {
-      for (final key in keys) {
-        final raw = p[key];
-        if (raw == null) continue;
-        final text = raw.toString().trim();
-        if (text.isNotEmpty && text != 'null') return text;
-      }
-      return '';
-    }
-
+  LembagaModel _mapLembaga(LatikProfile p) {
     return LembagaModel(
-      nama:
-          value(const ['nama_latik', 'nama_latik_perusahaan', 'name', 'nama']),
-      nib: value(const ['no_nib', 'nib', 'nomor_nib']),
-      badanHukum: value(const ['badan_hukum', 'legal_entity_type']),
-      alamat: value(const ['alamat_latik', 'alamat', 'address']),
-      provinsi: _normalizeProvince(
-          value(const ['nama_provinsi', 'provinsi_name', 'provinsi'])),
-      kota: value(const ['nama_kabupaten', 'city_name', 'kabupaten', 'kota']),
-      kodePos: value(const ['kode_pos', 'postal_code']),
-      telepon: value(const ['telepon', 'phone']),
-      email: value(const ['email', 'email_latik']),
-      website: value(const ['website']),
+      nama: p.namaLatik,
+      nib: p.noNib,
+      badanHukum: p.badanHukum,
+      alamat: p.alamat,
+      provinsi: _normalizeProvince(p.provinsi),
+      kota: p.kabupaten,
+      kodePos: p.kodePos,
+      telepon: p.phone,
+      email: p.email,
+      website: p.website,
     );
   }
 

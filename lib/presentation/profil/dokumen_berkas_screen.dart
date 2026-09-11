@@ -53,8 +53,7 @@ class DokumenBerkasScreen extends ConsumerWidget {
             ],
           ),
         ),
-        data: (profile) =>
-            _DocsView(docs: ProfilDokumen.listFrom(profile)),
+        data: (profile) => _DocsView(docs: profile.documents),
       ),
     );
   }
