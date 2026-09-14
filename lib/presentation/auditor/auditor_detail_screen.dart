@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/url_opener.dart';
 import '../../data/models/auditor_model.dart';
 import '../../data/models/master_data_model.dart';
 import '../../providers/auditor_provider.dart';
@@ -1020,30 +1018,12 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
     );
   }
 
-  Future<void> _openUrl(BuildContext context, String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null) {
-      _showSnackBar(context, 'URL tidak valid');
-      return;
-    }
-    if (url.toLowerCase().endsWith('.pdf')) {
-      context.push('${AppRoutes.pdfViewer}?url=${Uri.encodeComponent(url)}');
-      return;
-    }
-    try {
-      final externalOk =
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-      if (externalOk) return;
-      final inAppOk = await launchUrl(uri, mode: LaunchMode.inAppWebView);
-      if (!inAppOk) {
-        if (!context.mounted) return;
-        _showSnackBar(context, 'Tidak bisa membuka tautan');
-      }
-    } catch (_) {
-      if (!context.mounted) return;
-      _showSnackBar(context, 'Gagal membuka tautan');
-    }
-  }
+  Future<void> _openUrl(BuildContext context, String url) => openFileUrl(
+        context,
+        url,
+        invalidMessage: 'URL tidak valid',
+        failureMessage: 'Gagal membuka tautan',
+      );
 
   void _showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(

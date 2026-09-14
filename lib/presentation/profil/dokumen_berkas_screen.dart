@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/api_response_utils.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/url_opener.dart';
 import '../../data/models/profil_dokumen.dart';
 import '../../providers/profile_menu_provider.dart';
 
@@ -512,35 +510,5 @@ IconData _docIcon(String nama) {
   return Icons.description_outlined;
 }
 
-Future<void> _openDoc(BuildContext context, ProfilDokumen doc) async {
-  final url = doc.url.trim();
-  if (url.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Berkas belum tersedia')),
-    );
-    return;
-  }
-  final uri = Uri.tryParse(url);
-  if (uri == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('URL dokumen tidak valid')),
-    );
-    return;
-  }
-  if (url.toLowerCase().endsWith('.pdf')) {
-    context.push('${AppRoutes.pdfViewer}?url=${Uri.encodeComponent(url)}');
-    return;
-  }
-  try {
-    final ok = await launchUrl(uri, mode: LaunchMode.inAppWebView);
-    if (!ok) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  } catch (_) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal membuka dokumen')),
-      );
-    }
-  }
-}
+Future<void> _openDoc(BuildContext context, ProfilDokumen doc) =>
+    openFileUrl(context, doc.url);

@@ -211,6 +211,10 @@ class LatikProfile {
     );
   }
 
+  String get fileStr =>
+      pickString(raw, const ['file_str', 'str_file'],
+          deep: true, fallback: '')!;
+
   /// True when the profile carries no meaningful institution data.
   bool get isEmpty =>
       namaLatik.isEmpty &&

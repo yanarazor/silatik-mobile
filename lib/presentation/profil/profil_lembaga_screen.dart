@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/url_opener.dart';
 import '../../data/models/latik_profile.dart';
 import '../../providers/auditor_provider.dart';
 import '../../providers/profile_menu_provider.dart';
@@ -478,6 +479,30 @@ class _StrCard extends StatelessWidget {
               label: 'Masa Berlaku',
               value: info.period,
             ),
+          if (info.fileUrl.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const Divider(height: 1, color: Color(0xFFEAF2FB)),
+            const SizedBox(height: 10),
+            InkWell(
+              onTap: () => openFileUrl(context, info.fileUrl),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    'Buka',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  Icon(Icons.open_in_new_rounded,
+                      size: 15, color: AppColors.primary),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -615,7 +640,7 @@ class _InfoSection extends StatelessWidget {
         value: website,
         valueColor: AppColors.primaryLight,
         trailing: const Icon(Icons.open_in_new,
-            size: 13, color: AppColors.primaryLight),
+            size: 16, color: AppColors.primaryLight),
         onTap: () => _launchUrl(website),
       ));
     }
@@ -958,6 +983,7 @@ class _StrInfo {
     required this.end,
     required this.period,
     required this.statusSpec,
+    required this.fileUrl,
   });
 
   final String no;
@@ -965,6 +991,7 @@ class _StrInfo {
   final DateTime? end;
   final String period;
   final _PillSpec statusSpec;
+  final String fileUrl;
 }
 
 // ponytail: status/semantics diturunkan dari teks+kode (lihat enums.dart);
@@ -1009,6 +1036,7 @@ _StrInfo? _strInfo(LatikProfile data) {
     end: end,
     period: period,
     statusSpec: statusSpec,
+    fileUrl: data.fileStr.trim(),
   );
 }
 
