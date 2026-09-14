@@ -1,4 +1,7 @@
+import '../../core/utils/api_response_utils.dart';
 import '../models/auditor_model.dart';
+import '../models/registrasi_model.dart';
+import '../services/auditor_payload.dart';
 import '../services/auditor_service.dart';
 
 class AuditorRepository {
@@ -30,9 +33,46 @@ class AuditorRepository {
         .toList();
   }
 
-  Future<Map<String, dynamic>> save(Map<String, dynamic> data) =>
-      _service.saveAuditor(data);
-  Future<void> update(Map<String, dynamic> data) =>
-      _service.updateAuditor(data);
+  /// Definisi Data Dukung (dengan nama `field` multipart) untuk create.
+  Future<List<AuditorDokumenDef>> getDokumenDefs() async {
+    final rows = await _service.loadAuditorDokumenDefs();
+    return rows
+        .whereType<Map>()
+        .map((item) =>
+            AuditorDokumenDef.fromJson(Map<String, dynamic>.from(item)))
+        .where((d) => d.field.isNotEmpty)
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+  }
+
+  /// Create auditor (Profil + Data Dukung) via multipart. Mengembalikan `ref`.
+  Future<String> save(AuditorProfilPayload payload) async {
+    final res = await _service.saveAuditor(await payload.toFormData());
+    return pickString(res, const ['ref', 'auditor_ref', 'ref_auditor']) ?? '';
+  }
+
+  /// Update auditor: kirim ref + hanya file dokumen yang berubah.
+  Future<void> update(String ref, AuditorProfilPayload payload) async {
+    await _service.updateAuditor(await payload.toFormData(ref: ref));
+  }
+
+  /// Simpan satu Sertifikasi Teknis untuk auditor [ref].
+  Future<void> saveSertifikasiTeknis({
+    required String refAuditor,
+    required String namaPelatihan,
+    required String tahun,
+    required String lembaga,
+    required FileItem sertifikatFile,
+  }) async {
+    final form = await buildSertifikasiTeknisFormData(
+      refAuditor: refAuditor,
+      namaPelatihan: namaPelatihan,
+      tahun: tahun,
+      lembaga: lembaga,
+      sertifikatFile: sertifikatFile,
+    );
+    await _service.simpanSertifikasiTeknis(form);
+  }
+
   Future<void> delete(String ref) => _service.deleteAuditor(ref);
 }

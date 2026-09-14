@@ -154,6 +154,31 @@ void main() {
     });
   });
 
+  group('AuditorService.loadAuditorDokumenDefs', () {
+    test('fetches Data Dukung definitions via POST (no ref)', () async {
+      when(() => mockDio.post(any())).thenAnswer(
+        (_) async => makeResponse({
+          'code': 200,
+          'success': true,
+          'data': [
+            {'id': 1, 'nama_dokumen': 'KTP', 'field': 'ktp_file', 'order': 1},
+            {
+              'id': 3,
+              'nama_dokumen': 'Portofolio Auditor',
+              'field': 'portofolio',
+              'order': 3
+            },
+          ],
+        }),
+      );
+
+      final result = await auditorService.loadAuditorDokumenDefs();
+      expect(result, hasLength(2));
+      expect(result.first['field'], 'ktp_file');
+      verify(() => mockDio.post('auditor/dokumen/view')).called(1);
+    });
+  });
+
   group('AuditorService.saveAuditor', () {
     test('posts data and returns response', () async {
       when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(

@@ -25,3 +25,9 @@ final kabupatenListProvider =
   final repo = ref.watch(masterDataRepoProvider);
   return repo.getKabupaten(provinsiId: provinsiId);
 });
+
+final agamaListProvider =
+    FutureProvider.autoDispose<List<AgamaModel>>((ref) async {
+  final repo = ref.watch(masterDataRepoProvider);
+  return repo.getAgama();
+});

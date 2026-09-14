@@ -5,12 +5,12 @@ import '../../core/constants/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/models/auditor_model.dart';
 import '../../providers/auditor_provider.dart';
-import '../registration/steps/step4_auditor.dart';
 import '../shared/blue_header_band.dart';
 import '../shared/cached_remote_image.dart';
 import '../shared/header_filter_pills.dart';
 import '../shared/header_title.dart';
 import 'auditor_detail_screen.dart';
+import 'form/auditor_form_screen.dart';
 
 enum _Filter { semua, aktif, verifikasi, tidakAktif }
 
@@ -95,7 +95,7 @@ class _AuditorListScreenState extends ConsumerState<AuditorListScreen> {
             title: 'Kelola Auditor',
             subtitle: '${all.length} auditor terdaftar',
             trailing: FilledButton.icon(
-              onPressed: () => showAuditorSheet(context, ref),
+              onPressed: () => openAuditorForm(context),
               icon: const Icon(Icons.add_rounded, size: 18),
               label: const Text('Tambah'),
               style: FilledButton.styleFrom(
@@ -241,7 +241,7 @@ class _AuditorListScreenState extends ConsumerState<AuditorListScreen> {
                       if (all.isEmpty) ...[
                         const SizedBox(height: 8),
                         TextButton(
-                          onPressed: () => showAuditorSheet(context, ref),
+                          onPressed: () => openAuditorForm(context),
                           child: const Text('Tambah Auditor'),
                         ),
                       ],

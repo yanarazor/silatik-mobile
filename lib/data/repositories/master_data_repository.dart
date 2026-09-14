@@ -10,4 +10,6 @@ class MasterDataRepository {
 
   Future<List<KabupatenModel>> getKabupaten({String? provinsiId}) =>
       _service.getKabupaten(provinsiId: provinsiId);
+
+  Future<List<AgamaModel>> getAgama() => _service.getAgama();
 }

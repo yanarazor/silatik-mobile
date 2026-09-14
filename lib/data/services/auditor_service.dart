@@ -19,14 +19,21 @@ class AuditorService {
     return Map<String, dynamic>.from(res.data as Map);
   }
 
-  // POST /api/auditor/save
-  Future<Map<String, dynamic>> saveAuditor(Map<String, dynamic> data) async {
-    final res = await _dio.post(ApiEndpoints.auditorSave, data: data);
-    return res.data;
+  // POST /api/auditor/dokumen/view (tanpa ref) → daftar definisi Data Dukung.
+  // Dipakai saat create untuk tahu nama field multipart tiap dokumen.
+  Future<List<dynamic>> loadAuditorDokumenDefs() async {
+    final res = await _dio.post(ApiEndpoints.auditorDokumenView);
+    return extractList(res.data);
   }
 
-  // POST /api/auditor/update
-  Future<void> updateAuditor(Map<String, dynamic> data) async {
+  // POST /api/auditor/save (multipart). [data] boleh Map atau FormData.
+  Future<Map<String, dynamic>> saveAuditor(Object data) async {
+    final res = await _dio.post(ApiEndpoints.auditorSave, data: data);
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  // POST /api/auditor/update (multipart). [data] boleh Map atau FormData.
+  Future<void> updateAuditor(Object data) async {
     await _dio.post(ApiEndpoints.auditorUpdate, data: data);
   }
 
@@ -57,8 +64,9 @@ class AuditorService {
     await _dio.post(ApiEndpoints.auditorSaveDokumen, data: formData);
   }
 
-  // POST /api/auditor/simpansertifikasiteknis
-  Future<void> simpanSertifikasiTeknis(Map<String, dynamic> data) async {
+  // POST /api/auditor/simpansertifikasiteknis (multipart). [data] boleh Map
+  // atau FormData.
+  Future<void> simpanSertifikasiTeknis(Object data) async {
     await _dio.post(ApiEndpoints.auditorSimpanSertif, data: data);
   }
 

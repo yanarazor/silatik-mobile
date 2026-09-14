@@ -351,6 +351,33 @@ class AuditorCertificate {
       };
 }
 
+class AuditorDokumenDef {
+  final String id;
+  final String namaDokumen;
+  final String field;
+  final bool fileRequired;
+  final int order;
+
+  const AuditorDokumenDef({
+    required this.id,
+    required this.namaDokumen,
+    required this.field,
+    required this.fileRequired,
+    required this.order,
+  });
+
+  factory AuditorDokumenDef.fromJson(Map<String, dynamic> json) {
+    return AuditorDokumenDef(
+      id: (json['id'] ?? '').toString(),
+      namaDokumen: (json['nama_dokumen'] ?? json['nama'] ?? '').toString(),
+      field: (json['field'] ?? json['kolom'] ?? '').toString(),
+      // file_required boleh 1/0/true; anggap wajib kecuali eksplisit 0/false.
+      fileRequired: parseInt(json['file_required']) != 0,
+      order: parseInt(json['order']) ?? 0,
+    );
+  }
+}
+
 /// Satu dokumen pendukung auditor dari GET /auditor/dokumen/view?ref=…
 class AuditorDocument {
   final String id;

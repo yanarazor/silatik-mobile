@@ -12,6 +12,22 @@ class ProvinsiModel {
   }
 }
 
+class AgamaModel {
+  final String id;
+  final String nama;
+
+  AgamaModel({required this.id, required this.nama});
+
+  factory AgamaModel.fromJson(Map<String, dynamic> json) {
+    return AgamaModel(
+      id: (json['id'] ?? json['kode'] ?? json['agama_id'] ?? '').toString(),
+      // Backend agama memakai key `value` untuk nama.
+      nama: (json['value'] ?? json['nama'] ?? json['nama_agama'] ?? json['name'] ?? '')
+          .toString(),
+    );
+  }
+}
+
 class KabupatenModel {
   final String id;
   final String nama;

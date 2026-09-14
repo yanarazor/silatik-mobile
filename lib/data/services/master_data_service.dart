@@ -33,4 +33,13 @@ class MasterDataService {
         .map((e) => KabupatenModel.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
+
+  Future<List<AgamaModel>> getAgama() async {
+    final response = await _dio.get(ApiEndpoints.mastersAgama);
+    final items = extractList(response.data);
+    return items
+        .whereType<Map>()
+        .map((e) => AgamaModel.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
 }

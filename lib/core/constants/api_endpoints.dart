@@ -52,6 +52,7 @@
   static const String auditorView = 'latik/auditor/view'; // + /{ref}
   static const String auditorSaveDokumen = 'auditor/savedokumen';
   static const String auditorGetDokumen = 'auditor/dokumen';
+  static const String auditorDokumenView = 'auditor/dokumen/view';
   static const String auditorSimpanSertif = 'auditor/simpansertifikasiteknis';
   static const String auditorUpdateSertif = 'auditor/updatesertifikasiteknis';
   static const String auditorDeleteSertif =
@@ -70,6 +71,8 @@
 
   // MASTER DATA
   static const String kabupaten = 'kabupaten';
+  static const String provinsi = 'provinsi';
+  static const String mastersAgama = 'masters/agama';
   static const String dokumenPendukungAktif = 'dokumen_pendukung/aktif';
   static const String faqs = 'faqs';
   static const String faqsAll = 'faqs/all';

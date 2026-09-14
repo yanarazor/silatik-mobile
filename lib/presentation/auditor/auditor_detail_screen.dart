@@ -10,6 +10,7 @@ import '../../data/models/master_data_model.dart';
 import '../../providers/auditor_provider.dart';
 import '../../providers/master_data_provider.dart';
 import '../shared/cached_remote_image.dart';
+import 'form/auditor_form_screen.dart';
 
 class AuditorDetailScreen extends ConsumerStatefulWidget {
   final AuditorModel auditor;
@@ -42,6 +43,7 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
           ),
         ),
         backgroundColor: AppColors.primary,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -758,9 +760,12 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
           height: 52,
           width: double.infinity,
           child: FilledButton.icon(
-            // ponytail: alur edit auditor terpisah; biarkan no-op sampai ada
-            // full-screen editor auditor.
-            onPressed: () {},
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final changed =
+                  await openAuditorForm(context, initial: _auditor);
+              if (changed == true && mounted) navigator.pop();
+            },
             icon: const Icon(Icons.edit_square, size: 20),
             label: const Text(
               'Edit Auditor',
@@ -781,10 +786,10 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
           height: 50,
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: () => _confirmNonaktifkan(),
-            icon: const Icon(Icons.person_off, size: 20),
+            onPressed: () => _confirmHapus(),
+            icon: const Icon(Icons.delete_outline, size: 20),
             label: const Text(
-              'Nonaktifkan Auditor',
+              'Hapus Auditor',
               style: TextStyle(
                 color: AppColors.error,
                 fontSize: 15,
@@ -804,11 +809,46 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
     );
   }
 
-  void _confirmNonaktifkan() {
-    // ponytail: nonaktifkan = auditor/update (status_aktif=0); alurnya belum
-    // dibangun, kasih umpan balik eksplisit dulu, upgrade saat kelola auditor
-    // hadir.
-    _showSnackBar(context, 'Alur nonaktifkan auditor belum tersedia');
+  Future<void> _confirmHapus() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus Auditor'),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus auditor ${_auditor.nama}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      await ref.read(auditorRepoProvider).delete(_auditor.id);
+      ref.invalidate(auditorListProvider);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Auditor dihapus')),
+      );
+      navigator.pop();
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Gagal menghapus auditor: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   // -------------------------------------------------------- Perpanjangan
@@ -1024,12 +1064,6 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
         invalidMessage: 'URL tidak valid',
         failureMessage: 'Gagal membuka tautan',
       );
-
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
 }
 
 class _SectionCard extends StatefulWidget {
