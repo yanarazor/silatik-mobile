@@ -11,6 +11,7 @@ import '../../data/models/auditor_model.dart';
 import '../../data/models/master_data_model.dart';
 import '../../providers/auditor_provider.dart';
 import '../../providers/master_data_provider.dart';
+import '../shared/cached_remote_image.dart';
 
 class AuditorDetailScreen extends ConsumerStatefulWidget {
   final AuditorModel auditor;
@@ -139,13 +140,10 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       clipBehavior: Clip.antiAlias,
-      child: url.isNotEmpty
-          ? Image.network(
-              url,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _buildInitialsAvatar(),
-            )
-          : _buildInitialsAvatar(),
+      child: CachedRemoteImage(
+        url: url,
+        fallback: _buildInitialsAvatar(),
+      ),
     );
   }
 

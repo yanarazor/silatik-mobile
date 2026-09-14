@@ -7,6 +7,7 @@ import '../../data/models/auditor_model.dart';
 import '../../providers/auditor_provider.dart';
 import '../registration/steps/step4_auditor.dart';
 import '../shared/blue_header_band.dart';
+import '../shared/cached_remote_image.dart';
 import '../shared/header_filter_pills.dart';
 import '../shared/header_title.dart';
 import 'auditor_detail_screen.dart';
@@ -416,12 +417,11 @@ class _AuditorCard extends StatelessWidget {
       child: url.isNotEmpty
           ? ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                url,
+              child: CachedRemoteImage(
+                url: url,
                 width: 48,
                 height: 48,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _initialsText(initials),
+                fallback: _initialsText(initials),
               ),
             )
           : _initialsText(initials),
