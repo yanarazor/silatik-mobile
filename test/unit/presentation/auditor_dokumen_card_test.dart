@@ -68,4 +68,33 @@ void main() {
     await tester.pump(); // resolve future
     expect(find.text('2.00 MB'), findsOneWidget);
   });
+
+  testWidgets('foto variant uses image format hint on empty state',
+      (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: AuditorDokumenCard(
+              title: 'Foto Auditor',
+              requiredDoc: true,
+              file: null,
+              onPick: _noop,
+              onPreview: _noop,
+              leadingIcon: Icons.image_outlined,
+              leadingColor: Colors.blue,
+              formatHint: 'Format JPG/PNG (maks. 10 MB)',
+              imageThumbnail: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    // Judul dirender via RichText; cukup verifikasi hint format gambar.
+    expect(find.text('Format JPG/PNG (maks. 10 MB)'), findsOneWidget);
+    expect(find.text('Pilih Berkas'), findsOneWidget);
+  });
 }
+
+void _noop() {}

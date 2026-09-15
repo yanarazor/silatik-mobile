@@ -3,15 +3,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/url_opener.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/models/master_data_model.dart';
 import '../../../data/models/registrasi_model.dart';
 import '../../../providers/auditor_form_provider.dart';
 import '../../../providers/master_data_provider.dart';
+import 'auditor_dokumen_card.dart';
 
 /// Batas ukuran foto/sertifikat per dokumen (10MB, sesuai handover doc).
 /// FileUtils.maxSizeBytes tetap 5MB untuk alur registrasi lain.
@@ -282,8 +285,8 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
                 prefixIcon: Icon(Icons.notes_outlined),
               ),
             ),
-            _label('Foto Auditor', theme),
-            _fotoPicker(theme),
+            const SizedBox(height: AppTheme.spacing16),
+            _fotoCard(),
             const SizedBox(height: AppTheme.spacing24),
             ElevatedButton(
               onPressed: () {
@@ -432,48 +435,31 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
     );
   }
 
-  Widget _fotoPicker(ThemeData theme) {
-    if (_foto == null) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: OutlinedButton.icon(
-          onPressed: _pickFoto,
-          icon: const Icon(Icons.cloud_upload_outlined, size: 18),
-          label: const Text('Unggah Foto'),
-        ),
-      );
-    }
-    return Container(
-      margin: const EdgeInsets.only(top: AppTheme.spacing8),
-      padding: const EdgeInsets.all(AppTheme.spacing12),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.image_outlined, color: AppColors.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              _foto!.name,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-          IconButton(
-            onPressed: _pickFoto,
-            icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
-          ),
-          IconButton(
-            onPressed: () => setState(() => _foto = null),
-            icon: const Icon(Icons.delete_outline, color: AppColors.error),
-          ),
-        ],
-      ),
+  Widget _fotoCard() {
+    return AuditorDokumenCard(
+      title: 'Foto Auditor',
+      requiredDoc: true,
+      file: _foto,
+      onPick: _pickFoto,
+      onPreview: _previewFoto,
+      leadingIcon: Icons.image_outlined,
+      leadingColor: AppColors.primary,
+      formatHint: 'Format JPG/PNG (maks. 10 MB)',
+      imageThumbnail: true,
     );
+  }
+
+  Future<void> _previewFoto() async {
+    final path = _foto?.path.trim() ?? '';
+    if (path.isEmpty) return;
+    if (path.toLowerCase().startsWith('http')) {
+      await openFileUrl(context, path);
+      return;
+    }
+    final result = await OpenFilex.open(path);
+    if (result.type != ResultType.done && mounted) {
+      _snack('Gagal membuka foto: ${result.message}');
+    }
   }
 
   Widget _label(String text, ThemeData theme, {bool isRequired = true}) {

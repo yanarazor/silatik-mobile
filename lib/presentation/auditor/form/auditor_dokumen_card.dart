@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/file_utils.dart';
 import '../../../data/models/registrasi_model.dart';
 import '../../../providers/auditor_form_provider.dart';
+import '../../shared/cached_remote_image.dart';
 
 class AuditorDokumenCard extends ConsumerWidget {
   const AuditorDokumenCard({
@@ -15,6 +18,10 @@ class AuditorDokumenCard extends ConsumerWidget {
     required this.file,
     required this.onPick,
     required this.onPreview,
+    this.leadingIcon = Icons.picture_as_pdf,
+    this.leadingColor = AppColors.error,
+    this.formatHint = 'Format PDF (maks. 10 MB)',
+    this.imageThumbnail = false,
   });
 
   final String title;
@@ -24,6 +31,13 @@ class AuditorDokumenCard extends ConsumerWidget {
 
   /// Dipanggil saat "Pratinjau" ditekan (buka viewer PDF/URL bersama).
   final VoidCallback onPreview;
+
+  final IconData leadingIcon;
+  final Color leadingColor;
+
+  final String formatHint;
+
+  final bool imageThumbnail;
 
   bool get _isWebUrl {
     final p = file?.path.trim().toLowerCase() ?? '';
@@ -112,7 +126,7 @@ class AuditorDokumenCard extends ConsumerWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              'Format PDF (maks. 10 MB)',
+              formatHint,
               style: theme.textTheme.bodySmall
                   ?.copyWith(color: AppColors.textSecondary),
             ),
@@ -136,16 +150,7 @@ class AuditorDokumenCard extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
             child: Row(
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                  ),
-                  child: const Icon(Icons.picture_as_pdf,
-                      color: AppColors.error, size: 22),
-                ),
+                _leadingTile(),
                 const SizedBox(width: AppTheme.spacing12),
                 Expanded(
                   child: Column(
@@ -192,6 +197,40 @@ class AuditorDokumenCard extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _leadingTile() {
+    if (imageThumbnail && file != null) {
+      final path = file!.path;
+      final child = _isWebUrl
+          ? CachedRemoteImage(
+              url: path,
+              width: 40,
+              height: 40,
+              fallback: Icon(leadingIcon, color: leadingColor, size: 22),
+            )
+          : Image.file(
+              File(path),
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  Icon(leadingIcon, color: leadingColor, size: 22),
+            );
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        child: SizedBox(width: 40, height: 40, child: child),
+      );
+    }
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: leadingColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      child: Icon(leadingIcon, color: leadingColor, size: 22),
     );
   }
 
