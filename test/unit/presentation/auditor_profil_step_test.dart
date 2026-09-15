@@ -121,11 +121,52 @@ void main() {
     expect(form.control('email').value, 'budi@example.com');
     expect(find.text('Budi Santoso'), findsWidgets);
   });
+
+  testWidgets('edit mode prefills kabupaten once its list loads',
+      (tester) async {
+    const ref = 'REF-2';
+    final notifier = AuditorFormNotifier(MockAuditorRepository());
+    notifier.initFromAuditor(
+      _auditorWithWilayah(ref, provinsi: '32', kabupaten: '3216'),
+      const <AuditorDocument>[],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          provinsiListProvider.overrideWith(
+              (ref) async => [ProvinsiModel(id: '32', nama: 'Jawa Barat')]),
+          kabupatenListProvider('32').overrideWith((ref) async =>
+              [KabupatenModel(id: '3216', nama: 'Kab. Bekasi', provinsiId: '32')]),
+          agamaListProvider.overrideWith((ref) async => <AgamaModel>[]),
+          auditorFormProvider(ref).overrideWith((_) => notifier),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: AuditorProfilStep(formKey: ref, onNext: _noop),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final form =
+        tester.widget<ReactiveForm>(find.byType(ReactiveForm)).formGroup;
+    expect(form.control('provinsi').value, '32');
+    expect(form.control('kabupaten').value, '3216');
+  });
 }
 
 void _noop() {}
 
-AuditorModel _auditor(String ref) => AuditorModel(
+AuditorModel _auditor(String ref) => _auditorWithWilayah(ref);
+
+AuditorModel _auditorWithWilayah(
+  String ref, {
+  String provinsi = '',
+  String kabupaten = '',
+}) =>
+    AuditorModel(
       id: ref,
       nama: 'Budi Santoso',
       email: 'budi@example.com',
@@ -133,8 +174,8 @@ AuditorModel _auditor(String ref) => AuditorModel(
       tempatLahir: 'Jakarta',
       tanggalLahir: DateTime(1990, 5, 21),
       alamat: '',
-      provinsi: '',
-      kabupaten: '',
+      provinsi: provinsi,
+      kabupaten: kabupaten,
       kodePos: '',
       agama: '',
       phone: '08123456789',

@@ -39,7 +39,8 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
   DateTime? _tanggalLahir;
   FileItem? _foto;
   bool _prefilled = false;
-  bool _prefilling = false;
+  String? _lastProvinsi;
+  String? _pendingKabupaten;
 
   @override
   void initState() {
@@ -58,9 +59,11 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
       'status': FormControl<String>(value: '1'),
       'keterangan': FormControl<String>(),
     });
-    // Reset kabupaten saat provinsi berganti (kecuali saat prefill).
-    form.control('provinsi').valueChanges.listen((_) {
-      if (_prefilling) return;
+    form.control('provinsi').valueChanges.listen((value) {
+      final next = value?.toString();
+      if (next == _lastProvinsi) return; // tak ada perubahan nyata
+      _lastProvinsi = next;
+      _pendingKabupaten = null; // pilihan lama tak relevan untuk provinsi baru
       form.control('kabupaten').reset();
       if (mounted) setState(() {});
     });
@@ -77,7 +80,8 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
         p.tanggalLahir != null ||
         p.foto != null;
     if (!hasData) return; // tunggu draft terisi (async edit)
-    _prefilling = true;
+    _lastProvinsi = p.provinsi;
+    _pendingKabupaten = p.kabupaten.isEmpty ? null : p.kabupaten;
     form.patchValue({
       'nama': p.nama,
       'nik': p.nik,
@@ -91,7 +95,6 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
       'status': p.status.isEmpty ? '1' : p.status,
       'keterangan': p.keterangan,
     });
-    _prefilling = false;
     _tanggalLahir = p.tanggalLahir;
     _foto = p.foto;
     _prefilled = true;
@@ -373,19 +376,31 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
         hint: 'Gagal memuat kabupaten',
         onRetry: () => ref.invalidate(kabupatenListProvider(provinsiId)),
       ),
-      data: (list) => ReactiveDropdownField<String>(
-        formControlName: 'kabupaten',
-        isExpanded: true,
-        decoration: const InputDecoration(
-          hintText: 'Pilih Kota/Kabupaten',
-          prefixIcon: Icon(Icons.location_on_outlined),
-        ),
-        // Kirim id sesuai kontrak backend (bukan nama).
-        items: list
-            .map((KabupatenModel e) =>
-                DropdownMenuItem(value: e.id, child: Text(e.nama)))
-            .toList(),
-      ),
+      data: (list) {
+        final pending = _pendingKabupaten;
+        if (pending != null &&
+            form.control('kabupaten').value != pending &&
+            list.any((e) => e.id == pending)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            form.control('kabupaten').value = pending;
+            _pendingKabupaten = null;
+            setState(() {});
+          });
+        }
+        return ReactiveDropdownField<String>(
+          formControlName: 'kabupaten',
+          isExpanded: true,
+          decoration: const InputDecoration(
+            hintText: 'Pilih Kota/Kabupaten',
+            prefixIcon: Icon(Icons.location_on_outlined),
+          ),
+          items: list
+              .map((KabupatenModel e) =>
+                  DropdownMenuItem(value: e.id, child: Text(e.nama)))
+              .toList(),
+        );
+      },
     );
   }
 
