@@ -43,13 +43,11 @@ class LatikService {
   Future<void> saveDokumenBatch(List<DokumenUpload> uploads) async {
     final map = <String, dynamic>{};
     for (final u in uploads) {
-      map['file_${u.id}'] = await MultipartFile.fromFile(
-        u.file.path,
-        filename: u.fileName,
-      );
-      if (u.nomor != null && u.nomor!.isNotEmpty) {
-        map['nomor_${u.id}'] = u.nomor;
-      }
+      final file = u.file;
+      map['file_${u.id}'] = file != null
+          ? await MultipartFile.fromFile(file.path, filename: u.fileName)
+          : 'undefined';
+      map['nomor_${u.id}'] = u.nomor ?? '';
       if (u.tanggal != null && u.tanggal!.isNotEmpty) {
         map['tanggal_${u.id}'] = u.tanggal;
       }
@@ -138,15 +136,15 @@ class LatikService {
 
 class DokumenUpload {
   final int id;
-  final File file;
-  final String fileName;
+  final File? file;
+  final String? fileName;
   final String? nomor;
   final String? tanggal;
 
   const DokumenUpload({
     required this.id,
-    required this.file,
-    required this.fileName,
+    this.file,
+    this.fileName,
     this.nomor,
     this.tanggal,
   });

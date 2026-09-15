@@ -131,26 +131,36 @@ class _DokumenBerkasEditScreenState
         return null;
       }
 
-      if (e.newlyPicked && e.file != null) {
-        uploads.add(DokumenUpload(
-          id: id,
-          file: File(e.file!.path),
-          fileName: e.file!.name,
-          nomor: d.nomorRequired ? e.nomor.text.trim() : _nullIfEmpty(e.nomor.text),
-          tanggal: e.tanggal == null ? null : _formatDate(e.tanggal!),
-        ));
-      }
+      uploads.add(DokumenUpload(
+        id: id,
+        file: e.newlyPicked && e.file != null ? File(e.file!.path) : null,
+        fileName: e.newlyPicked ? e.file?.name : null,
+        nomor: e.nomor.text.trim(),
+        tanggal: e.tanggal == null ? null : _formatDate(e.tanggal!),
+      ));
     }
     return uploads;
   }
 
+  bool _hasAnyChange() {
+    for (final d in _docs) {
+      final id = d.id;
+      if (id == null) continue;
+      final e = _edits[id]!;
+      if (e.newlyPicked) return true;
+      if (e.nomor.text.trim() != d.nomor.trim()) return true;
+      if (_formatOrEmpty(e.tanggal) != _originalTanggal(d)) return true;
+    }
+    return false;
+  }
+
   Future<void> _submit() async {
-    final uploads = _buildUploads();
-    if (uploads == null) return;
-    if (uploads.isEmpty) {
-      _snack('Tidak ada perubahan berkas untuk disimpan');
+    if (!_hasAnyChange()) {
+      _snack('Tidak ada perubahan untuk disimpan');
       return;
     }
+    final uploads = _buildUploads();
+    if (uploads == null) return;
     setState(() => _submitting = true);
     try {
       await ref.read(latikServiceProvider).saveDokumenBatch(uploads);
@@ -327,7 +337,10 @@ class _DokumenBerkasEditScreenState
     return '$dd-$mm-${d.year}';
   }
 
-  static String? _nullIfEmpty(String v) => v.trim().isEmpty ? null : v.trim();
+  static String _formatOrEmpty(DateTime? d) => d == null ? '' : _formatDate(d);
+
+  static String _originalTanggal(ProfilDokumen d) =>
+      _formatOrEmpty(parseFlexibleDate(d.tanggal));
 
   static String _fileNameFromUrl(String url) {
     final clean = url.split('?').first;

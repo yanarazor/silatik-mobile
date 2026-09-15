@@ -302,7 +302,7 @@ void main() {
       return f;
     }
 
-    test('mengirim key dinamis file_/nomor_/tanggal_ per id', () async {
+    test('file baru dikirim sebagai MultipartFile + nomor_/tanggal_', () async {
       when(() => mockDio.post(any(), data: any(named: 'data')))
           .thenAnswer((_) async => makeResponse(null));
 
@@ -314,8 +314,6 @@ void main() {
           nomor: '123/AKTA/2025',
           tanggal: '15-04-2025',
         ),
-        // Dokumen tanpa nomor/tanggal: hanya file_ yang dikirim.
-        DokumenUpload(id: 9, file: makePdf('struktur.pdf'), fileName: 'struktur.pdf'),
       ]);
 
       final captured = verify(() => mockDio.post(
@@ -323,11 +321,7 @@ void main() {
             data: captureAny(named: 'data'),
           )).captured.single as FormData;
 
-      final fieldKeys = captured.fields.map((e) => e.key).toSet();
-      final fileKeys = captured.files.map((e) => e.key).toSet();
-
-      expect(fileKeys, {'file_11', 'file_9'});
-      expect(fieldKeys, {'nomor_11', 'tanggal_11'});
+      expect(captured.files.map((e) => e.key), ['file_11']);
       expect(
         captured.fields.firstWhere((e) => e.key == 'nomor_11').value,
         '123/AKTA/2025',
@@ -338,18 +332,13 @@ void main() {
       );
     });
 
-    test('nomor/tanggal kosong tidak dikirim', () async {
+    test('full-state: file tak diganti dikirim string "undefined"', () async {
       when(() => mockDio.post(any(), data: any(named: 'data')))
           .thenAnswer((_) async => makeResponse(null));
 
       await latikService.saveDokumenBatch([
-        DokumenUpload(
-          id: 6,
-          file: makePdf('x.pdf'),
-          fileName: 'x.pdf',
-          nomor: '',
-          tanggal: null,
-        ),
+        DokumenUpload(id: 11, file: makePdf('akta.pdf'), fileName: 'akta.pdf', nomor: 'A/1'),
+        const DokumenUpload(id: 9, nomor: 'B/2'),
       ]);
 
       final captured = verify(() => mockDio.post(
@@ -357,8 +346,33 @@ void main() {
             data: captureAny(named: 'data'),
           )).captured.single as FormData;
 
-      expect(captured.files.map((e) => e.key), ['file_6']);
-      expect(captured.fields, isEmpty);
+      expect(captured.files.map((e) => e.key), ['file_11']);
+      expect(
+        captured.fields.firstWhere((e) => e.key == 'file_9').value,
+        'undefined',
+      );
+      expect(captured.fields.firstWhere((e) => e.key == 'nomor_11').value, 'A/1');
+      expect(captured.fields.firstWhere((e) => e.key == 'nomor_9').value, 'B/2');
+    });
+
+    test('nomor kosong tetap dikirim (replace, bukan patch)', () async {
+      when(() => mockDio.post(any(), data: any(named: 'data')))
+          .thenAnswer((_) async => makeResponse(null));
+
+      await latikService.saveDokumenBatch([
+        const DokumenUpload(id: 6, nomor: '', tanggal: null),
+      ]);
+
+      final captured = verify(() => mockDio.post(
+            'latik/savedokumen',
+            data: captureAny(named: 'data'),
+          )).captured.single as FormData;
+
+      final fieldMap = {for (final f in captured.fields) f.key: f.value};
+      expect(captured.files, isEmpty);
+      expect(fieldMap['file_6'], 'undefined');
+      expect(fieldMap['nomor_6'], ''); // dikirim kosong, bukan diomit
+      expect(fieldMap.containsKey('tanggal_6'), isFalse); // tanggal kosong diomit
     });
   });
 }
