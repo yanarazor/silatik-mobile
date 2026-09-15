@@ -41,21 +41,9 @@ class LatikProfile {
   /// Institution ref used by update/edit calls.
   final String latikRef;
 
-  /// KAN accreditation status text, and whether any KAN certificate/number
-  /// is present.
-  final String akreditasiKanStatus;
-  final bool hasKanCertificate;
-
   /// Number of auditors reported by the profile payload (0 when absent; the
   /// screen falls back to the auditor list length).
   final int auditorCount;
-
-  /// Display value for KAN accreditation: the status text, else 'Terdaftar'
-  /// when a certificate is present, else '-'.
-  String get akreditasiValue {
-    if (akreditasiKanStatus.isNotEmpty) return akreditasiKanStatus;
-    return hasKanCertificate ? 'Terdaftar' : '-';
-  }
 
   /// Raw registration-scope source (`lingkup_pendaftaran` and variants),
   /// passed to `latikScopeLabels` for display. Dynamic because it may be a
@@ -96,8 +84,6 @@ class LatikProfile {
     this.strTanggalAwal,
     this.strTanggalAkhir,
     this.latikRef = '',
-    this.akreditasiKanStatus = '',
-    this.hasKanCertificate = false,
     this.auditorCount = 0,
     this.scopeSource,
     this.documents = const [],
@@ -171,25 +157,6 @@ class LatikProfile {
       strTanggalAkhir: parseFlexibleDate(
           pickString(json, const ['str_tanggal_akhir'], deep: true)),
       latikRef: get(const ['ref', 'latik_ref', 'ref_latik']),
-      akreditasiKanStatus: get(const [
-        'nama_status_kan',
-        'status_akreditasi_kan',
-        'status_kan',
-        'akreditasi_kan',
-        'status_akreditasi',
-      ]),
-      hasKanCertificate: get(const [
-        'nomor_kan',
-        'no_kan',
-        'nomor_sertifikat_kan',
-        'nomor_sertifikat',
-        'file_cer_kan',
-        'file_kan',
-        'sertifikat_kan',
-        'file_sertifikat_kan',
-        'ruang_lingkup_kan',
-        'ruang_lingkup_akreditasi',
-      ]).isNotEmpty,
       auditorCount: parseInt(pickString(
               json,
               const [
@@ -211,6 +178,8 @@ class LatikProfile {
     );
   }
 
+  /// STR document URL from `file_str` (and variants), used to open the STR
+  /// file. Empty when absent.
   String get fileStr =>
       pickString(raw, const ['file_str', 'str_file'],
           deep: true, fallback: '')!;

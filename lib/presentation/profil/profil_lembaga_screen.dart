@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -70,6 +72,12 @@ class ProfilLembagaScreen extends ConsumerWidget {
               _StatsRow(data: data, auditorCount: auditorCount),
               const SizedBox(height: 16),
               _InfoSection(data: data),
+              if (_LatLng.parse(data.latitude, data.longitude) != null) ...[
+                const SizedBox(height: 16),
+                _LocationCard(
+                  coord: _LatLng.parse(data.latitude, data.longitude)!,
+                ),
+              ],
             ],
           );
         },
@@ -332,7 +340,7 @@ class _IdentityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final str = _strInfo(data);
-    final badges = _statusBadges(data, str);
+    final badges = _statusBadges(data);
 
     final displayName =
         data.namaLatik.isEmpty ? 'Nama Lembaga Belum Diisi' : data.namaLatik;
@@ -518,31 +526,41 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = data.auditorCount > 0 ? data.auditorCount : auditorCount;
-    final akreditasiValue = data.akreditasiValue;
+    final statusValue =
+        data.statusText.isEmpty ? 'Belum Terverifikasi' : data.statusText;
+    final verified = data.isVerified;
 
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            iconBg: _blueTint,
-            iconColor: AppColors.primary,
-            icon: Icons.group_rounded,
-            label: 'Total Auditor',
-            value: '$count Orang',
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 3,
+            child: _StatCard(
+              iconBg: _blueTint,
+              iconColor: AppColors.primary,
+              icon: Icons.group_rounded,
+              label: 'Total Auditor',
+              value: '$count Orang',
+            ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            iconBg: _green.withValues(alpha: 0.12),
-            iconColor: _green,
-            icon: Icons.verified_rounded,
-            label: 'Akreditasi KAN',
-            value: akreditasiValue,
-            valueColor: akreditasiValue == 'Terdaftar' ? _green : null,
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 4,
+            child: _StatCard(
+              iconBg: verified
+                  ? _green.withValues(alpha: 0.12)
+                  : _amber.withValues(alpha: 0.12),
+              iconColor: verified ? _green : _amber,
+              icon: verified ? Icons.verified_rounded : Icons.pending_rounded,
+              label: 'Status Verifikasi',
+              value: statusValue,
+              valueColor: verified ? _green : _amber,
+              valueMaxLines: 2,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -588,9 +606,9 @@ class _InfoSection extends StatelessWidget {
           if (rows.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
-              child: const Text(
+              child: Text(
                 'Belum ada data informasi lembaga.',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 13,
                 ),
@@ -607,16 +625,37 @@ class _InfoSection extends StatelessWidget {
   }
 
   List<Widget> _buildRows() {
+    final noRegistrasi = data.noPendaftaran;
+    final nib = data.noNib;
+    final npwp = data.noNpwp;
     final nama = data.namaLatik;
     final email = data.email;
-    final telepon = data.phone;
     final alamat = data.fullAddress;
+    final telepon = data.phone;
     final website = data.website;
-    final npwp = data.noNpwp;
-    final nib = data.noNib;
+    final areaOperasional = data.areaOperasional;
     final scopes = latikScopeLabels(data.scopeSource);
 
     final rows = <Widget>[];
+    if (noRegistrasi.isNotEmpty) {
+      rows.add(_ValueRow(
+        label: 'Nomor Registrasi',
+        value: noRegistrasi,
+        mono: true,
+      ));
+    }
+    if (nib.isNotEmpty) {
+      rows.add(_ValueRow(
+        label: 'Nomor Induk Berusaha (NIB)',
+        value: nib,
+        mono: true,
+        trailing: const Icon(Icons.verified_rounded,
+            size: 16, color: Color(0xFF25B45B)),
+      ));
+    }
+    if (npwp.isNotEmpty) {
+      rows.add(_ValueRow(label: 'NPWP Institusi', value: npwp, mono: true));
+    }
     if (nama.isNotEmpty) {
       rows.add(_ValueRow(label: 'Nama Lembaga', value: nama));
     }
@@ -628,11 +667,11 @@ class _InfoSection extends StatelessWidget {
         onTap: () => _launchUrl(email, mailto: true),
       ));
     }
-    if (telepon.isNotEmpty) {
-      rows.add(_ValueRow(label: 'Nomor Telepon Kantor', value: telepon));
-    }
     if (alamat.isNotEmpty) {
       rows.add(_ValueRow(label: 'Alamat Lengkap', value: alamat));
+    }
+    if (telepon.isNotEmpty) {
+      rows.add(_ValueRow(label: 'Nomor Telepon Kantor', value: telepon));
     }
     if (website.isNotEmpty) {
       rows.add(_ValueRow(
@@ -644,17 +683,8 @@ class _InfoSection extends StatelessWidget {
         onTap: () => _launchUrl(website),
       ));
     }
-    if (npwp.isNotEmpty) {
-      rows.add(_ValueRow(label: 'NPWP Institusi', value: npwp, mono: true));
-    }
-    if (nib.isNotEmpty) {
-      rows.add(_ValueRow(
-        label: 'Nomor Induk Berusaha (NIB)',
-        value: nib,
-        mono: true,
-        trailing: const Icon(Icons.verified_rounded,
-            size: 16, color: Color(0xFF25B45B)),
-      ));
+    if (areaOperasional.isNotEmpty) {
+      rows.add(_ValueRow(label: 'Area Operasional', value: areaOperasional));
     }
     if (scopes.isNotEmpty) {
       rows.add(_ValueRow(
@@ -669,6 +699,139 @@ class _InfoSection extends StatelessWidget {
       ));
     }
     return rows;
+  }
+}
+
+class _LatLng {
+  const _LatLng(this.lat, this.lng);
+
+  final double lat;
+  final double lng;
+
+  static _LatLng? parse(String rawLat, String rawLng) {
+    final lat = double.tryParse(rawLat.trim());
+    final lng = double.tryParse(rawLng.trim());
+    if (lat == null || lng == null) return null;
+    if (lat == 0 && lng == 0) return null;
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    return _LatLng(lat, lng);
+  }
+
+  LatLng get latLng => LatLng(lat, lng);
+
+  String get osmPageUrl =>
+      'https://www.openstreetmap.org/?mlat=$lat&mlon=$lng#map=16/$lat/$lng';
+}
+
+class _LocationCard extends StatelessWidget {
+  const _LocationCard({required this.coord});
+
+  final _LatLng coord;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      child: InkWell(
+        onTap: () => openFileUrl(
+          context,
+          coord.osmPageUrl,
+          emptyMessage: 'Lokasi tidak tersedia',
+          failureMessage: 'Gagal membuka peta',
+        ),
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                SizedBox(
+                  width: 4,
+                  height: 16,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'Lokasi Lembaga',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: IgnorePointer(
+                child: SizedBox(
+                  height: 200,
+                  child: FlutterMap(
+                    options: MapOptions(
+                      initialCenter: coord.latLng,
+                      initialZoom: 16,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.none,
+                      ),
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'id.go.brin.silatik',
+                        maxZoom: 16,
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: coord.latLng,
+                            width: 44,
+                            height: 44,
+                            alignment: Alignment.bottomCenter,
+                            child: const Icon(
+                              Icons.location_on,
+                              color: AppColors.error,
+                              size: 40,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const _OsmAttribution(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OsmAttribution extends StatelessWidget {
+  const _OsmAttribution();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Align(
+      alignment: Alignment.bottomRight,
+      child: ColoredBox(
+        color: Colors.white70,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          child: Text(
+            '© OpenStreetMap',
+            style: TextStyle(fontSize: 9, color: AppColors.textSecondary),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -708,6 +871,7 @@ class _StatCard extends StatelessWidget {
     required this.label,
     required this.value,
     this.valueColor,
+    this.valueMaxLines = 1,
   });
 
   final Color iconBg;
@@ -716,6 +880,7 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String value;
   final Color? valueColor;
+  final int valueMaxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -748,12 +913,13 @@ class _StatCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  maxLines: 1,
+                  maxLines: valueMaxLines,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: valueColor ?? AppColors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
+                    height: 1.2,
                   ),
                 ),
               ],
@@ -1042,13 +1208,7 @@ _StrInfo? _strInfo(LatikProfile data) {
 
 // ponytail: status/semantik diturunkan dari teks+kode (mirror enums.dart);
 // status baru yang tak dikenal jatuh ke label teks apa adanya.
-List<_PillSpec> _statusBadges(LatikProfile data, _StrInfo? str) {
-  if (str?.statusSpec.label == 'Aktif') {
-    return const [
-      _PillSpec('Terverifikasi', _green),
-      _PillSpec('Valid', _green),
-    ];
-  }
+List<_PillSpec> _statusBadges(LatikProfile data) {
   final rawStatus = data.statusText.trim().toLowerCase();
   if (rawStatus.isNotEmpty &&
       (rawStatus == '4' ||
