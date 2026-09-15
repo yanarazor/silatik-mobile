@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:silatik_mobile/data/services/latik_service.dart';
@@ -279,6 +282,83 @@ void main() {
 
       await latikService.deletePengalaman('EXP-001');
       verify(() => mockDio.delete('latik/pengalaman/EXP-001')).called(1);
+    });
+  });
+
+  group('LatikService.saveDokumenBatch', () {
+    late Directory tmp;
+
+    setUp(() {
+      tmp = Directory.systemTemp.createTempSync('latik_batch_test');
+    });
+
+    tearDown(() {
+      if (tmp.existsSync()) tmp.deleteSync(recursive: true);
+    });
+
+    File makePdf(String name) {
+      final f = File('${tmp.path}/$name');
+      f.writeAsBytesSync([0x25, 0x50, 0x44, 0x46]); // "%PDF"
+      return f;
+    }
+
+    test('mengirim key dinamis file_/nomor_/tanggal_ per id', () async {
+      when(() => mockDio.post(any(), data: any(named: 'data')))
+          .thenAnswer((_) async => makeResponse(null));
+
+      await latikService.saveDokumenBatch([
+        DokumenUpload(
+          id: 11,
+          file: makePdf('akta.pdf'),
+          fileName: 'akta.pdf',
+          nomor: '123/AKTA/2025',
+          tanggal: '15-04-2025',
+        ),
+        // Dokumen tanpa nomor/tanggal: hanya file_ yang dikirim.
+        DokumenUpload(id: 9, file: makePdf('struktur.pdf'), fileName: 'struktur.pdf'),
+      ]);
+
+      final captured = verify(() => mockDio.post(
+            'latik/savedokumen',
+            data: captureAny(named: 'data'),
+          )).captured.single as FormData;
+
+      final fieldKeys = captured.fields.map((e) => e.key).toSet();
+      final fileKeys = captured.files.map((e) => e.key).toSet();
+
+      expect(fileKeys, {'file_11', 'file_9'});
+      expect(fieldKeys, {'nomor_11', 'tanggal_11'});
+      expect(
+        captured.fields.firstWhere((e) => e.key == 'nomor_11').value,
+        '123/AKTA/2025',
+      );
+      expect(
+        captured.fields.firstWhere((e) => e.key == 'tanggal_11').value,
+        '15-04-2025',
+      );
+    });
+
+    test('nomor/tanggal kosong tidak dikirim', () async {
+      when(() => mockDio.post(any(), data: any(named: 'data')))
+          .thenAnswer((_) async => makeResponse(null));
+
+      await latikService.saveDokumenBatch([
+        DokumenUpload(
+          id: 6,
+          file: makePdf('x.pdf'),
+          fileName: 'x.pdf',
+          nomor: '',
+          tanggal: null,
+        ),
+      ]);
+
+      final captured = verify(() => mockDio.post(
+            'latik/savedokumen',
+            data: captureAny(named: 'data'),
+          )).captured.single as FormData;
+
+      expect(captured.files.map((e) => e.key), ['file_6']);
+      expect(captured.fields, isEmpty);
     });
   });
 }

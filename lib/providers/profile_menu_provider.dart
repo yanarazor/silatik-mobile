@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/models/faq.dart';
 import '../data/models/latik_profile.dart';
+import '../data/models/profil_dokumen.dart';
 import '../data/models/user_profile.dart';
 import '../data/services/profile_menu_service.dart';
 import 'auth_provider.dart';
+import 'registrasi_provider.dart';
 
 final profileMenuServiceProvider = Provider((ref) => ProfileMenuService(ref.watch(dioProvider)));
 
@@ -20,4 +22,10 @@ final userProfileProvider = FutureProvider.autoDispose<UserProfile>((ref) {
 
 final faqProfileProvider = FutureProvider.autoDispose<List<Faq>>((ref) {
   return ref.watch(profileMenuServiceProvider).getFaqs();
+});
+
+final dokumenBerkasProvider =
+    FutureProvider.autoDispose<List<ProfilDokumen>>((ref) async {
+  final rows = await ref.watch(latikServiceProvider).getDokumen();
+  return ProfilDokumen.listFromView(rows);
 });

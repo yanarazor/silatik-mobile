@@ -15,6 +15,11 @@ class ProfilDokumen {
   final String catatan;
   final int? statusVerifikasi; // 1 = terverifikasi, selain itu = belum
 
+  final int? id;
+  final bool nomorRequired;
+  final bool tanggalRequired;
+  final bool fileRequired;
+
   const ProfilDokumen({
     this.nama = '',
     this.nomor = '',
@@ -22,6 +27,10 @@ class ProfilDokumen {
     this.url = '',
     this.catatan = '',
     this.statusVerifikasi,
+    this.id,
+    this.nomorRequired = false,
+    this.tanggalRequired = false,
+    this.fileRequired = false,
   });
 
   bool get terverifikasi => statusVerifikasi == 1;
@@ -94,6 +103,45 @@ class ProfilDokumen {
     }
     return docs;
   }
+
+  static List<ProfilDokumen> listFromView(List<dynamic> rows) {
+    final indexed = <MapEntry<int, ProfilDokumen>>[];
+    for (final item in rows.whereType<Map>()) {
+      final map = Map<String, dynamic>.from(item);
+      final base = ProfilDokumen.fromJson(map);
+      final isi = _mapOrNull(map['isi']) ?? const {};
+      final template = _mapOrNull(isi['o_dokumen']);
+      var nama = _pick(isi, const ['jenis_dokumen']);
+      if (nama.isEmpty && template != null) {
+        nama = _pick(template, const ['nama_dokumen']);
+      }
+      if (nama.isEmpty) {
+        nama = _stripLeadingNumber(_pick(map, const ['nama_dokumen']));
+      }
+      final doc = ProfilDokumen(
+        nama: nama.replaceAll(RegExp(r'\s+'), ' ').trim(),
+        nomor: base.nomor,
+        tanggal: base.tanggal,
+        url: base.url,
+        catatan: base.catatan,
+        statusVerifikasi: base.statusVerifikasi,
+        id: _toInt(_pick(map, const ['id'])),
+        nomorRequired: _toInt(_pick(map, const ['nomor_required'])) == 1,
+        tanggalRequired: _toInt(_pick(map, const ['tanggal_required'])) == 1,
+        fileRequired: _toInt(_pick(map, const ['file_required'])) == 1,
+      );
+      final order = _toInt(_pick(map, const ['order'])) ?? indexed.length;
+      indexed.add(MapEntry(order, doc));
+    }
+    indexed.sort((a, b) => a.key.compareTo(b.key));
+    return indexed.map((e) => e.value).toList();
+  }
+
+  // "1. Salinan akta badan hukum" -> "Salinan akta badan hukum"
+  static String _stripLeadingNumber(String name) => name
+      .replaceFirst(RegExp(r'^\s*\d+\.\s*'), '')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
 
   static List<dynamic>? _findList(Map<String, dynamic> data, String key) {
     final direct = data[key];

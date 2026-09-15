@@ -104,4 +104,93 @@ void main() {
       expect(docs, isEmpty);
     });
   });
+
+  group('ProfilDokumen.listFromView', () {
+    List<Map<String, dynamic>> rows() => [
+          // urutan sengaja dibalik untuk menguji sort by `order`
+          {
+            'nama_dokumen': '2. Struktur organisasi dan manajemen LATIK',
+            'order': 2,
+            'isi': null, // belum diunggah -> slot kosong tetap tampil
+          },
+          {
+            'nama_dokumen': '1. Salinan akta badan hukum',
+            'order': 1,
+            'isi': {
+              'jenis_dokumen': 'Salinan akta badan hukum',
+              'nomor': 'test',
+              'tanggal': '2025-04-15',
+              'status_verifikasi': 1,
+              'catatan_verifikasi': 'oke',
+              'url_dokumen': 'https://minio/akta.pdf',
+            },
+          },
+        ];
+
+    test('mempertahankan slot belum diunggah dan mengurutkan sesuai order', () {
+      final docs = ProfilDokumen.listFromView(rows());
+      expect(docs, hasLength(2));
+      // order 1 lebih dulu
+      expect(docs.first.nama, 'Salinan akta badan hukum');
+      expect(docs.first.url, isNotEmpty);
+      expect(docs.first.terverifikasi, isTrue);
+      // slot belum diunggah tetap ada, url kosong
+      expect(docs.last.nama, 'Struktur organisasi dan manajemen LATIK');
+      expect(docs.last.url, isEmpty);
+      expect(docs.last.terverifikasi, isFalse);
+    });
+
+    test('nama slot kosong dibuang prefix nomornya (unnumbered)', () {
+      final docs = ProfilDokumen.listFromView([
+        {'nama_dokumen': '10. Surat Permohonan Registrasi Auditor', 'order': 1},
+      ]);
+      expect(docs.single.nama, 'Surat Permohonan Registrasi Auditor');
+    });
+
+    test('nomor & tanggal kosong dibiarkan kosong', () {
+      final docs = ProfilDokumen.listFromView([
+        {
+          'nama_dokumen': '3. Peraturan',
+          'order': 1,
+          'isi': {
+            'jenis_dokumen': 'Peraturan',
+            'nomor': null,
+            'tanggal': null,
+            'url_dokumen': 'https://minio/peraturan.pdf',
+          },
+        },
+      ]);
+      expect(docs.single.nomor, isEmpty);
+      expect(docs.single.tanggal, isEmpty);
+    });
+
+    test('mem-parse id dan flag *_required top-level', () {
+      final docs = ProfilDokumen.listFromView([
+        {
+          'id': 11,
+          'nama_dokumen': '1. Salinan akta badan hukum',
+          'nomor_required': 1,
+          'tanggal_required': 1,
+          'file_required': 1,
+          'order': 1,
+        },
+        {
+          'id': 9,
+          'nama_dokumen': '2. Struktur organisasi',
+          'nomor_required': 0,
+          'tanggal_required': 0,
+          'file_required': 1,
+          'order': 2,
+        },
+      ]);
+      expect(docs.first.id, 11);
+      expect(docs.first.nomorRequired, isTrue);
+      expect(docs.first.tanggalRequired, isTrue);
+      expect(docs.first.fileRequired, isTrue);
+      expect(docs.last.id, 9);
+      expect(docs.last.nomorRequired, isFalse);
+      expect(docs.last.tanggalRequired, isFalse);
+      expect(docs.last.fileRequired, isTrue);
+    });
+  });
 }

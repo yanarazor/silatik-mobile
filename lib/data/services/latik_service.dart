@@ -40,6 +40,23 @@ class LatikService {
     await _dio.post(ApiEndpoints.latikSaveDokumen, data: formData);
   }
 
+  Future<void> saveDokumenBatch(List<DokumenUpload> uploads) async {
+    final map = <String, dynamic>{};
+    for (final u in uploads) {
+      map['file_${u.id}'] = await MultipartFile.fromFile(
+        u.file.path,
+        filename: u.fileName,
+      );
+      if (u.nomor != null && u.nomor!.isNotEmpty) {
+        map['nomor_${u.id}'] = u.nomor;
+      }
+      if (u.tanggal != null && u.tanggal!.isNotEmpty) {
+        map['tanggal_${u.id}'] = u.tanggal;
+      }
+    }
+    await _dio.post(ApiEndpoints.latikSaveDokumen, data: FormData.fromMap(map));
+  }
+
   // GET /api/latik/dokumen/view
   Future<List<dynamic>> getDokumen() async {
     final res = await _dio.get(ApiEndpoints.latikGetDokumen);
@@ -117,4 +134,20 @@ class LatikService {
   Future<void> deletePengalaman(String ref) async {
     await _dio.delete('${ApiEndpoints.latikDeletePengalaman}/$ref');
   }
+}
+
+class DokumenUpload {
+  final int id;
+  final File file;
+  final String fileName;
+  final String? nomor;
+  final String? tanggal;
+
+  const DokumenUpload({
+    required this.id,
+    required this.file,
+    required this.fileName,
+    this.nomor,
+    this.tanggal,
+  });
 }

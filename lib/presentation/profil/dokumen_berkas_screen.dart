@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/api_response_utils.dart';
 import '../../core/utils/formatters.dart';
@@ -22,14 +24,14 @@ class DokumenBerkasScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(latikProfileProvider);
+    final docsAsync = ref.watch(dokumenBerkasProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Dokumen & Berkas'),
       ),
-      body: profileAsync.when(
+      body: docsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => Center(
           child: Column(
@@ -45,14 +47,34 @@ class DokumenBerkasScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => ref.invalidate(latikProfileProvider),
+                onPressed: () => ref.invalidate(dokumenBerkasProvider),
                 child: const Text('Coba Lagi'),
               ),
             ],
           ),
         ),
-        data: (profile) => _DocsView(docs: profile.documents),
+        data: (docs) => _DocsView(docs: docs),
       ),
+      bottomNavigationBar: docsAsync.hasValue
+          ? SafeArea(
+              minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push(AppRoutes.dokumenBerkasEdit),
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: const Text('Edit Dokumen'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }
@@ -286,11 +308,13 @@ class _DocCard extends StatelessWidget {
       if (doc.tanggal.isNotEmpty) _tanggalText(doc.tanggal),
     ];
 
+    final hasFile = doc.url.trim().isNotEmpty;
+
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
       child: InkWell(
-        onTap: () => _openDoc(context, doc),
+        onTap: hasFile ? () => _openDoc(context, doc) : null,
         borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
         child: Container(
           decoration: BoxDecoration(
@@ -348,33 +372,34 @@ class _DocCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF2F4F7),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Buka',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
+                  if (hasFile)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF2F4F7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Buka',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 2),
-                        Icon(
-                          Icons.open_in_new,
-                          size: 13,
-                          color: AppColors.primary,
-                        ),
-                      ],
+                          SizedBox(width: 2),
+                          Icon(
+                            Icons.open_in_new,
+                            size: 13,
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                 ],
               ),
               if (doc.catatan.trim().isNotEmpty) ...[
@@ -429,7 +454,18 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final verified = doc.terverifikasi;
+    final uploaded = doc.url.trim().isNotEmpty;
     final color = verified ? _green : AppColors.textSecondary;
+    final label = verified
+        ? 'Terverifikasi'
+        : uploaded
+            ? 'Belum Diverifikasi'
+            : 'Belum Diunggah';
+    final icon = verified
+        ? Icons.check_circle
+        : uploaded
+            ? Icons.schedule
+            : Icons.upload_file_outlined;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -440,13 +476,13 @@ class _StatusPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            verified ? Icons.check_circle : Icons.schedule,
+            icon,
             size: 13,
             color: color,
           ),
           const SizedBox(width: 5),
           Text(
-            verified ? 'Terverifikasi' : 'Belum Diverifikasi',
+            label,
             style: TextStyle(
               color: color,
               fontSize: 11,

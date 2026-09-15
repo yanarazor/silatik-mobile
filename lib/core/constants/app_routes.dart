@@ -14,4 +14,5 @@
   static const profilLembaga = '/profil-lembaga';
   static const dataPengguna = '/data-pengguna';
   static const dokumenBerkas = '/dokumen-berkas';
+  static const dokumenBerkasEdit = '/dokumen-berkas/edit';
 }
