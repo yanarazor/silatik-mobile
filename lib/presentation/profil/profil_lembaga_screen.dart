@@ -618,6 +618,7 @@ class _LocationCard extends StatelessWidget {
                 child: SizedBox(
                   height: 200,
                   child: FlutterMap(
+                    key: ValueKey('${coord.lat},${coord.lng}'),
                     options: MapOptions(
                       initialCenter: coord.latLng,
                       initialZoom: 16,
