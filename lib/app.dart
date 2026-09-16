@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import 'core/constants/app_routes.dart';
 import 'core/theme/app_theme.dart';
+import 'data/models/latik_profile.dart';
 import 'presentation/auditor/auditor_list_screen.dart';
 import 'presentation/auth/forgot_password_screen.dart';
 import 'presentation/auth/login_screen.dart';
@@ -20,6 +21,7 @@ import 'presentation/notifikasi/notifikasi_screen.dart';
 import 'presentation/profil/data_pengguna_screen.dart';
 import 'presentation/profil/dokumen_berkas_edit_screen.dart';
 import 'presentation/profil/dokumen_berkas_screen.dart';
+import 'presentation/profil/profil_lembaga_edit_screen.dart';
 import 'presentation/profil/profil_lembaga_screen.dart';
 import 'presentation/profil/profil_screen.dart';
 import 'presentation/registration/registration_flow_screen.dart';
@@ -89,6 +91,12 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         GoRoute(
           path: AppRoutes.profilLembaga,
           builder: (_, __) => const ProfilLembagaScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.profilLembagaEdit,
+          builder: (_, state) => ProfilLembagaEditScreen(
+            profile: state.extra as LatikProfile,
+          ),
         ),
         GoRoute(
           path: AppRoutes.dataPengguna,
@@ -169,6 +177,7 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
     if (location == AppRoutes.registration ||
         location == AppRoutes.dokumen ||
         location == AppRoutes.profilLembaga ||
+        location == AppRoutes.profilLembagaEdit ||
         location == AppRoutes.dokumenBerkas ||
         location == AppRoutes.dokumenBerkasEdit ||
         location == AppRoutes.auditors) {

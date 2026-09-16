@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
+import '../../core/constants/map_config.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/url_opener.dart';
 import '../../data/models/latik_profile.dart';
 import '../../providers/auditor_provider.dart';
 import '../../providers/profile_menu_provider.dart';
-import '../../providers/registrasi_provider.dart';
 
 const _green = Color(0xFF25B45B);
 const _amber = Color(0xFFE8A000);
@@ -84,123 +86,11 @@ class ProfilLembagaScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: profileAsync.maybeWhen(
         data: (data) => _EditFooter(
-          onEdit: () => _showEditSheet(context, ref, data),
+          onEdit: () =>
+              context.push(AppRoutes.profilLembagaEdit, extra: data),
         ),
         orElse: () => null,
       ),
-    );
-  }
-
-  void _showEditSheet(
-    BuildContext context,
-    WidgetRef ref,
-    LatikProfile data,
-  ) {
-    final nameCtrl = TextEditingController(text: data.namaLatik);
-    final nibCtrl = TextEditingController(text: data.noNib);
-    final emailCtrl = TextEditingController(text: data.email);
-    final phoneCtrl = TextEditingController(text: data.phone);
-    final addressCtrl = TextEditingController(text: data.alamat);
-    final refLatik = data.latikRef;
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              22,
-              18,
-              22,
-              24 + MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Edit Profil Lembaga',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  TextField(
-                    controller: nameCtrl,
-                    decoration:
-                        const InputDecoration(labelText: 'Nama Lembaga'),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: nibCtrl,
-                    decoration: const InputDecoration(labelText: 'NIB'),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: emailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: phoneCtrl,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'Telepon'),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: addressCtrl,
-                    decoration: const InputDecoration(labelText: 'Alamat'),
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 20),
-                  FilledButton(
-                    onPressed: () async {
-                      final payload = <String, dynamic>{
-                        if (refLatik.isNotEmpty) 'ref': refLatik,
-                        'name': nameCtrl.text.trim(),
-                        'no_nib': nibCtrl.text.trim(),
-                        'email': emailCtrl.text.trim(),
-                        'phone': phoneCtrl.text.trim(),
-                        'address': addressCtrl.text.trim(),
-                      };
-                      try {
-                        await ref
-                            .read(latikServiceProvider)
-                            .updateProfile(payload);
-                        ref.invalidate(latikProfileProvider);
-                        if (!context.mounted) return;
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Profil lembaga diperbarui')),
-                        );
-                      } catch (_) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Gagal memperbarui profil')),
-                          );
-                        }
-                      }
-                    },
-                    child: const Text('Simpan'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -247,50 +137,6 @@ class _EmptyProfileState extends StatelessWidget {
           OutlinedButton(
             onPressed: onRetry,
             child: const Text('Muat Ulang'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DebugDataBanner extends StatelessWidget {
-  const _DebugDataBanner({required this.data});
-
-  final Map<String, dynamic> data;
-
-  @override
-  Widget build(BuildContext context) {
-    final keys = data.keys
-        .where((k) => data[k] != null && data[k].toString().trim().isNotEmpty)
-        .toList();
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'DEBUG: Profile keys (${keys.length})',
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            keys.take(20).join(', '),
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 10,
-              fontFamily: 'monospace',
-            ),
           ),
         ],
       ),
@@ -781,9 +627,8 @@ class _LocationCard extends StatelessWidget {
                     ),
                     children: [
                       TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'id.go.brin.silatik',
+                        urlTemplate: MapConfig.tileUrlTemplate,
+                        userAgentPackageName: MapConfig.userAgentPackageName,
                         maxZoom: 16,
                       ),
                       MarkerLayer(

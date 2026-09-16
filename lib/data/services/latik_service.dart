@@ -118,9 +118,9 @@ class LatikService {
     return res.data['data'] ?? res.data;
   }
 
-  // POST /api/latik/updateprofile
-  Future<void> updateProfile(Map<String, dynamic> data) async {
-    await _dio.post(ApiEndpoints.latikUpdateProfile, data: data);
+  // POST /api/latik/saveprofile — self-service LATIK profile update.
+  Future<void> saveProfile(Map<String, dynamic> data) async {
+    await _dio.post(ApiEndpoints.latikSaveProfile, data: data);
   }
 
   // POST /api/latik/pengalaman

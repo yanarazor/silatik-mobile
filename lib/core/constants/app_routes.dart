@@ -12,6 +12,7 @@
   static const pdfViewer = '/pdf-viewer';
   static const dokumen = '/dokumen';
   static const profilLembaga = '/profil-lembaga';
+  static const profilLembagaEdit = '/profil-lembaga/edit';
   static const dataPengguna = '/data-pengguna';
   static const dokumenBerkas = '/dokumen-berkas';
   static const dokumenBerkasEdit = '/dokumen-berkas/edit';

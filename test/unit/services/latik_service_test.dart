@@ -250,15 +250,15 @@ void main() {
     });
   });
 
-  group('LatikService.updateProfile', () {
-    test('posts profile data', () async {
+  group('LatikService.saveProfile', () {
+    test('posts profile data to saveprofile', () async {
       when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
         (_) async => makeResponse(null),
       );
 
-      await latikService.updateProfile({'nama': 'Updated'});
-      verify(() => mockDio.post('latik/updateprofile',
-          data: {'nama': 'Updated'})).called(1);
+      await latikService.saveProfile({'nama_latik': 'Updated'});
+      verify(() => mockDio.post('latik/saveprofile',
+          data: {'nama_latik': 'Updated'})).called(1);
     });
   });
 
