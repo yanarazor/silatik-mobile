@@ -30,6 +30,7 @@ import 'presentation/shared/app_bottom_nav.dart';
 import 'presentation/shared/pdf_viewer_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/auditor_provider.dart';
+import 'providers/notifikasi_provider.dart';
 import 'providers/profile_menu_provider.dart';
 import 'providers/registrasi_provider.dart';
 import 'core/auth/access_control.dart';
@@ -195,6 +196,9 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         ref.invalidate(userProfileProvider);
         ref.invalidate(faqProfileProvider);
         ref.invalidate(registrasiBootstrapProvider);
+        ref.invalidate(notifikasiListProvider);
+        ref.invalidate(unreadNotificationProvider);
+        ref.invalidate(unreadNotificationCountProvider);
       }
       if (previous?.isLoggedIn == true && !next.isLoggedIn) {
         _router.go(AppRoutes.login);
