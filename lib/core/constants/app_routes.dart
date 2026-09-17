@@ -16,4 +16,5 @@
   static const dataPengguna = '/data-pengguna';
   static const dokumenBerkas = '/dokumen-berkas';
   static const dokumenBerkasEdit = '/dokumen-berkas/edit';
+  static const transaksi = '/transaksi';
 }

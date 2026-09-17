@@ -26,10 +26,13 @@ import 'presentation/profil/profil_lembaga_screen.dart';
 import 'presentation/profil/profil_screen.dart';
 import 'presentation/registration/registration_flow_screen.dart';
 import 'presentation/dokumen/dokumen_screen.dart';
+import 'presentation/transaksi/transaksi_screen.dart';
 import 'presentation/shared/app_bottom_nav.dart';
 import 'presentation/shared/pdf_viewer_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/auditor_provider.dart';
+import 'providers/dokumen_provider.dart';
+import 'providers/invoice_provider.dart';
 import 'providers/notifikasi_provider.dart';
 import 'providers/profile_menu_provider.dart';
 import 'providers/registrasi_provider.dart';
@@ -111,6 +114,10 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
           path: AppRoutes.dokumenBerkasEdit,
           builder: (_, __) => const DokumenBerkasEditScreen(),
         ),
+        GoRoute(
+          path: AppRoutes.transaksi,
+          builder: (_, __) => const TransaksiScreen(),
+        ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             return ScaffoldWithNavBar(navigationShell: navigationShell);
@@ -181,6 +188,7 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         location == AppRoutes.profilLembagaEdit ||
         location == AppRoutes.dokumenBerkas ||
         location == AppRoutes.dokumenBerkasEdit ||
+        location == AppRoutes.transaksi ||
         location == AppRoutes.auditors) {
       return AccessControl.latikProfile;
     }
@@ -199,6 +207,8 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         ref.invalidate(notifikasiListProvider);
         ref.invalidate(unreadNotificationProvider);
         ref.invalidate(unreadNotificationCountProvider);
+        ref.invalidate(dokumenListProvider);
+        ref.invalidate(invoiceListProvider);
       }
       if (previous?.isLoggedIn == true && !next.isLoggedIn) {
         _router.go(AppRoutes.login);

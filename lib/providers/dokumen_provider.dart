@@ -11,6 +11,7 @@ final dokumenServiceProvider =
 final dokumenRepoProvider =
     Provider((ref) => DokumenRepository(ref.watch(dokumenServiceProvider)));
 
-final dokumenListProvider = FutureProvider<List<DokumenModel>>((ref) async {
+final dokumenListProvider =
+    FutureProvider.autoDispose<List<DokumenModel>>((ref) async {
   return await ref.watch(dokumenRepoProvider).getDokumenList();
 });

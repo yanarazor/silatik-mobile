@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'dart:io';
 import '../../core/constants/api_endpoints.dart';
+import '../../core/utils/api_response_utils.dart';
 
 class LatikService {
   final Dio _dio;
@@ -99,6 +100,19 @@ class LatikService {
   Future<List<dynamic>> getStrInvoiceList() async {
     final res = await _dio.get(ApiEndpoints.strListInvoiceLatik);
     return res.data['data'] ?? res.data;
+  }
+
+  // GET /api/latik/listinvoices?status=&jenis_transaksi=
+  // Backend scopes to the authenticated LATIK; empty params = no filter.
+  Future<List<dynamic>> getInvoices({int? status, int? jenisTransaksi}) async {
+    final res = await _dio.get(
+      ApiEndpoints.latikListInvoices,
+      queryParameters: {
+        'status': status?.toString() ?? '',
+        'jenis_transaksi': jenisTransaksi?.toString() ?? '',
+      },
+    );
+    return extractList(res.data);
   }
 
   // POST /api/latik/createinvoice

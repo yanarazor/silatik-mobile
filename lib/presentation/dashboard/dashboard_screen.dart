@@ -115,9 +115,9 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(width: 18),
                     _QuickAction(
-                      icon: Icons.groups_2_outlined,
-                      label: 'Auditor',
-                      onTap: () => context.go(AppRoutes.auditors),
+                      icon: Icons.receipt_long_outlined,
+                      label: 'Transaksi',
+                      onTap: () => context.push(AppRoutes.transaksi),
                     ),
                     const SizedBox(width: 18),
                     _QuickAction(
