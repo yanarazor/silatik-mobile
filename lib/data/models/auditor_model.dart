@@ -50,6 +50,12 @@ class AuditorModel {
 
   final bool editableRenew;
 
+  final int? auditorStep;
+
+  final int activeInvoiceCount;
+
+  final bool editableAdd;
+
   const AuditorModel({
     required this.id,
     required this.nama,
@@ -95,6 +101,9 @@ class AuditorModel {
     this.auditorExtCount = 0,
     this.auditorExt = const [],
     this.editableRenew = false,
+    this.auditorStep,
+    this.activeInvoiceCount = 0,
+    this.editableAdd = false,
   });
 
   factory AuditorModel.fromJson(Map<String, dynamic> json) {
@@ -260,6 +269,11 @@ class AuditorModel {
       editableRenew: json['editable_renew'] == true ||
           json['editable_renew'] == 1 ||
           json['editable_renew'] == '1',
+      auditorStep: _toInt(json['auditor_step']),
+      activeInvoiceCount: _toInt(json['active_invoice_count']) ?? 0,
+      editableAdd: json['editable_add'] == true ||
+          json['editable_add'] == 1 ||
+          json['editable_add'] == '1',
     );
   }
 

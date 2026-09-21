@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/url_opener.dart';
@@ -754,8 +756,33 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
   // ---------------------------------------------------------------- Aksi
 
   Widget _buildActions() {
+    // Tombol Ajukan Penambahan hanya saat auditor_step == 0 (belum diajukan).
+    // null (field tak dikirim API) atau step lain (ajuan diproses) = sembunyi.
+    final canAjukan = _auditor.auditorStep == 0;
     return Column(
       children: [
+        if (canAjukan) ...[
+          SizedBox(
+            height: 52,
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () =>
+                  context.push(AppRoutes.penambahanAuditor, extra: _auditor),
+              icon: const Icon(Icons.person_add_alt_1, size: 20),
+              label: const Text(
+                'Ajukan Penambahan',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.success,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing12),
+        ],
         SizedBox(
           height: 52,
           width: double.infinity,

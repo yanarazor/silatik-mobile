@@ -62,4 +62,14 @@ class AuditorExtRepository {
 
   Future<void> requestVerifikasi(String refExt) =>
       _service.requestExtVerifikasi(refExt);
+
+  // ------------------------------------------------------------ PENAMBAHAN
+
+  /// Buat invoice penambahan (is_new=3). Kembalikan `ref` invoice.
+  Future<String> createAddInvoice(List<AuditorAddInvoiceItem> auditors) =>
+      _service.createAddInvoice(auditors);
+
+  /// Ajukan verifikasi penambahan untuk satu auditor.
+  Future<void> requestVerifikasiPenambahan(String refAuditor) =>
+      _service.requestVerifikasiPenambahan(refAuditor);
 }

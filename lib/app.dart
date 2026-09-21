@@ -11,7 +11,9 @@ import 'package:intl/intl.dart';
 import 'core/constants/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'data/models/latik_profile.dart';
+import 'data/models/auditor_model.dart';
 import 'presentation/auditor/auditor_list_screen.dart';
+import 'presentation/auditor/penambahan_confirm_screen.dart';
 import 'presentation/auth/forgot_password_screen.dart';
 import 'presentation/auth/login_screen.dart';
 import 'presentation/auth/activation_notice_screen.dart';
@@ -134,6 +136,11 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
           path: AppRoutes.perpanjanganAuditor,
           builder: (_, state) =>
               AuditorPerpanjanganScreen(refExt: state.extra as String),
+        ),
+        GoRoute(
+          path: AppRoutes.penambahanAuditor,
+          builder: (_, state) =>
+              PenambahanConfirmScreen(auditor: state.extra as AuditorModel),
         ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {

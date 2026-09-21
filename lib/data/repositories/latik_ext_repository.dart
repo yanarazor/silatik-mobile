@@ -33,7 +33,10 @@ class LatikExtRepository {
   Future<void> requestVerifikasi(String refExt) =>
       _service.requestExtVerifikasi(refExt);
 
-  Future<String> billing(String invoiceRef) => _service.getBilling(invoiceRef);
+  /// Hasilkan/ambil kode tagihan untuk invoice [invoiceRef]. [refLatik] opsional
+  /// = ref_latik pemilik invoice (spec §5 add-auditor).
+  Future<String> billing(String invoiceRef, {String? refLatik}) =>
+      _service.getBilling(invoiceRef, refLatik: refLatik);
 
   Future<Map<String, dynamic>> checkBilling(String kodeTagihan) =>
       _service.checkBilling(kodeTagihan);

@@ -217,12 +217,18 @@ class LatikService {
 
   // ---------------------------------------------------------------- BILLING
 
-  // GET /api/latik/billing?ref=&ref_invoice= — hasilkan/ambil kode tagihan
-  // untuk sebuah invoice. Kembalikan kode_tagihan ('' bila belum ada).
-  Future<String> getBilling(String invoiceRef) async {
+  // GET /api/latik/billing?ref=&ref_invoice= — hasilkan/ambil kode tagihan.
+  // `ref` = ref_latik pemilik invoice (spec §5), `ref_invoice` = ref invoice.
+  // [refLatik] opsional demi kompatibilitas pemanggil lama; bila null jatuh ke
+  // [invoiceRef] (perilaku sebelumnya).
+  // Kembalikan kode_tagihan ('' bila belum ada).
+  Future<String> getBilling(String invoiceRef, {String? refLatik}) async {
     final res = await _dio.get(
       ApiEndpoints.latikBilling,
-      queryParameters: {'ref': invoiceRef, 'ref_invoice': invoiceRef},
+      queryParameters: {
+        'ref': (refLatik == null || refLatik.isEmpty) ? invoiceRef : refLatik,
+        'ref_invoice': invoiceRef,
+      },
     );
     return pickString(extractMap(res.data), const ['kode_tagihan'],
             fallback: '') ??

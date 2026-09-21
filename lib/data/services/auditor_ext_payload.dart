@@ -93,3 +93,36 @@ Future<FormData> buildAuditorExtCreateInvoiceFormData({
     'latik_ref': latikRef,
   });
 }
+
+Future<FormData> buildAuditorAddCreateInvoiceFormData({
+  required List<AuditorAddInvoiceItem> auditors,
+}) async {
+  final auditorJson = jsonEncode({
+    'auditor': [
+      for (final a in auditors)
+        {
+          'ref': a.ref,
+          'nama': a.nama,
+          'status': a.status == 1 ? '1' : '0',
+          'is_new': '3',
+        },
+    ],
+  });
+
+  return FormData.fromMap({
+    'is_new': '3',
+    'auditor': auditorJson,
+  });
+}
+
+class AuditorAddInvoiceItem {
+  final String ref;
+  final String nama;
+  final int? status;
+
+  const AuditorAddInvoiceItem({
+    required this.ref,
+    required this.nama,
+    this.status,
+  });
+}

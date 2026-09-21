@@ -240,15 +240,15 @@ void main() {
     });
   });
 
-  group('AuditorService.requestVerifikasiPenambahan', () {
-    test('posts ref_latik', () async {
+  group('AuditorService.requestVerifikasiPenambahan (per-auditor)', () {
+    test('posts ref_auditor', () async {
       when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
         (_) async => makeResponse(null),
       );
 
-      await auditorService.requestVerifikasiPenambahan('LATIK-001');
+      await auditorService.requestVerifikasiPenambahan('AUD-001');
       verify(() => mockDio.post('auditor/penambahan/requestverifikasi',
-          data: {'ref_latik': 'LATIK-001'})).called(1);
+          data: {'ref_auditor': 'AUD-001'})).called(1);
     });
   });
 }

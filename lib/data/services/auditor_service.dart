@@ -76,16 +76,26 @@ class AuditorService {
     await _dio.delete('${ApiEndpoints.auditorDeleteSertif}/$ref');
   }
 
-  // POST /api/auditor/penambahan/requestverifikasi
-  Future<void> requestVerifikasiPenambahan(String refLatik) async {
+  // POST /api/auditor/penambahan/requestverifikasi — sekali per auditor.
+  Future<void> requestVerifikasiPenambahan(String refAuditor) async {
     await _dio.post(ApiEndpoints.auditorRequestVerif, data: {
-      'ref_latik': refLatik,
+      'ref_auditor': refAuditor,
     });
+  }
+
+  // POST /api/latik/createinvoice (multipart) — mode penambahan (is_new=3).
+  // Kembalikan `ref` invoice.
+  Future<String> createAddInvoice(List<AuditorAddInvoiceItem> auditors) async {
+    final form =
+        await buildAuditorAddCreateInvoiceFormData(auditors: auditors);
+    final res = await _dio.post(ApiEndpoints.latikCreateInvoice, data: form);
+    return pickString(extractMap(res.data), const ['ref'], fallback: '') ?? '';
   }
 
   // ---------------------------------------------------------- PERPANJANGAN
 
   // POST /api/latikext-auditor — resolve/buat referensi perpanjangan auditor.
+  // Envelope sama bentuk dengan /latikext (ExtResolution.fromResponse parse).
   Future<Map<String, dynamic>> resolveExt(String refLatik) async {
     final res = await _dio.post(ApiEndpoints.auditorExtResolve, data: {
       'ref_latik': refLatik,
@@ -109,6 +119,7 @@ class AuditorService {
   }
 
   // GET /api/auditorext/dokumen/view?ref_ext=&ref_auditors=<csv>
+  // Respons: satu array flat untuk semua auditor (lihat AUDITOR_EXT_DOKUMEN).
   Future<List<dynamic>> getExtDokumen(
     String refExt,
     List<String> refAuditors,
