@@ -133,6 +133,7 @@ class LatikService {
   }
 
   // POST /api/latik/saveprofile — self-service LATIK profile update.
+  // Body is the full profile JSON (see save-latik-profile contract).
   Future<void> saveProfile(Map<String, dynamic> data) async {
     await _dio.post(ApiEndpoints.latikSaveProfile, data: data);
   }
@@ -145,6 +146,97 @@ class LatikService {
   // DELETE /api/latik/pengalaman/{ref}
   Future<void> deletePengalaman(String ref) async {
     await _dio.delete('${ApiEndpoints.latikDeletePengalaman}/$ref');
+  }
+
+  // ---------------------------------------------------------- PERPANJANGAN
+
+  // POST /api/latikext — resolve/buat referensi perpanjangan untuk LATIK ini.
+  Future<Map<String, dynamic>> resolveExt(String refLatik) async {
+    final res = await _dio.post(ApiEndpoints.latikExt, data: {
+      'ref_latik': refLatik,
+    });
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  // GET /api/latikext/dokumen/view?ref_ext=
+  Future<List<dynamic>> getExtDokumen(String refExt) async {
+    final res = await _dio.get(
+      ApiEndpoints.latikExtGetDokumen,
+      queryParameters: {'ref_ext': refExt},
+    );
+    return extractList(res.data);
+  }
+
+  // POST /api/latikext/savedokumen (multipart) — sama pola dengan
+  // [saveDokumenBatch]: key dinamis `file_{id}` / `nomor_{id}` / `tanggal_{id}`,
+  // TANGGAL FORMAT `DD-MM-YYYY` (pemanggil yang memformat). Endpoint ini
+  // "replace full state" seperti savedokumen LATIK, jadi WAJIB mengirim SEMUA
+  // dokumen. File tak berubah dikirim string "undefined" (backend pertahankan).
+  // Bedanya dari base: ada `ref_ext` di body dan nomor/tanggal per dokumen.
+  Future<void> saveExtDokumen({
+    required String refExt,
+    required List<DokumenUpload> uploads,
+  }) async {
+    final map = <String, dynamic>{'ref_ext': refExt};
+    for (final u in uploads) {
+      final file = u.file;
+      map['file_${u.id}'] = file != null
+          ? await MultipartFile.fromFile(file.path, filename: u.fileName)
+          : 'undefined';
+      map['nomor_${u.id}'] = u.nomor ?? '';
+      if (u.tanggal != null && u.tanggal!.isNotEmpty) {
+        map['tanggal_${u.id}'] = u.tanggal;
+      }
+    }
+    await _dio.post(ApiEndpoints.latikExtSaveDokumen,
+        data: FormData.fromMap(map));
+  }
+
+  // POST /api/latik/createinvoice (multipart) — mode perpanjangan.
+  // `is_new=2` menandai extension; karena itu `latik_ext` wajib disertakan,
+  // `auditor` dikirim daftar kosong untuk alur LATIK. Kembalikan `ref` invoice.
+  Future<String> createExtInvoice(String refExt) async {
+    final res = await _dio.post(
+      ApiEndpoints.latikCreateInvoice,
+      data: FormData.fromMap({
+        'is_new': '2',
+        'auditor': '{"auditor":[]}',
+        'latik_ext': refExt,
+      }),
+    );
+    return pickString(extractMap(res.data), const ['ref'], fallback: '') ?? '';
+  }
+
+  // POST /api/latikext/requestverifikasi?ref_ext= — body kosong.
+  Future<void> requestExtVerifikasi(String refExt) async {
+    await _dio.post(
+      ApiEndpoints.latikExtRequestVerifikasi,
+      queryParameters: {'ref_ext': refExt},
+    );
+  }
+
+  // ---------------------------------------------------------------- BILLING
+
+  // GET /api/latik/billing?ref=&ref_invoice= — hasilkan/ambil kode tagihan
+  // untuk sebuah invoice. Kembalikan kode_tagihan ('' bila belum ada).
+  Future<String> getBilling(String invoiceRef) async {
+    final res = await _dio.get(
+      ApiEndpoints.latikBilling,
+      queryParameters: {'ref': invoiceRef, 'ref_invoice': invoiceRef},
+    );
+    return pickString(extractMap(res.data), const ['kode_tagihan'],
+            fallback: '') ??
+        '';
+  }
+
+  // GET /api/latik/checkbilling?kode_tagihan= — poll status kode billing.
+  // Kembalikan envelope agar pemanggil bisa memeriksa "siap/belum".
+  Future<Map<String, dynamic>> checkBilling(String kodeTagihan) async {
+    final res = await _dio.get(
+      ApiEndpoints.latikCheckBilling,
+      queryParameters: {'kode_tagihan': kodeTagihan},
+    );
+    return Map<String, dynamic>.from(res.data as Map);
   }
 }
 

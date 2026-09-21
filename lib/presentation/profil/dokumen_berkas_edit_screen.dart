@@ -16,7 +16,7 @@ import '../../data/models/registrasi_model.dart';
 import '../../data/services/latik_service.dart';
 import '../../providers/profile_menu_provider.dart';
 import '../../providers/registrasi_provider.dart';
-import '../auditor/form/auditor_dokumen_card.dart';
+import '../shared/dokumen_upload_card.dart';
 import '../auditor/form/auditor_profil_step.dart' show kAuditorFileMaxBytes;
 
 class DokumenBerkasEditScreen extends ConsumerStatefulWidget {
@@ -243,7 +243,7 @@ class _DokumenBerkasEditScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AuditorDokumenCard(
+        DokumenUploadCard(
           title: d.nama.isEmpty ? 'Dokumen' : d.nama,
           requiredDoc: d.fileRequired,
           file: _edits[d.id]!.file,

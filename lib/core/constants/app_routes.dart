@@ -17,4 +17,6 @@
   static const dokumenBerkas = '/dokumen-berkas';
   static const dokumenBerkasEdit = '/dokumen-berkas/edit';
   static const transaksi = '/transaksi';
+  static const perpanjangan = '/perpanjangan';
+  static const perpanjanganLatik = '/perpanjangan/latik';
 }

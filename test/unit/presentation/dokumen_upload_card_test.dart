@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:silatik_mobile/data/models/registrasi_model.dart';
-import 'package:silatik_mobile/presentation/auditor/form/auditor_dokumen_card.dart';
+import 'package:silatik_mobile/presentation/shared/dokumen_upload_card.dart';
 import 'package:silatik_mobile/providers/auditor_form_provider.dart';
 
 Widget _host(FileItem? file, {List<Override> overrides = const []}) {
@@ -10,7 +10,7 @@ Widget _host(FileItem? file, {List<Override> overrides = const []}) {
     overrides: overrides,
     child: MaterialApp(
       home: Scaffold(
-        body: AuditorDokumenCard(
+        body: DokumenUploadCard(
           title: 'KTP',
           requiredDoc: true,
           file: file,
@@ -75,7 +75,7 @@ void main() {
       const ProviderScope(
         child: MaterialApp(
           home: Scaffold(
-            body: AuditorDokumenCard(
+            body: DokumenUploadCard(
               title: 'Foto Auditor',
               requiredDoc: true,
               file: null,

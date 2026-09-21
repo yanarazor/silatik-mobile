@@ -123,7 +123,7 @@ class DashboardScreen extends ConsumerWidget {
                     _QuickAction(
                       icon: Icons.autorenew_rounded,
                       label: 'Perpanjangan',
-                      onTap: () => context.push(AppRoutes.registration),
+                      onTap: () => context.push(AppRoutes.perpanjangan),
                     ),
                   ],
                 ),

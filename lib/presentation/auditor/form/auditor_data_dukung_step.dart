@@ -10,7 +10,7 @@ import '../../../core/utils/url_opener.dart';
 import '../../../data/models/auditor_model.dart';
 import '../../../data/models/registrasi_model.dart';
 import '../../../providers/auditor_form_provider.dart';
-import 'auditor_dokumen_card.dart';
+import '../../shared/dokumen_upload_card.dart';
 import 'auditor_profil_step.dart' show kAuditorFileMaxBytes;
 
 class AuditorDataDukungStep extends ConsumerWidget {
@@ -133,7 +133,7 @@ class AuditorDataDukungStep extends ConsumerWidget {
             ),
             const SizedBox(height: AppTheme.spacing16),
             for (final def in defs) ...[
-              AuditorDokumenCard(
+              DokumenUploadCard(
                 title: def.namaDokumen,
                 requiredDoc: def.fileRequired,
                 file: state.dokumen[def.field],

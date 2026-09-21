@@ -14,7 +14,7 @@ import '../../../data/models/master_data_model.dart';
 import '../../../data/models/registrasi_model.dart';
 import '../../../providers/auditor_form_provider.dart';
 import '../../../providers/master_data_provider.dart';
-import 'auditor_dokumen_card.dart';
+import '../../shared/dokumen_upload_card.dart';
 
 /// Batas ukuran foto/sertifikat per dokumen (10MB, sesuai handover doc).
 /// FileUtils.maxSizeBytes tetap 5MB untuk alur registrasi lain.
@@ -436,7 +436,7 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
   }
 
   Widget _fotoCard() {
-    return AuditorDokumenCard(
+    return DokumenUploadCard(
       title: 'Foto Auditor',
       requiredDoc: true,
       file: _foto,

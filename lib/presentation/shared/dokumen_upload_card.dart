@@ -3,15 +3,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/file_utils.dart';
-import '../../../data/models/registrasi_model.dart';
-import '../../../providers/auditor_form_provider.dart';
-import '../../shared/cached_remote_image.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/utils/file_utils.dart';
+import '../../data/models/registrasi_model.dart';
+import '../../providers/auditor_form_provider.dart';
+import 'cached_remote_image.dart';
 
-class AuditorDokumenCard extends ConsumerWidget {
-  const AuditorDokumenCard({
+class DokumenUploadCard extends ConsumerWidget {
+  const DokumenUploadCard({
     super.key,
     required this.title,
     required this.requiredDoc,
@@ -22,6 +22,7 @@ class AuditorDokumenCard extends ConsumerWidget {
     this.leadingColor = AppColors.error,
     this.formatHint = 'Format PDF (maks. 10 MB)',
     this.imageThumbnail = false,
+    this.extraFields,
   });
 
   final String title;
@@ -29,7 +30,6 @@ class AuditorDokumenCard extends ConsumerWidget {
   final FileItem? file;
   final VoidCallback onPick;
 
-  /// Dipanggil saat "Pratinjau" ditekan (buka viewer PDF/URL bersama).
   final VoidCallback onPreview;
 
   final IconData leadingIcon;
@@ -38,6 +38,8 @@ class AuditorDokumenCard extends ConsumerWidget {
   final String formatHint;
 
   final bool imageThumbnail;
+
+  final Widget? extraFields;
 
   bool get _isWebUrl {
     final p = file?.path.trim().toLowerCase() ?? '';
@@ -84,6 +86,10 @@ class AuditorDokumenCard extends ConsumerWidget {
           ),
           const SizedBox(height: AppTheme.spacing12),
           file == null ? _uploadZone(theme) : _fileBox(context, ref, theme),
+          if (extraFields != null) ...[
+            const SizedBox(height: AppTheme.spacing12),
+            extraFields!,
+          ],
         ],
       ),
     );
@@ -234,8 +240,6 @@ class AuditorDokumenCard extends ConsumerWidget {
     );
   }
 
-  /// Baris ukuran: file lokal pakai size langsung; file server ambil dari
-  /// header content-length (kalau ada). Kalau tak ada, baris disembunyikan.
   Widget _sizeLine(WidgetRef ref, ThemeData theme) {
     final localSize = file!.size;
     if (!_isWebUrl && localSize > 0) {
