@@ -28,6 +28,7 @@ import 'presentation/registration/registration_flow_screen.dart';
 import 'presentation/dokumen/dokumen_screen.dart';
 import 'presentation/perpanjangan/perpanjangan_entry_screen.dart';
 import 'presentation/perpanjangan/latik_perpanjangan_screen.dart';
+import 'presentation/perpanjangan/auditor_perpanjangan_screen.dart';
 import 'presentation/transaksi/transaksi_screen.dart';
 import 'presentation/shared/app_bottom_nav.dart';
 import 'presentation/shared/pdf_viewer_screen.dart';
@@ -128,6 +129,11 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
           path: AppRoutes.perpanjanganLatik,
           builder: (_, state) =>
               LatikPerpanjanganScreen(refExt: state.extra as String),
+        ),
+        GoRoute(
+          path: AppRoutes.perpanjanganAuditor,
+          builder: (_, state) =>
+              AuditorPerpanjanganScreen(refExt: state.extra as String),
         ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {

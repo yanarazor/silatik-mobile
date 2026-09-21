@@ -48,6 +48,8 @@ class AuditorModel {
   final int auditorExtCount;
   final List<AuditorExtension> auditorExt;
 
+  final bool editableRenew;
+
   const AuditorModel({
     required this.id,
     required this.nama,
@@ -92,6 +94,7 @@ class AuditorModel {
     this.strTanggalAwal,
     this.auditorExtCount = 0,
     this.auditorExt = const [],
+    this.editableRenew = false,
   });
 
   factory AuditorModel.fromJson(Map<String, dynamic> json) {
@@ -254,6 +257,9 @@ class AuditorModel {
               ? (json['auditor_ext'] as List).length
               : 0),
       auditorExt: auditorExt,
+      editableRenew: json['editable_renew'] == true ||
+          json['editable_renew'] == 1 ||
+          json['editable_renew'] == '1',
     );
   }
 
@@ -327,6 +333,7 @@ class AuditorModel {
         'str_tanggal_awal': strTanggalAwal?.toIso8601String(),
         'auditor_ext_count': auditorExtCount,
         'auditor_ext': auditorExt.map((e) => e.toJson()).toList(),
+        'editable_renew': editableRenew,
       };
 }
 
@@ -351,6 +358,9 @@ class AuditorCertificate {
       };
 }
 
+/// Definisi satu jenis dokumen pendukung auditor (Data Dukung) dari
+/// GET /auditor/dokumen/view (tanpa ref). `field` = nama part multipart yang
+/// dipakai saat upload; tidak boleh di-hardcode karena datang dari backend.
 class AuditorDokumenDef {
   final String id;
   final String namaDokumen;

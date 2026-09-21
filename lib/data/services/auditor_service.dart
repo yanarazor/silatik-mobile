@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import '../../core/constants/api_endpoints.dart';
 import '../../core/utils/api_response_utils.dart';
+import 'auditor_ext_payload.dart';
 
 class AuditorService {
   final Dio _dio;
@@ -80,5 +81,83 @@ class AuditorService {
     await _dio.post(ApiEndpoints.auditorRequestVerif, data: {
       'ref_latik': refLatik,
     });
+  }
+
+  // ---------------------------------------------------------- PERPANJANGAN
+
+  // POST /api/latikext-auditor — resolve/buat referensi perpanjangan auditor.
+  Future<Map<String, dynamic>> resolveExt(String refLatik) async {
+    final res = await _dio.post(ApiEndpoints.auditorExtResolve, data: {
+      'ref_latik': refLatik,
+    });
+    return Map<String, dynamic>.from(res.data as Map);
+  }
+
+  // POST /api/auditorext — simpan pilihan auditor untuk perpanjangan.
+  Future<void> saveExtSelection({
+    required String latikRef,
+    required String latikExt,
+    required List<String> auditorRefs,
+  }) async {
+    await _dio.post(ApiEndpoints.auditorExt, data: {
+      'latik_ref': latikRef,
+      'latik_ext': latikExt,
+      'auditors': [
+        for (final ref in auditorRefs) {'auditor_ref': ref},
+      ],
+    });
+  }
+
+  // GET /api/auditorext/dokumen/view?ref_ext=&ref_auditors=<csv>
+  Future<List<dynamic>> getExtDokumen(
+    String refExt,
+    List<String> refAuditors,
+  ) async {
+    final res = await _dio.get(
+      ApiEndpoints.auditorExtGetDokumen,
+      queryParameters: {
+        'ref_ext': refExt,
+        'ref_auditors': refAuditors.join(','),
+      },
+    );
+    return extractList(res.data);
+  }
+
+  // POST /api/auditorext/savedokumen (multipart, notasi array bersarang).
+  Future<void> saveExtDokumen({
+    required String latikRef,
+    required String latikExt,
+    required List<AuditorExtBatch> batches,
+  }) async {
+    final form = await buildAuditorExtSaveDokumenFormData(
+      latikRef: latikRef,
+      latikExt: latikExt,
+      batches: batches,
+    );
+    await _dio.post(ApiEndpoints.auditorExtSaveDokumen, data: form);
+  }
+
+  // POST /api/auditorext/createinvoice (multipart). Kembalikan `ref` invoice.
+  Future<String> createExtInvoice({
+    required String latikRef,
+    required String latikExt,
+    required List<AuditorExtInvoiceItem> auditors,
+  }) async {
+    final form = await buildAuditorExtCreateInvoiceFormData(
+      latikRef: latikRef,
+      latikExt: latikExt,
+      auditors: auditors,
+    );
+    final res =
+        await _dio.post(ApiEndpoints.auditorExtCreateInvoice, data: form);
+    return pickString(extractMap(res.data), const ['ref'], fallback: '') ?? '';
+  }
+
+  // POST /api/auditorext/requestverifikasi?latik_ext= — body kosong.
+  Future<void> requestExtVerifikasi(String refExt) async {
+    await _dio.post(
+      ApiEndpoints.auditorExtRequestVerifikasi,
+      queryParameters: {'latik_ext': refExt},
+    );
   }
 }

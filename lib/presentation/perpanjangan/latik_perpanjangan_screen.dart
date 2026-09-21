@@ -7,6 +7,7 @@ import 'package:open_filex/open_filex.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/api_error_handler.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/url_opener.dart';
 import '../../data/models/latik_profile.dart';
@@ -49,7 +50,7 @@ class _LatikPerpanjanganScreenState
     try {
       await ref.read(latikExtProvider(_key).notifier).load(widget.refExt);
     } catch (e) {
-      if (mounted) _snack('Gagal memuat dokumen: $e');
+      if (mounted) _snack(ApiErrorHandler.messageFrom(e));
     }
   }
 
@@ -121,7 +122,7 @@ class _LatikPerpanjanganScreenState
         context.pop();
       }
     } catch (e) {
-      if (mounted) _snack('Gagal mengirim pengajuan: $e');
+      if (mounted) _snack(ApiErrorHandler.messageFrom(e));
     }
   }
 
@@ -216,12 +217,18 @@ class _LatikPerpanjanganScreenState
 
   void _snack(String message, {bool error = true}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: error ? AppColors.error : AppColors.success,
-      ),
-    );
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: error ? AppColors.error : AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          ),
+        ),
+      );
   }
 }
 
@@ -296,8 +303,11 @@ class _DokumenStep extends StatelessWidget {
                 if (f != null) onPreview(f);
               },
               extraFields: (d.def.nomorRequired || d.def.tanggalRequired)
-                  ? _NomorTanggalFields(
-                      draft: d,
+                  ? NomorTanggalFields(
+                      showNomor: d.def.nomorRequired,
+                      showTanggal: d.def.tanggalRequired,
+                      nomor: d.nomor,
+                      tanggal: d.tanggal,
                       onNomor: (v) => onNomor(d.def.id, v),
                       onTanggal: () => onTanggal(d.def.id, d.tanggal),
                     )
@@ -484,86 +494,6 @@ class _InfoCard extends StatelessWidget {
       ],
     );
   }
-}
-
-class _NomorTanggalFields extends StatelessWidget {
-  const _NomorTanggalFields({
-    required this.draft,
-    required this.onNomor,
-    required this.onTanggal,
-  });
-
-  final ExtDokumenDraft draft;
-  final ValueChanged<String> onNomor;
-  final VoidCallback onTanggal;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (draft.def.nomorRequired) ...[
-          _label(theme, 'Nomor', true),
-          const SizedBox(height: 4),
-          TextFormField(
-            initialValue: draft.nomor,
-            onChanged: onNomor,
-            decoration: _inputDecoration('Masukkan nomor dokumen'),
-          ),
-          const SizedBox(height: AppTheme.spacing8),
-        ],
-        if (draft.def.tanggalRequired) ...[
-          _label(theme, 'Tanggal', true),
-          const SizedBox(height: 4),
-          InkWell(
-            onTap: onTanggal,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-            child: InputDecorator(
-              decoration: _inputDecoration('Pilih tanggal').copyWith(
-                suffixIcon: const Icon(Icons.calendar_today_rounded, size: 18),
-              ),
-              child: Text(
-                draft.tanggal != null
-                    ? AppFormatters.formatDate(draft.tanggal)
-                    : 'Pilih tanggal',
-                style: TextStyle(
-                  color: draft.tanggal != null
-                      ? const Color(0xFF111827)
-                      : AppColors.textSecondary,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _label(ThemeData theme, String text, bool required) => RichText(
-        text: TextSpan(
-          text: text,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
-          ),
-          children: required
-              ? const [
-                  TextSpan(text: ' *', style: TextStyle(color: AppColors.error))
-                ]
-              : const [],
-        ),
-      );
-
-  InputDecoration _inputDecoration(String hint) => InputDecoration(
-        hintText: hint,
-        isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        ),
-      );
 }
 
 class _KonfirmasiStep extends StatelessWidget {

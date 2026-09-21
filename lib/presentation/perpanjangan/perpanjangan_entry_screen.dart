@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/latik_ext_model.dart';
+import '../../providers/auditor_ext_provider.dart';
 import '../../providers/latik_ext_provider.dart';
 
 class PerpanjanganEntryScreen extends ConsumerStatefulWidget {
@@ -20,19 +21,40 @@ class _PerpanjanganEntryScreenState
     extends ConsumerState<PerpanjanganEntryScreen> {
   bool _busy = false;
 
-  Future<void> _startLatik() async {
-    final confirmed = await _confirm(
-      'Perpanjang Registrasi LATIK',
-      'Anda yakin ingin memperpanjang registrasi lembaga?',
-    );
+  Future<void> _startLatik() => _start(
+        confirmTitle: 'Perpanjang Registrasi LATIK',
+        confirmMessage: 'Anda yakin ingin memperpanjang registrasi lembaga?',
+        route: AppRoutes.perpanjanganLatik,
+        resolve: () {
+          ref.invalidate(latikExtResolveProvider);
+          return ref.read(latikExtResolveProvider.future);
+        },
+      );
+
+  Future<void> _startAuditor() => _start(
+        confirmTitle: 'Perpanjang Registrasi Auditor',
+        confirmMessage: 'Anda yakin ingin memperpanjang registrasi auditor?',
+        route: AppRoutes.perpanjanganAuditor,
+        resolve: () {
+          ref.invalidate(auditorExtResolveProvider);
+          return ref.read(auditorExtResolveProvider.future);
+        },
+      );
+
+  Future<void> _start({
+    required String confirmTitle,
+    required String confirmMessage,
+    required String route,
+    required Future<ExtResolution?> Function() resolve,
+  }) async {
+    final confirmed = await _confirm(confirmTitle, confirmMessage);
     if (confirmed != true || !mounted) return;
 
     setState(() => _busy = true);
     ExtResolution? resolution;
     String? error;
     try {
-      ref.invalidate(latikExtResolveProvider);
-      resolution = await ref.read(latikExtResolveProvider.future);
+      resolution = await resolve();
     } catch (e) {
       error = e.toString();
     } finally {
@@ -46,16 +68,13 @@ class _PerpanjanganEntryScreenState
     }
     if (resolution == null) {
       _info('Tidak tersedia',
-          'Perpanjangan belum dapat dimulai untuk lembaga ini.');
+          'Perpanjangan belum dapat dimulai saat ini.');
       return;
     }
 
     switch (resolution.action) {
       case ExtAction.proceed:
-        context.push(
-          AppRoutes.perpanjanganLatik,
-          extra: resolution.refExt,
-        );
+        context.push(route, extra: resolution.refExt);
       case ExtAction.inVerification:
         _info('Sedang Diverifikasi',
             'Pengajuan perpanjangan Anda sedang dalam proses verifikasi.');
@@ -110,9 +129,9 @@ class _PerpanjanganEntryScreenState
                 _ChoiceCard(
                   icon: Icons.groups_rounded,
                   title: 'Auditor',
-                  subtitle: 'Segera hadir.',
-                  enabled: false,
-                  onTap: () {},
+                  subtitle: 'Perpanjang registrasi satu atau lebih auditor.',
+                  enabled: !_busy,
+                  onTap: _startAuditor,
                 ),
               ],
             ),

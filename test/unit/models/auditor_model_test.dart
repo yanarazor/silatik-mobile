@@ -365,4 +365,24 @@ void main() {
       expect(model.auditorExtCount, 0);
     });
   });
+
+  group('AuditorModel.editableRenew (selection gate)', () {
+    test('true for bool true / int 1 / string "1"', () {
+      expect(AuditorModel.fromJson({'editable_renew': true}).editableRenew,
+          isTrue);
+      expect(
+          AuditorModel.fromJson({'editable_renew': 1}).editableRenew, isTrue);
+      expect(AuditorModel.fromJson({'editable_renew': '1'}).editableRenew,
+          isTrue);
+    });
+
+    test('false for explicit false / absent / other values', () {
+      // Nilai nyata dari /latik/auditors sample.
+      expect(AuditorModel.fromJson({'editable_renew': false}).editableRenew,
+          isFalse);
+      expect(AuditorModel.fromJson(const {}).editableRenew, isFalse);
+      expect(
+          AuditorModel.fromJson({'editable_renew': 0}).editableRenew, isFalse);
+    });
+  });
 }
