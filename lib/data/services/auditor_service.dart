@@ -65,6 +65,13 @@ class AuditorService {
     await _dio.post(ApiEndpoints.auditorSaveDokumen, data: formData);
   }
 
+  // GET /api/auditor/sertifikasiteknis/{ref_auditor} → list of certificates.
+  Future<List<dynamic>> getSertifikasiTeknis(String refAuditor) async {
+    final res =
+        await _dio.get('${ApiEndpoints.auditorGetSertif}/$refAuditor');
+    return extractList(res.data);
+  }
+
   // POST /api/auditor/simpansertifikasiteknis (multipart). [data] boleh Map
   // atau FormData.
   Future<void> simpanSertifikasiTeknis(Object data) async {

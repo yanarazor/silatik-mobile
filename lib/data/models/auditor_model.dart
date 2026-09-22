@@ -131,22 +131,7 @@ class AuditorModel {
             .toList()
         : <Map<String, dynamic>>[];
     final certModels = certificates
-        .map(
-          (item) => AuditorCertificate(
-            nama: (item['nama_pelatihan'] ??
-                    item['nama'] ??
-                    item['nama_sertifikat'] ??
-                    '')
-                .toString(),
-            lembaga: (item['lembaga'] ?? item['issuer'] ?? '').toString(),
-            tahun: (item['tahun'] ?? '').toString(),
-            fileUrl: (item['sertifikat_file_url'] ??
-                    item['sertifikat_file'] ??
-                    item['file_url'] ??
-                    '')
-                .toString(),
-          ),
-        )
+        .map(AuditorCertificate.fromJson)
         .where((c) => c.nama.isNotEmpty || c.fileUrl.isNotEmpty)
         .toList();
     final firstCert = certificates.isNotEmpty ? certificates.first : null;
@@ -373,19 +358,45 @@ class AuditorModel {
 }
 
 class AuditorCertificate {
+  /// Certificate UUID; used for DELETE /auditor/sertifikasiteknis/{ref}.
+  /// Empty for certificates not yet saved on the server (cannot be deleted).
+  final String ref;
   final String nama;
   final String lembaga;
   final String tahun;
   final String fileUrl;
 
   const AuditorCertificate({
+    this.ref = '',
     required this.nama,
     required this.lembaga,
     required this.tahun,
     required this.fileUrl,
   });
 
+  /// A row from GET /auditor/sertifikasiteknis/{ref} (`data` envelope).
+  factory AuditorCertificate.fromJson(Map<String, dynamic> json) {
+    return AuditorCertificate(
+      ref: (json['ref'] ?? json['id'] ?? '').toString(),
+      nama: (json['nama_pelatihan'] ??
+              json['nama'] ??
+              json['nama_sertifikat'] ??
+              '')
+          .toString(),
+      lembaga: (json['lembaga'] ?? json['issuer'] ?? '').toString(),
+      tahun: (json['tahun'] ?? '').toString(),
+      fileUrl: (json['sertifikat_file_url'] ??
+              json['sertifikat_file'] ??
+              json['file_url'] ??
+              '')
+          .toString(),
+    );
+  }
+
+  bool get canDelete => ref.trim().isNotEmpty;
+
   Map<String, dynamic> toJson() => {
+        'ref': ref,
         'nama': nama,
         'lembaga': lembaga,
         'tahun': tahun,

@@ -214,14 +214,19 @@ class AuditorFormNotifier extends StateNotifier<AuditorFormState> {
     }
   }
 
-  /// Simpan satu Sertifikasi Teknis (butuh auditor sudah tersimpan).
+  /// Save one Technical Certification. [auditorRef] must be supplied by the
+  /// caller (the standalone screen knows its ref) so it doesn't depend on state
+  /// that can be autoDisposed; falls back to state.ref for legacy callers (edit tab).
   Future<void> addSertifikat({
     required String namaPelatihan,
     required String tahun,
     required String lembaga,
     required FileItem sertifikatFile,
+    String? auditorRef,
   }) async {
-    final ref = state.ref;
+    final ref = (auditorRef != null && auditorRef.isNotEmpty)
+        ? auditorRef
+        : state.ref;
     if (ref == null || ref.isEmpty) {
       throw StateError('Auditor belum tersimpan');
     }
@@ -234,18 +239,7 @@ class AuditorFormNotifier extends StateNotifier<AuditorFormState> {
         lembaga: lembaga,
         sertifikatFile: sertifikatFile,
       );
-      state = state.copyWith(
-        submitting: false,
-        certificates: [
-          ...state.certificates,
-          AuditorCertificate(
-            nama: namaPelatihan,
-            lembaga: lembaga,
-            tahun: tahun,
-            fileUrl: '',
-          ),
-        ],
-      );
+      state = state.copyWith(submitting: false);
     } catch (e) {
       state = state.copyWith(submitting: false, error: e.toString());
       rethrow;

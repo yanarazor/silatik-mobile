@@ -48,7 +48,9 @@ class AuditorRepository {
   /// Create auditor (Profil + Data Dukung) via multipart. Mengembalikan `ref`.
   Future<String> save(AuditorProfilPayload payload) async {
     final res = await _service.saveAuditor(await payload.toFormData());
-    return pickString(res, const ['ref', 'auditor_ref', 'ref_auditor']) ?? '';
+    return pickString(extractMap(res), const ['ref', 'auditor_ref', 'ref_auditor']) ??
+        pickString(res, const ['ref', 'auditor_ref', 'ref_auditor']) ??
+        '';
   }
 
   /// Update auditor: kirim ref + hanya file dokumen yang berubah.
@@ -73,6 +75,19 @@ class AuditorRepository {
     );
     await _service.simpanSertifikasiTeknis(form);
   }
+
+  Future<List<AuditorCertificate>> getSertifikasiTeknis(
+      String refAuditor) async {
+    final rows = await _service.getSertifikasiTeknis(refAuditor);
+    return rows
+        .whereType<Map>()
+        .map((item) =>
+            AuditorCertificate.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Future<void> deleteSertifikasiTeknis(String refSertifikat) =>
+      _service.deleteSertifikasiTeknis(refSertifikat);
 
   Future<void> delete(String ref) => _service.deleteAuditor(ref);
 }

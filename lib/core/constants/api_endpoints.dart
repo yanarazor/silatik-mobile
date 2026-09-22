@@ -55,6 +55,8 @@
   static const String auditorDokumenView = 'auditor/dokumen/view';
   static const String auditorSimpanSertif = 'auditor/simpansertifikasiteknis';
   static const String auditorUpdateSertif = 'auditor/updatesertifikasiteknis';
+  static const String auditorGetSertif =
+      'auditor/sertifikasiteknis'; // + /{ref}
   static const String auditorDeleteSertif =
       'auditor/sertifikasiteknis'; // + /{ref}
   static const String auditorRequestVerif =

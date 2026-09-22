@@ -36,3 +36,7 @@ final auditorListProvider = FutureProvider<List<AuditorModel>>(
 final auditorDocsProvider = FutureProvider.autoDispose
     .family<List<AuditorDocument>, String>((ref, auditorRef) =>
         ref.watch(auditorRepoProvider).getDocuments(auditorRef));
+
+final auditorSertifikasiProvider = FutureProvider.autoDispose
+    .family<List<AuditorCertificate>, String>((ref, auditorRef) =>
+        ref.watch(auditorRepoProvider).getSertifikasiTeknis(auditorRef));
