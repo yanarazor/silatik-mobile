@@ -385,4 +385,56 @@ void main() {
           AuditorModel.fromJson({'editable_renew': 0}).editableRenew, isFalse);
     });
   });
+
+  AuditorModel aud({
+    String strNo = '',
+    int activeInvoiceCount = 0,
+    int? auditorStep,
+  }) =>
+      AuditorModel.fromJson({
+        'ref': 'A1',
+        'str_no': strNo,
+        'active_invoice_count': activeInvoiceCount,
+        if (auditorStep != null) 'auditor_step': auditorStep,
+      });
+
+  group('AuditorModel.canEdit (add-auditor isEditable)', () {
+    test('true when no STR, no active invoice', () {
+      expect(aud().canEdit, isTrue);
+    });
+
+    test('true when returned (auditor_step == 3) even without invoices', () {
+      expect(aud(auditorStep: 3).canEdit, isTrue);
+    });
+
+    test('false when STR number is set', () {
+      expect(aud(strNo: 'STR-123').canEdit, isFalse);
+    });
+
+    test('false when active invoices exist', () {
+      expect(aud(activeInvoiceCount: 2).canEdit, isFalse);
+    });
+
+    test('STR set wins over returned step', () {
+      expect(aud(strNo: 'STR-1', auditorStep: 3).canEdit, isFalse);
+    });
+  });
+
+  group('AuditorModel.canDelete (add-auditor isDeleteable)', () {
+    test('true when no STR, no active invoice, not returned', () {
+      expect(aud().canDelete, isTrue);
+    });
+
+    test('false when STR number is set', () {
+      expect(aud(strNo: 'STR-123').canDelete, isFalse);
+    });
+
+    test('false when active invoices exist', () {
+      expect(aud(activeInvoiceCount: 1).canDelete, isFalse);
+    });
+
+    test('false when returned (auditor_step == 3)', () {
+      expect(aud(auditorStep: 3).canDelete, isFalse);
+    });
+  });
 }

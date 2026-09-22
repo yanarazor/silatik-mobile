@@ -759,6 +759,14 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
     // Tombol Ajukan Penambahan hanya saat auditor_step == 0 (belum diajukan).
     // null (field tak dikirim API) atau step lain (ajuan diproses) = sembunyi.
     final canAjukan = _auditor.auditorStep == 0;
+    // Manage Auditor mixes the web `add-auditor` & `update` flows; only
+    // `add-auditor` is handled here. Edit & Delete are gated by STR /
+    // active invoice / auditor_step (see AuditorModel.canEdit & canDelete).
+    // TODO(update-flow): when latik needs to submit/resubmit verification, add
+    // the update viewMode gate (Edit always shown; Delete needs editable &&
+    // profil.status_verifikasi != 2).
+    final showEdit = _auditor.canEdit;
+    final showHapus = _auditor.canDelete;
     return Column(
       children: [
         if (canAjukan) ...[
@@ -781,57 +789,62 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
               ),
             ),
           ),
-          const SizedBox(height: AppTheme.spacing12),
         ],
-        SizedBox(
-          height: 52,
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final changed =
-                  await openAuditorForm(context, initial: _auditor);
-              if (changed == true && mounted) navigator.pop();
-            },
-            icon: const Icon(Icons.edit_square, size: 20),
-            label: const Text(
-              'Edit Auditor',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
+        if (showEdit) ...[
+          if (canAjukan) const SizedBox(height: AppTheme.spacing12),
+          SizedBox(
+            height: 52,
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                final changed =
+                    await openAuditorForm(context, initial: _auditor);
+                if (changed == true && mounted) navigator.pop();
+              },
+              icon: const Icon(Icons.edit_square, size: 20),
+              label: const Text(
+                'Edit Auditor',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-            style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppTheme.spacing12),
-        SizedBox(
-          height: 50,
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () => _confirmHapus(),
-            icon: const Icon(Icons.delete_outline, size: 20),
-            label: const Text(
-              'Hapus Auditor',
-              style: TextStyle(
-                color: AppColors.error,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.error,
-              side: const BorderSide(color: AppColors.error, width: 1.2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
+                ),
               ),
             ),
           ),
-        ),
+        ],
+        if (showHapus) ...[
+          if (canAjukan || showEdit)
+            const SizedBox(height: AppTheme.spacing12),
+          SizedBox(
+            height: 50,
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _confirmHapus(),
+              icon: const Icon(Icons.delete_outline, size: 20),
+              label: const Text(
+                'Hapus Auditor',
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: const BorderSide(color: AppColors.error, width: 1.2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

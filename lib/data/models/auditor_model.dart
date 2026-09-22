@@ -277,6 +277,27 @@ class AuditorModel {
     );
   }
 
+  /// Gates the Edit button on the detail screen (spec: add-auditor viewMode
+  /// `isEditable`). Cannot be edited when it has an STR (`str_no`) or an active
+  /// invoice; can be edited when there is no active invoice OR the auditor was
+  /// returned (`auditor_step == 3`).
+  /// Note: the `update` flow (submit/resubmit latik verification) is not handled yet.
+  bool get canEdit {
+    if (strNo.trim().isNotEmpty) return false;
+    if (activeInvoiceCount > 0) return false;
+    return activeInvoiceCount == 0 || auditorStep == 3;
+  }
+
+  /// Gates the Delete button (spec: add-auditor viewMode `isDeleteable`). Cannot
+  /// be deleted when it has an STR, has an active invoice, or was already
+  /// returned (`auditor_step == 3`); otherwise it can.
+  bool get canDelete {
+    if (strNo.trim().isNotEmpty) return false;
+    if (activeInvoiceCount > 0) return false;
+    if (auditorStep == 3) return false;
+    return true;
+  }
+
   static int? _toInt(dynamic value) => parseInt(value);
 
   static DateTime? _parseDate(dynamic value) => parseFlexibleDate(value);
