@@ -4,92 +4,59 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:silatik_mobile/data/models/auditor_model.dart';
 import 'package:silatik_mobile/data/repositories/auditor_repository.dart';
-import 'package:silatik_mobile/presentation/auditor/form/auditor_sertifikasi_step.dart';
+import 'package:silatik_mobile/presentation/auditor/form/auditor_sertifikasi_body.dart';
+import 'package:silatik_mobile/presentation/shared/dokumen_upload_card.dart';
 import 'package:silatik_mobile/providers/auditor_form_provider.dart';
+import 'package:silatik_mobile/providers/auditor_provider.dart';
 
 class MockAuditorRepository extends Mock implements AuditorRepository {}
 
-Widget _host(AuditorFormNotifier notifier) {
+const _ref = 'AUD-1';
+
+Widget _host(AuditorFormNotifier notifier, List<AuditorCertificate> certs) {
   return ProviderScope(
     overrides: [
-      auditorFormProvider(null).overrideWith((ref) => notifier),
+      auditorFormProvider(_ref).overrideWith((ref) => notifier),
+      auditorSertifikasiProvider(_ref).overrideWith((ref) async => certs),
     ],
-    child: MaterialApp(
+    child: const MaterialApp(
       home: Scaffold(
-        body: AuditorSertifikasiStep(
-          formKey: null,
-          onBack: () {},
-          onFinish: () {},
-        ),
+        body: AuditorSertifikasiBody(formKey: _ref),
       ),
     ),
   );
 }
 
 void main() {
-  testWidgets('locked until auditor saved (no ref)', (tester) async {
+  testWidgets('shows add form', (tester) async {
     final notifier = AuditorFormNotifier(MockAuditorRepository());
-    await tester.pumpWidget(_host(notifier));
-    await tester.pump();
+    await tester.pumpWidget(_host(notifier, const []));
+    await tester.pumpAndSettle();
 
-    expect(find.text('Simpan data auditor dulu'), findsOneWidget);
-    expect(find.text('Tambah Sertifikat'), findsNothing);
+    // List-first: tombol Tambah Sertifikat tampil; form ada di bottom sheet.
+    expect(find.text('Tambah Sertifikat'), findsOneWidget);
+    expect(find.byType(DokumenUploadCard), findsNothing);
   });
 
-  testWidgets('unlocked and lists existing certificates once saved',
-      (tester) async {
+  testWidgets('empty state shown when no certificates', (tester) async {
     final notifier = AuditorFormNotifier(MockAuditorRepository());
-    // Buat state tersimpan lewat initFromAuditor dengan satu sertifikat.
-    notifier.initFromAuditor(
-      _auditorWithRef('REF-1'),
-      const <AuditorDocument>[],
-    );
+    await tester.pumpWidget(_host(notifier, const []));
+    await tester.pumpAndSettle();
 
-    await tester.pumpWidget(_host(notifier));
-    await tester.pump();
+    expect(find.text('Belum ada sertifikat'), findsOneWidget);
+  });
 
-    expect(find.text('Tambah Sertifikat'), findsOneWidget);
+  testWidgets('lists saved certificates from server provider', (tester) async {
+    final notifier = AuditorFormNotifier(MockAuditorRepository());
+    await tester.pumpWidget(_host(notifier, const [
+      AuditorCertificate(
+          ref: 'C1', nama: 'Pelatihan A', lembaga: 'BRIN', tahun: '2023', fileUrl: ''),
+    ]));
+    await tester.pumpAndSettle();
+
     expect(find.text('Pelatihan A'), findsOneWidget);
+    expect(find.text('Sertifikat Tersimpan (1)'), findsOneWidget);
+    // Sertifikat dengan ref bisa dihapus → ada tombol hapus.
+    expect(find.byIcon(Icons.delete_outline), findsOneWidget);
   });
 }
-
-AuditorModel _auditorWithRef(String ref) => AuditorModel(
-      id: ref,
-      nama: 'Budi',
-      email: '',
-      nik: '3201010101010001',
-      tempatLahir: '',
-      tanggalLahir: null,
-      alamat: '',
-      provinsi: '',
-      kabupaten: '',
-      kodePos: '',
-      agama: '',
-      phone: '',
-      keterangan: '',
-      fotoUrl: '',
-      nomorSertifikasi: '',
-      lembagaPenerbit: '',
-      tanggalTerbit: null,
-      tanggalBerakhir: null,
-      kompetensi: const [],
-      certificates: const [
-        AuditorCertificate(
-            nama: 'Pelatihan A', lembaga: 'BRIN', tahun: '2023', fileUrl: ''),
-      ],
-      statusLabel: '',
-      activeLabel: '',
-      verificationLabel: '',
-      strTanggalAkhir: null,
-      filePath: '',
-      fileName: '',
-      fileSize: 0,
-      ktpFileUrl: '',
-      sertifikatKompetensiUrl: '',
-      portofolioUrl: '',
-      praktikAuditUrl: '',
-      asosiasiProfesiUrl: '',
-      pernyataanIntegritasUrl: '',
-      suratPermohonanUrl: '',
-      pengangkatanUrl: '',
-    );

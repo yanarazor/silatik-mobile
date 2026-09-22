@@ -215,6 +215,24 @@ void main() {
     });
   });
 
+  group('AuditorService.getSertifikasiTeknis', () {
+    test('fetches certificate list by auditor ref', () async {
+      when(() => mockDio.get(any())).thenAnswer(
+        (_) async => makeResponse({
+          'data': [
+            {'ref': 'C1', 'nama_pelatihan': 'Pelatihan A'},
+            {'ref': 'C2', 'nama_pelatihan': 'Pelatihan B'},
+          ],
+        }),
+      );
+
+      final result = await auditorService.getSertifikasiTeknis('AUD-1');
+      expect(result, hasLength(2));
+      expect(result.first['ref'], 'C1');
+      verify(() => mockDio.get('auditor/sertifikasiteknis/AUD-1')).called(1);
+    });
+  });
+
   group('AuditorService.simpanSertifikasiTeknis', () {
     test('posts certification data', () async {
       when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(

@@ -13,6 +13,7 @@ import '../../providers/auditor_provider.dart';
 import '../../providers/master_data_provider.dart';
 import '../shared/cached_remote_image.dart';
 import 'form/auditor_form_screen.dart';
+import 'form/auditor_sertifikasi_screen.dart';
 
 class AuditorDetailScreen extends ConsumerStatefulWidget {
   final AuditorModel auditor;
@@ -459,16 +460,43 @@ class _AuditorDetailScreenState extends ConsumerState<AuditorDetailScreen> {
   bool _isNumericId(String value) =>
       value.isNotEmpty && RegExp(r'^\d+$').hasMatch(value);
   Widget _buildCertificates(BuildContext context) {
-    if (_auditor.certificates.isEmpty) {
-      return const _EmptySection('Belum ada sertifikat pelatihan');
-    }
+    final certsAsync = ref.watch(auditorSertifikasiProvider(_auditor.id));
+    final certs = certsAsync.valueOrNull ?? _auditor.certificates;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final cert in _auditor.certificates)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
-            child: _buildCertificateRow(context, cert),
+        if (certsAsync.isLoading && certsAsync.valueOrNull == null)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppTheme.spacing8),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (certs.isEmpty)
+          const _EmptySection('Belum ada sertifikat pelatihan')
+        else
+          for (final cert in certs)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spacing8),
+              child: _buildCertificateRow(context, cert),
+            ),
+        if (_auditor.canEdit) ...[
+          const SizedBox(height: AppTheme.spacing8),
+          OutlinedButton.icon(
+            onPressed: () async {
+              await openAuditorSertifikasi(context, ref: _auditor.id);
+              if (!mounted) return;
+              ref.invalidate(auditorSertifikasiProvider(_auditor.id));
+            },
+            icon: const Icon(Icons.workspace_premium_outlined, size: 18),
+            label: const Text('Kelola Sertifikasi Teknis'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.primary),
+              padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+            ),
           ),
+        ],
       ],
     );
   }
