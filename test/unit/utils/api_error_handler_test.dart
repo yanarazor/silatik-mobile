@@ -153,4 +153,24 @@ void main() {
           'Terjadi kesalahan. Silakan coba lagi.');
     });
   });
+
+  group('global DioException.readableStringBuilder root', () {
+    setUp(() => DioException.readableStringBuilder = ApiErrorHandler.getMessage);
+    tearDown(() => DioException.readableStringBuilder =
+        defaultDioExceptionReadableStringBuilder);
+
+    test('toString() yields clean message, no "DioException [...]" prefix', () {
+      final error = DioException(
+        requestOptions: RequestOptions(path: 'x'),
+        response: Response(
+          statusCode: 400,
+          requestOptions: RequestOptions(path: 'x'),
+          data: {'message': 'Sudah diajukan | Module: /api/x'},
+        ),
+      );
+      // This is what raw callsites do: '$e' / e.toString() / error: e.toString().
+      expect('$error', 'Sudah diajukan');
+      expect(error.toString(), isNot(contains('DioException')));
+    });
+  });
 }

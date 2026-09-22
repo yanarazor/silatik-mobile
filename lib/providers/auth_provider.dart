@@ -92,13 +92,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e) {
       debugPrint('[AUTH_PROVIDER] login error: $e');
-      String errorMessage = e.toString();
       if (e is DioException) {
         debugPrint('[AUTH_PROVIDER] dio status: ${e.response?.statusCode}');
         debugPrint('[AUTH_PROVIDER] dio body: ${e.response?.data}');
-        errorMessage = ApiErrorHandler.getMessage(e);
       }
-      state = state.copyWith(isLoading: false, error: errorMessage);
+      state =
+          state.copyWith(isLoading: false, error: ApiErrorHandler.messageFrom(e));
     }
   }
 
@@ -108,11 +107,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _repo.register(payload);
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      String errorMessage = e.toString();
-      if (e is DioException) {
-        errorMessage = ApiErrorHandler.getMessage(e);
-      }
-      state = state.copyWith(isLoading: false, error: errorMessage);
+      state =
+          state.copyWith(isLoading: false, error: ApiErrorHandler.messageFrom(e));
       rethrow;
     }
   }
@@ -123,11 +119,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _repo.forgotPassword(email);
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      String errorMessage = e.toString();
-      if (e is DioException) {
-        errorMessage = ApiErrorHandler.getMessage(e);
-      }
-      state = state.copyWith(isLoading: false, error: errorMessage);
+      state =
+          state.copyWith(isLoading: false, error: ApiErrorHandler.messageFrom(e));
       rethrow;
     }
   }
@@ -136,10 +129,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _repo.changePassword(oldPassword, newPassword);
     } catch (e) {
-      if (e is DioException) {
-        throw ApiErrorHandler.getMessage(e);
-      }
-      throw e.toString();
+      throw ApiErrorHandler.messageFrom(e);
     }
   }
 
