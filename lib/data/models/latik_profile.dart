@@ -35,6 +35,8 @@ class LatikProfile {
   final String statusVerifikasi;
   final String strStatus;
 
+  final bool editable;
+
   final DateTime? strTanggalAwal;
   final DateTime? strTanggalAkhir;
 
@@ -81,6 +83,7 @@ class LatikProfile {
     this.namaStatusStr = '',
     this.statusVerifikasi = '',
     this.strStatus = '',
+    this.editable = true,
     this.strTanggalAwal,
     this.strTanggalAkhir,
     this.latikRef = '',
@@ -152,6 +155,11 @@ class LatikProfile {
         'verification_status',
       ]),
       strStatus: get(const ['str_status', 'status_aktif_str']),
+      editable: () {
+        final raw = pickString(json, const ['editable'], deep: true);
+        if (raw == null) return true;
+        return raw != 'false' && raw != '0';
+      }(),
       strTanggalAwal: parseFlexibleDate(
           pickString(json, const ['str_tanggal_awal'], deep: true)),
       strTanggalAkhir: parseFlexibleDate(

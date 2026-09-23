@@ -21,4 +21,5 @@
   static const perpanjanganLatik = '/perpanjangan/latik';
   static const perpanjanganAuditor = '/perpanjangan/auditor';
   static const penambahanAuditor = '/penambahan/auditor';
+  static const verifikasiLatik = '/verifikasi/latik';
 }
