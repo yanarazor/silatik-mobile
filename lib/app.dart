@@ -32,6 +32,7 @@ import 'presentation/perpanjangan/perpanjangan_entry_screen.dart';
 import 'presentation/perpanjangan/latik_perpanjangan_screen.dart';
 import 'presentation/perpanjangan/auditor_perpanjangan_screen.dart';
 import 'presentation/transaksi/transaksi_screen.dart';
+import 'presentation/verifikasi/latik_verifikasi_screen.dart';
 import 'presentation/shared/app_bottom_nav.dart';
 import 'presentation/shared/pdf_viewer_screen.dart';
 import 'providers/auth_provider.dart';
@@ -142,6 +143,11 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
           builder: (_, state) =>
               PenambahanConfirmScreen(auditor: state.extra as AuditorModel),
         ),
+        GoRoute(
+          path: AppRoutes.verifikasiLatik,
+          builder: (_, state) =>
+              LatikVerifikasiScreen(profile: state.extra as LatikProfile),
+        ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             return ScaffoldWithNavBar(navigationShell: navigationShell);
@@ -213,6 +219,7 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         location == AppRoutes.dokumenBerkas ||
         location == AppRoutes.dokumenBerkasEdit ||
         location == AppRoutes.transaksi ||
+        location == AppRoutes.verifikasiLatik ||
         location == AppRoutes.auditors) {
       return AccessControl.latikProfile;
     }

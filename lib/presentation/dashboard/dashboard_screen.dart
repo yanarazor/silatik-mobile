@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../data/models/latik_profile.dart';
 import '../../data/models/notifikasi_model.dart';
+import '../../providers/latik_verifikasi_provider.dart';
 import '../../providers/notifikasi_provider.dart';
 import '../../providers/profile_menu_provider.dart';
 import '../shared/blue_header_band.dart';
@@ -311,7 +312,7 @@ class _LatikSummaryCard extends StatelessWidget {
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
-        onTap: () => _showLatikDetail(context, data),
+        onTap: () => _onCardTap(context, data),
         borderRadius: BorderRadius.circular(18),
         child: Container(
           padding: const EdgeInsets.all(22),
@@ -376,6 +377,17 @@ class _LatikSummaryCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _onCardTap(BuildContext context, LatikProfile data) {
+    switch (verifikasiActionFor(data.statusVerifikasi)) {
+      case VerifikasiAction.wizard:
+        context.push(AppRoutes.verifikasiLatik, extra: data);
+      case VerifikasiAction.transaksi:
+        context.push(AppRoutes.transaksi);
+      case VerifikasiAction.detail:
+        _showLatikDetail(context, data);
+    }
   }
 
   void _showLatikDetail(BuildContext context, LatikProfile data) {
