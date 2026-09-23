@@ -80,4 +80,31 @@ void main() {
       expect(LatikProfile.fromJson({'name': 'X'}).isEmpty, isFalse);
     });
   });
+
+  group('LatikProfile.editable', () {
+    test('absent -> true (brand-new registration, edit mode)', () {
+      expect(LatikProfile.fromJson({'name': 'PT X'}).editable, isTrue);
+    });
+
+    test('explicit true -> true', () {
+      expect(LatikProfile.fromJson({'editable': true}).editable, isTrue);
+      expect(LatikProfile.fromJson({'editable': 1}).editable, isTrue);
+      expect(LatikProfile.fromJson({'editable': '1'}).editable, isTrue);
+    });
+
+    test('explicit false -> false (read-only)', () {
+      expect(LatikProfile.fromJson({'editable': false}).editable, isFalse);
+      expect(LatikProfile.fromJson({'editable': 0}).editable, isFalse);
+      expect(LatikProfile.fromJson({'editable': '0'}).editable, isFalse);
+    });
+
+    test('nested under o_latik -> false', () {
+      expect(
+        LatikProfile.fromJson({
+          'o_latik': {'editable': false}
+        }).editable,
+        isFalse,
+      );
+    });
+  });
 }

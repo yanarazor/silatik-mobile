@@ -44,6 +44,21 @@
   static const String latikInvoice = 'latik/invoice'; // + /{ref}
   static const String latikListInvoices = 'latik/listinvoices';
 
+  // LATIK EXTENSION
+  static const String latikExt = 'latikext'; // GET/POST
+  static const String latikExtView =
+      'latikext'; // + /{ref_ext} // TODO: integrate
+  static const String latikExtUpdateStr =
+      'latikext/updatestr'; // TODO: integrate
+  static const String latikExtSaveDokumen = 'latikext/savedokumen';
+  static const String latikExtGetDokumen = 'latikext/dokumen/view';
+  static const String latikExtRequestVerifikasi = 'latikext/requestverifikasi';
+  static const String latikExtRevision =
+      'latikext/revisi'; // TODO: integrate; web path, absent from API docs
+  static const String latikExtCreateInvoice =
+      'latik/createinvoicelatikextension'; // TODO: integrate; web path, absent from API docs
+
+
   // AUDITOR
   static const String auditorSave = 'auditor/save';
   static const String auditorUpdate = 'auditor/update';

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:silatik_mobile/data/services/auditor_ext_payload.dart';
 import 'package:silatik_mobile/data/services/latik_service.dart';
 
 import '../../helpers/mock_helpers.dart';
@@ -129,14 +130,14 @@ void main() {
   });
 
   group('LatikService.konfirmasiData', () {
-    test('posts confirmation with ref', () async {
+    test('posts {is_checked: 1}', () async {
       when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
         (_) async => makeResponse(null),
       );
 
-      await latikService.konfirmasiData('LATIK-001');
+      await latikService.konfirmasiData();
       verify(() => mockDio.post('latik/konfirmasidata',
-          data: {'ref_latik': 'LATIK-001', 'is_checked': true})).called(1);
+          data: {'is_checked': 1})).called(1);
     });
   });
 
@@ -205,14 +206,18 @@ void main() {
     });
   });
 
-  group('LatikService.createInvoice', () {
-    test('creates invoice with ref', () async {
+  group('LatikService.createRegistrationInvoice', () {
+    test('posts multipart to latik/createinvoice and returns ref', () async {
       when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
-        (_) async => makeResponse({'invoice_id': 'INV-001'}),
+        (_) async => makeResponse({'ref': 'INV-001'}),
       );
 
-      final result = await latikService.createInvoice('LATIK-001');
-      expect(result['invoice_id'], 'INV-001');
+      final result = await latikService.createRegistrationInvoice(const [
+        LatikRegAuditorItem(ref: 'AUD-1', nama: 'Don', status: 1),
+      ]);
+      expect(result, 'INV-001');
+      verify(() => mockDio.post('latik/createinvoice',
+          data: any(named: 'data'))).called(1);
     });
   });
 

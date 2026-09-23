@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'dart:io';
 import '../../core/constants/api_endpoints.dart';
 import '../../core/utils/api_response_utils.dart';
+import 'auditor_ext_payload.dart';
 
 class LatikService {
   final Dio _dio;
@@ -62,18 +63,16 @@ class LatikService {
     return res.data['data'] ?? res.data;
   }
 
-  // GET /api/dokumen_pendukung/aktif → ambil template dokumen yg wajib diupload
+  // GET /api/dokumen_pendukung/aktif → fetch required document templates
   Future<List<dynamic>> getDokumenPendukungAktif() async {
     final res = await _dio.get(ApiEndpoints.dokumenPendukungAktif);
     return res.data['data'] ?? res.data;
   }
 
-  // POST /api/latik/konfirmasidata
-  Future<void> konfirmasiData(String refLatik) async {
-    await _dio.post(ApiEndpoints.latikKonfirmasi, data: {
-      'ref_latik': refLatik,
-      'is_checked': true,
-    });
+  // POST /api/latik/konfirmasidata — body {is_checked: 1}. Marks
+  // org data as confirmed; backend resolves LATIK from token.
+  Future<void> konfirmasiData() async {
+    await _dio.post(ApiEndpoints.latikKonfirmasi, data: {'is_checked': 1});
   }
 
   // POST /api/latik/requestverifikasi
@@ -115,12 +114,16 @@ class LatikService {
     return extractList(res.data);
   }
 
-  // POST /api/latik/createinvoice
-  Future<Map<String, dynamic>> createInvoice(String refLatik) async {
-    final res = await _dio.post(ApiEndpoints.latikCreateInvoice, data: {
-      'ref_latik': refLatik,
-    });
-    return res.data;
+  // POST /api/latik/createinvoice (multipart) — INITIAL REGISTRATION mode
+  // (is_new=1). `auditor` = JSON string of selected auditors.
+  // Returns invoice `ref`.
+  Future<String> createRegistrationInvoice(
+      List<LatikRegAuditorItem> auditors) async {
+    final res = await _dio.post(
+      ApiEndpoints.latikCreateInvoice,
+      data: buildLatikRegistrationInvoiceFormData(auditors: auditors),
+    );
+    return pickString(extractMap(res.data), const ['ref'], fallback: '') ?? '';
   }
 
   // GET /api/latik/search?q={query} (public)
@@ -148,9 +151,9 @@ class LatikService {
     await _dio.delete('${ApiEndpoints.latikDeletePengalaman}/$ref');
   }
 
-  // ---------------------------------------------------------- PERPANJANGAN
+  // ---------------------------------------------------------- EXTENSION
 
-  // POST /api/latikext — resolve/buat referensi perpanjangan untuk LATIK ini.
+  // POST /api/latikext — resolve/create extension reference for this LATIK.
   Future<Map<String, dynamic>> resolveExt(String refLatik) async {
     final res = await _dio.post(ApiEndpoints.latikExt, data: {
       'ref_latik': refLatik,
@@ -192,9 +195,9 @@ class LatikService {
         data: FormData.fromMap(map));
   }
 
-  // POST /api/latik/createinvoice (multipart) — mode perpanjangan.
-  // `is_new=2` menandai extension; karena itu `latik_ext` wajib disertakan,
-  // `auditor` dikirim daftar kosong untuk alur LATIK. Kembalikan `ref` invoice.
+  // POST /api/latik/createinvoice (multipart) — extension mode.
+  // `is_new=2` marks an extension; therefore `latik_ext` must be included,
+  // `auditor` is sent as an empty list for the LATIK flow. Returns invoice `ref`.
   Future<String> createExtInvoice(String refExt) async {
     final res = await _dio.post(
       ApiEndpoints.latikCreateInvoice,
@@ -207,7 +210,7 @@ class LatikService {
     return pickString(extractMap(res.data), const ['ref'], fallback: '') ?? '';
   }
 
-  // POST /api/latikext/requestverifikasi?ref_ext= — body kosong.
+  // POST /api/latikext/requestverifikasi?ref_ext= — empty body.
   Future<void> requestExtVerifikasi(String refExt) async {
     await _dio.post(
       ApiEndpoints.latikExtRequestVerifikasi,

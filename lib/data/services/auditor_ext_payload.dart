@@ -126,3 +126,47 @@ class AuditorAddInvoiceItem {
     this.status,
   });
 }
+
+class LatikRegAuditorItem {
+  final String ref;
+  final String nama;
+  final int? status;
+
+  const LatikRegAuditorItem({
+    required this.ref,
+    required this.nama,
+    this.status,
+  });
+
+  bool get isTetap => status == 1;
+}
+
+FormData buildLatikRegistrationInvoiceFormData({
+  required List<LatikRegAuditorItem> auditors,
+}) {
+  final auditorJson = jsonEncode({
+    'auditor': [
+      for (final a in auditors)
+        {
+          'ref': a.ref,
+          'nama': a.nama,
+          'status': a.isTetap ? '1' : '0',
+          'is_new': '1',
+        },
+    ],
+  });
+
+  return FormData.fromMap({
+    'is_new': '1',
+    'auditor': auditorJson,
+  });
+}
+
+int latikRegistrationTotal(List<LatikRegAuditorItem> auditors) {
+  const base = 5000000;
+  const perAuditor = 1000000;
+  final firstTetapIdx = auditors.indexWhere((a) => a.isTetap);
+  final freeCount = firstTetapIdx == -1 ? 0 : 1;
+  final nonFree = auditors.length - freeCount;
+  return base + nonFree * perAuditor;
+}
