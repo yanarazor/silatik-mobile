@@ -11,6 +11,8 @@ import '../../data/models/auditor_model.dart';
 import '../../providers/auditor_provider.dart' show auditorListProvider;
 import '../../providers/invoice_provider.dart' show invoiceListProvider;
 import '../../providers/penambahan_provider.dart';
+import '../shared/confirm_dialog.dart';
+import '../shared/pks_notice.dart';
 
 const int kPenambahanFeeEstimate = 1000000;
 
@@ -41,7 +43,7 @@ class PenambahanConfirmScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(AppTheme.spacing16),
           children: [
-            const _PksNotice(),
+            const PksNotice(),
             const SizedBox(height: AppTheme.spacing16),
             _FeeCard(auditor: auditor),
           ],
@@ -56,6 +58,14 @@ class PenambahanConfirmScreen extends ConsumerWidget {
   }
 
   Future<void> _submit(BuildContext context, WidgetRef ref) async {
+    final ok = await showConfirmDialog(
+      context,
+      title: 'Ajukan Penambahan',
+      message: 'Tagihan akan dibuat dan pengajuan dikirim untuk verifikasi. '
+          'Lanjutkan?',
+      confirmLabel: 'Ya, Ajukan',
+    );
+    if (!ok || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ref.read(penambahanProvider.notifier).submit(auditor);
@@ -70,70 +80,6 @@ class PenambahanConfirmScreen extends ConsumerWidget {
         ),
       );
     }
-  }
-}
-
-class _PksNotice extends StatelessWidget {
-  const _PksNotice();
-
-  static const _address = [
-    'Direktorat Alih dan Sistem Audit Teknologi',
-    'Kedeputian Pemanfaatan Riset dan Inovasi',
-    'Badan Riset dan Inovasi Nasional',
-    'Gedung BJ Habibie Lantai 9',
-    'Jl. M.H. Thamrin No.8, RT.2/RW.1, Kebon Sirih, Kec. Menteng, '
-        'Kota Jakarta Pusat',
-    'Daerah Khusus Ibukota Jakarta 10340',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.warning_amber_rounded,
-                  size: 20, color: AppColors.warning),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Mohon mengirimkan dokumen PKS bermaterai rangkap 2 ke '
-                  'alamat berikut:',
-                  style: TextStyle(
-                    color: AppColors.warning.withValues(alpha: 0.95),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    height: 1.35,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacing12),
-          for (final line in _address)
-            Padding(
-              padding: const EdgeInsets.only(left: 28, bottom: 4),
-              child: Text(
-                line,
-                style: TextStyle(
-                  color: AppColors.warning.withValues(alpha: 0.95),
-                  fontSize: 12.5,
-                  height: 1.35,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
   }
 }
 

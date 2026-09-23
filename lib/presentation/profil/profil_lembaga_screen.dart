@@ -1,26 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
-import '../../core/constants/map_config.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/url_opener.dart';
 import '../../data/models/latik_profile.dart';
 import '../../providers/auditor_provider.dart';
 import '../../providers/profile_menu_provider.dart';
+import '../shared/latik_info_section.dart';
 
 const _green = Color(0xFF25B45B);
 const _amber = Color(0xFFE8A000);
 const _cardBorder = Color(0xFFE5EAF3);
 const _blueTint = Color(0xFFEAF2FB);
 const _blueTintBorder = Color(0xFFD5E5F7);
-const _scopeBg = Color(0xFFEBF3FC);
 
 class ProfilLembagaScreen extends ConsumerWidget {
   const ProfilLembagaScreen({super.key});
@@ -73,12 +69,10 @@ class ProfilLembagaScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               _StatsRow(data: data, auditorCount: auditorCount),
               const SizedBox(height: 16),
-              _InfoSection(data: data),
-              if (_LatLng.parse(data.latitude, data.longitude) != null) ...[
+              LatikInfoSection(data: data),
+              if (LatikLocationCard.maybeBuild(data) case final map?) ...[
                 const SizedBox(height: 16),
-                _LocationCard(
-                  coord: _LatLng.parse(data.latitude, data.longitude)!,
-                ),
+                map,
               ],
             ],
           );
@@ -411,276 +405,6 @@ class _StatsRow extends StatelessWidget {
   }
 }
 
-class _InfoSection extends StatelessWidget {
-  const _InfoSection({required this.data});
-
-  final LatikProfile data;
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = _buildRows();
-
-    return _Card(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              SizedBox(
-                width: 4,
-                height: 16,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.all(Radius.circular(8)),
-                  ),
-                ),
-              ),
-              SizedBox(width: 8),
-              Text(
-                'Informasi Lembaga',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (rows.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Text(
-                'Belum ada data informasi lembaga.',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
-              ),
-            )
-          else
-            for (var i = 0; i < rows.length; i++) ...[
-              if (i > 0) const Divider(height: 1, color: Color(0xFFF0F2F7)),
-              rows[i],
-            ],
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildRows() {
-    final noRegistrasi = data.noPendaftaran;
-    final nib = data.noNib;
-    final npwp = data.noNpwp;
-    final nama = data.namaLatik;
-    final email = data.email;
-    final alamat = data.fullAddress;
-    final telepon = data.phone;
-    final website = data.website;
-    final areaOperasional = data.areaOperasional;
-    final scopes = latikScopeLabels(data.scopeSource);
-
-    final rows = <Widget>[];
-    if (noRegistrasi.isNotEmpty) {
-      rows.add(_ValueRow(
-        label: 'Nomor Registrasi',
-        value: noRegistrasi,
-        mono: true,
-      ));
-    }
-    if (nib.isNotEmpty) {
-      rows.add(_ValueRow(
-        label: 'Nomor Induk Berusaha (NIB)',
-        value: nib,
-        mono: true,
-        trailing: const Icon(Icons.verified_rounded,
-            size: 16, color: Color(0xFF25B45B)),
-      ));
-    }
-    if (npwp.isNotEmpty) {
-      rows.add(_ValueRow(label: 'NPWP Institusi', value: npwp, mono: true));
-    }
-    if (nama.isNotEmpty) {
-      rows.add(_ValueRow(label: 'Nama Lembaga', value: nama));
-    }
-    if (email.isNotEmpty) {
-      rows.add(_ValueRow(
-        label: 'Email Institusi',
-        value: email,
-        valueColor: AppColors.primaryLight,
-        onTap: () => _launchUrl(email, mailto: true),
-      ));
-    }
-    if (alamat.isNotEmpty) {
-      rows.add(_ValueRow(label: 'Alamat Lengkap', value: alamat));
-    }
-    if (telepon.isNotEmpty) {
-      rows.add(_ValueRow(label: 'Nomor Telepon Kantor', value: telepon));
-    }
-    if (website.isNotEmpty) {
-      rows.add(_ValueRow(
-        label: 'Website Resmi',
-        value: website,
-        valueColor: AppColors.primaryLight,
-        trailing: const Icon(Icons.open_in_new,
-            size: 16, color: AppColors.primaryLight),
-        onTap: () => _launchUrl(website),
-      ));
-    }
-    if (areaOperasional.isNotEmpty) {
-      rows.add(_ValueRow(label: 'Area Operasional', value: areaOperasional));
-    }
-    if (scopes.isNotEmpty) {
-      rows.add(_ValueRow(
-        label: 'Lingkup Pendaftaran',
-        child: Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final s in scopes) _ScopeChip(label: s),
-          ],
-        ),
-      ));
-    }
-    return rows;
-  }
-}
-
-class _LatLng {
-  const _LatLng(this.lat, this.lng);
-
-  final double lat;
-  final double lng;
-
-  static _LatLng? parse(String rawLat, String rawLng) {
-    final lat = double.tryParse(rawLat.trim());
-    final lng = double.tryParse(rawLng.trim());
-    if (lat == null || lng == null) return null;
-    if (lat == 0 && lng == 0) return null;
-    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
-    return _LatLng(lat, lng);
-  }
-
-  LatLng get latLng => LatLng(lat, lng);
-
-  String get osmPageUrl =>
-      'https://www.openstreetmap.org/?mlat=$lat&mlon=$lng#map=16/$lat/$lng';
-}
-
-class _LocationCard extends StatelessWidget {
-  const _LocationCard({required this.coord});
-
-  final _LatLng coord;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Card(
-      child: InkWell(
-        onTap: () => openFileUrl(
-          context,
-          coord.osmPageUrl,
-          emptyMessage: 'Lokasi tidak tersedia',
-          failureMessage: 'Gagal membuka peta',
-        ),
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                SizedBox(
-                  width: 4,
-                  height: 16,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Lokasi Lembaga',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: IgnorePointer(
-                child: SizedBox(
-                  height: 200,
-                  child: FlutterMap(
-                    key: ValueKey('${coord.lat},${coord.lng}'),
-                    options: MapOptions(
-                      initialCenter: coord.latLng,
-                      initialZoom: 16,
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.none,
-                      ),
-                    ),
-                    children: [
-                      TileLayer(
-                        urlTemplate: MapConfig.tileUrlTemplate,
-                        userAgentPackageName: MapConfig.userAgentPackageName,
-                        maxZoom: 16,
-                      ),
-                      MarkerLayer(
-                        markers: [
-                          Marker(
-                            point: coord.latLng,
-                            width: 44,
-                            height: 44,
-                            alignment: Alignment.bottomCenter,
-                            child: const Icon(
-                              Icons.location_on,
-                              color: AppColors.error,
-                              size: 40,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const _OsmAttribution(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OsmAttribution extends StatelessWidget {
-  const _OsmAttribution();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Align(
-      alignment: Alignment.bottomRight,
-      child: ColoredBox(
-        color: Colors.white70,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          child: Text(
-            '© OpenStreetMap',
-            style: TextStyle(fontSize: 9, color: AppColors.textSecondary),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _Card extends StatelessWidget {
   const _Card({required this.child, this.padding = const EdgeInsets.all(16)});
 
@@ -777,81 +501,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _ValueRow extends StatelessWidget {
-  const _ValueRow({
-    required this.label,
-    this.value,
-    this.child,
-    this.valueColor,
-    this.mono = false,
-    this.trailing,
-    this.onTap,
-  });
-
-  final String label;
-  final String? value;
-  final Widget? child;
-  final Color? valueColor;
-  final bool mono;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = value ?? '';
-    final content = child ??
-        Text(
-          text,
-          style: TextStyle(
-            color: valueColor ?? AppColors.textPrimary,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            fontFamily: mono ? 'monospace' : null,
-            height: 1.35,
-          ),
-        );
-
-    final row = Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: content),
-        if (trailing != null) ...[
-          const SizedBox(width: 6),
-          trailing!,
-        ],
-      ],
-    );
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 3),
-          onTap != null
-              ? InkWell(
-                  onTap: onTap,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: row,
-                  ),
-                )
-              : row,
-        ],
-      ),
-    );
-  }
-}
-
 class _PairRow extends StatelessWidget {
   const _PairRow({required this.label, required this.value, this.mono = false});
 
@@ -893,51 +542,6 @@ class _PairRow extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _ScopeChip extends StatelessWidget {
-  const _ScopeChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: _scopeBg,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: _blueTintBorder),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _scopeIcon(label),
-            size: 14,
-            color: AppColors.primary,
-          ),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static IconData _scopeIcon(String label) {
-    final t = label.toLowerCase();
-    if (t.contains('aplikasi')) return Icons.apps_rounded;
-    if (t.contains('infrastruktur')) return Icons.lan_rounded;
-    if (t.contains('keamanan')) return Icons.security_rounded;
-    return Icons.apartment_rounded;
   }
 }
 
@@ -1122,62 +726,4 @@ String _periodText(DateTime? start, DateTime? end) {
   return '';
 }
 
-void _launchUrl(String url, {bool mailto = false}) {
-  var target = url.trim();
-  if (mailto && !target.startsWith('mailto:')) target = 'mailto:$target';
-  if (!mailto && !target.contains('://')) target = 'https://$target';
-  final uri = Uri.tryParse(target);
-  if (uri == null) return;
-  final scheme = uri.scheme;
-  if (scheme != 'http' && scheme != 'https' && scheme != 'mailto') return;
-  launchUrl(uri,
-      mode: mailto
-          ? LaunchMode.externalApplication
-          : LaunchMode.inAppBrowserView);
-}
 
-String? latikScopeName(String raw) {
-  final t = raw.trim().toLowerCase().replaceAll('_', ' ');
-  if (t.isEmpty || t == 'null') return null;
-  if (t.contains('aplikasi')) return 'Aplikasi';
-  if (t.contains('infrastruktur')) return 'Infrastruktur';
-  if (t.contains('keamanan')) return 'Keamanan Informasi';
-  if (t.contains('organisasi') || t.contains('tata kelola')) {
-    return 'Organisasi';
-  }
-  return null;
-}
-
-List<String> latikScopeLabels(Object? raw) {
-  final result = <String>[];
-
-  void add(String? label) {
-    if (label != null && !result.contains(label)) result.add(label);
-  }
-
-  if (raw is Map) {
-    raw.forEach((key, value) {
-      if (value == true || value == 1 || value == '1') {
-        add(latikScopeName(key.toString()));
-      } else if (value is String &&
-          const {'true', '1', 'aktif', 'active', 'ya', 'yes'}
-              .contains(value.trim().toLowerCase())) {
-        add(latikScopeName(key.toString()));
-      }
-    });
-    return result;
-  }
-  if (raw is List) {
-    for (final item in raw) {
-      if (item == null) continue;
-      add(latikScopeName(item.toString()));
-    }
-    return result;
-  }
-  if (raw is String && raw.trim().isNotEmpty && raw != 'null') {
-    for (final part in raw.split(',')) {
-      add(latikScopeName(part));
-    }
-  }
-  return result;
-}

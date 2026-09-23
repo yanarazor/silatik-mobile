@@ -10,14 +10,15 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/api_error_handler.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/url_opener.dart';
-import '../../data/models/latik_profile.dart';
 import '../../data/models/registrasi_model.dart';
 import '../../providers/invoice_provider.dart';
 import '../../providers/latik_ext_provider.dart';
 import '../../providers/profile_menu_provider.dart';
 import '../auditor/form/auditor_profil_step.dart' show kAuditorFileMaxBytes;
 import '../registration/widgets/step_indicator.dart';
+import '../shared/confirm_dialog.dart';
 import '../shared/dokumen_upload_card.dart';
+import '../shared/latik_info_section.dart';
 
 const int _kLatikExtFee = 3750000;
 
@@ -109,6 +110,14 @@ class _LatikPerpanjanganScreenState
   }
 
   Future<void> _submit() async {
+    final ok = await showConfirmDialog(
+      context,
+      title: 'Ajukan Perpanjangan',
+      message: 'Tagihan akan dibuat dan pengajuan dikirim untuk verifikasi. '
+          'Lanjutkan?',
+      confirmLabel: 'Ya, Ajukan',
+    );
+    if (!ok || !mounted) return;
     try {
       final invoiceRef =
           await ref.read(latikExtProvider(_key).notifier).submit();
@@ -406,7 +415,11 @@ class _DataLatikStep extends ConsumerWidget {
                   ?.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppTheme.spacing16),
-            _InfoCard(data: data),
+            LatikInfoSection(data: data),
+            if (LatikLocationCard.maybeBuild(data) case final map?) ...[
+              const SizedBox(height: AppTheme.spacing16),
+              map,
+            ],
             const SizedBox(height: AppTheme.spacing24),
             ElevatedButton(
               onPressed: onNext,
@@ -422,76 +435,6 @@ class _DataLatikStep extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.data});
-
-  final LatikProfile data;
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = <(String, String)>[
-      ('Nama Lembaga', data.namaLatik),
-      ('Nomor Registrasi', data.noPendaftaran),
-      ('No. STR', data.noStr),
-      ('NIB', data.noNib),
-      ('NPWP', data.noNpwp),
-      ('Email', data.email),
-      ('Telepon', data.phone),
-      ('Alamat', data.fullAddress),
-      ('Website', data.website),
-    ].where((e) => e.$2.trim().isNotEmpty).toList();
-
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (rows.isEmpty)
-            Text(
-              'Data lembaga belum tersedia.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: AppColors.textSecondary),
-            )
-          else
-            for (var i = 0; i < rows.length; i++) ...[
-              if (i > 0) const Divider(height: 20, color: Color(0xFFF0F2F7)),
-              _row(context, rows[i].$1, rows[i].$2),
-            ],
-        ],
-      ),
-    );
-  }
-
-  Widget _row(BuildContext context, String label, String value) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(fontWeight: FontWeight.w600),
-        ),
-      ],
     );
   }
 }
