@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../data/models/auditor_document.dart';
 import '../../../data/models/auditor_model.dart';
 import '../../../providers/auditor_form_provider.dart';
 import '../../../providers/auditor_provider.dart';

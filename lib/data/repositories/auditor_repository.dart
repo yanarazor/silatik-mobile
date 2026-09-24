@@ -1,4 +1,7 @@
 import '../../core/utils/api_response_utils.dart';
+import '../models/auditor_certificate.dart';
+import '../models/auditor_document.dart';
+import '../models/auditor_dokumen_def.dart';
 import '../models/auditor_model.dart';
 import '../models/registrasi_model.dart';
 import '../services/auditor_payload.dart';

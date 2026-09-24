@@ -1,4 +1,6 @@
 import '../../core/utils/api_response_utils.dart';
+import 'auditor_certificate.dart';
+import 'auditor_extension.dart';
 
 class AuditorModel {
   final String id;
@@ -36,9 +38,6 @@ class AuditorModel {
   final String pernyataanIntegritasUrl;
   final String suratPermohonanUrl;
   final String pengangkatanUrl;
-
-  /// Raw numeric values from the API. These are the codes the labels above
-  /// are derived from; they power list filters and status chips.
   final int? status;
   final int? statusAktif;
   final int? statusVerifikasi;
@@ -47,13 +46,9 @@ class AuditorModel {
   final DateTime? strTanggalAwal;
   final int auditorExtCount;
   final List<AuditorExtension> auditorExt;
-
   final bool editableRenew;
-
   final int? auditorStep;
-
   final int activeInvoiceCount;
-
   final bool editableAdd;
 
   const AuditorModel({
@@ -178,66 +173,57 @@ class AuditorModel {
       nama: (json['nama'] ?? json['name'] ?? json['nama_auditor'] ?? '')
           .toString(),
       email: (json['email'] ?? '').toString(),
-      nik:
-          (json['nik'] ?? json['identity_number'] ?? json['no_identitas'] ?? '')
-              .toString(),
+      nik: (json['nik'] ?? json['identity_number'] ?? json['no_identitas'] ?? '')
+          .toString(),
       tempatLahir:
           (json['tempat_lahir'] ?? json['birth_place'] ?? '').toString(),
       tanggalLahir: _parseDate(json['tanggal_lahir'] ?? json['birth_date']),
       alamat: (json['alamat'] ?? json['address'] ?? '').toString(),
-      provinsi:
-          (json['provinsi'] ?? json['province'] ?? json['nama_provinsi'] ?? '')
-              .toString(),
+      provinsi: (json['provinsi'] ?? json['province'] ?? json['nama_provinsi'] ?? '')
+          .toString(),
       kabupaten: (json['kabupaten'] ??
               json['kota'] ??
               json['city'] ??
-              json['nama_kabupaten'] ??
-              '')
+              json['nama_kabupaten'] ?? '')
           .toString(),
-      kodePos:
-          (json['kode_post'] ?? json['kode_pos'] ?? json['postal_code'] ?? '')
-              .toString(),
+      kodePos: (json['kode_post'] ?? json['kode_pos'] ?? json['postal_code'] ?? '')
+          .toString(),
       agama: (json['agama'] ?? '').toString(),
       phone: (json['phone'] ?? json['telepon'] ?? '').toString(),
       keterangan: (json['keterangan'] ?? '').toString(),
       fotoUrl: (json['url_foto'] ??
               json['foto_url'] ??
               json['foto'] ??
-              json['photo_url'] ??
-              '')
+              json['photo_url'] ?? '')
           .toString(),
       nomorSertifikasi: (json['nomor_sertifikasi'] ??
               json['no_sertifikat'] ??
               json['sertifikat'] ??
-              certName ??
-              '')
+              certName ?? '')
           .toString(),
       lembagaPenerbit:
           (json['lembaga_penerbit'] ?? json['issuer'] ?? certIssuer ?? '')
               .toString(),
-      tanggalTerbit: _parseDate(
-              json['tanggal_terbit'] ?? json['terbit'] ?? json['issued_at']) ??
-          certYearDate,
-      tanggalBerakhir: _parseDate(
-          json['tanggal_berakhir'] ?? json['berakhir'] ?? json['expired_at']),
+      tanggalTerbit:
+          _parseDate(json['tanggal_terbit'] ?? json['terbit'] ?? json['issued_at']) ??
+              certYearDate,
+      tanggalBerakhir:
+          _parseDate(json['tanggal_berakhir'] ?? json['berakhir'] ?? json['expired_at']),
       kompetensi: derivedKompetensi,
       certificates: certModels,
       statusLabel: _statusLabel(json['status']),
       activeLabel: _activeLabel(json['status_aktif'] ?? json['active']),
       verificationLabel: _verificationLabel(json['status_verifikasi']),
       strTanggalAkhir: _parseDate(json['str_tanggal_akhir']),
-      filePath:
-          (json['file_path'] ?? json['path'] ?? certFileUrl ?? '').toString(),
+      filePath: (json['file_path'] ?? json['path'] ?? certFileUrl ?? '').toString(),
       fileName: (json['file_name'] ?? json['filename'] ?? '').toString(),
       fileSize: parseInt(json['file_size'] ?? json['size']) ?? 0,
       ktpFileUrl: (json['ktp_file'] ?? '').toString(),
-      sertifikatKompetensiUrl:
-          (json['sertifikat_kompetensi_file'] ?? '').toString(),
+      sertifikatKompetensiUrl: (json['sertifikat_kompetensi_file'] ?? '').toString(),
       portofolioUrl: (json['portofolio'] ?? '').toString(),
       praktikAuditUrl: (json['praktik_audit_file'] ?? '').toString(),
       asosiasiProfesiUrl: (json['asosiasi_profesi_file'] ?? '').toString(),
-      pernyataanIntegritasUrl:
-          (json['pernyataan_integritas_file'] ?? '').toString(),
+      pernyataanIntegritasUrl: (json['pernyataan_integritas_file'] ?? '').toString(),
       suratPermohonanUrl: (json['surat_permohonan_file'] ?? '').toString(),
       pengangkatanUrl: (json['pengangkatan_file'] ?? '').toString(),
       status: _toInt(json['status']),
@@ -262,20 +248,12 @@ class AuditorModel {
     );
   }
 
-  /// Gates the Edit button on the detail screen (spec: add-auditor viewMode
-  /// `isEditable`). Cannot be edited when it has an STR (`str_no`) or an active
-  /// invoice; can be edited when there is no active invoice OR the auditor was
-  /// returned (`auditor_step == 3`).
-  /// Note: the `update` flow (submit/resubmit latik verification) is not handled yet.
   bool get canEdit {
     if (strNo.trim().isNotEmpty) return false;
     if (activeInvoiceCount > 0) return false;
     return activeInvoiceCount == 0 || auditorStep == 3;
   }
 
-  /// Gates the Delete button (spec: add-auditor viewMode `isDeleteable`). Cannot
-  /// be deleted when it has an STR, has an active invoice, or was already
-  /// returned (`auditor_step == 3`); otherwise it can.
   bool get canDelete {
     if (strNo.trim().isNotEmpty) return false;
     if (activeInvoiceCount > 0) return false;
@@ -284,7 +262,6 @@ class AuditorModel {
   }
 
   static int? _toInt(dynamic value) => parseInt(value);
-
   static DateTime? _parseDate(dynamic value) => parseFlexibleDate(value);
 
   static DateTime? _parseYear(String? value) {
@@ -354,246 +331,5 @@ class AuditorModel {
         'auditor_ext_count': auditorExtCount,
         'auditor_ext': auditorExt.map((e) => e.toJson()).toList(),
         'editable_renew': editableRenew,
-      };
-}
-
-class AuditorCertificate {
-  /// Certificate UUID; used for DELETE /auditor/sertifikasiteknis/{ref}.
-  /// Empty for certificates not yet saved on the server (cannot be deleted).
-  final String ref;
-  final String nama;
-  final String lembaga;
-  final String tahun;
-  final String fileUrl;
-
-  const AuditorCertificate({
-    this.ref = '',
-    required this.nama,
-    required this.lembaga,
-    required this.tahun,
-    required this.fileUrl,
-  });
-
-  /// A row from GET /auditor/sertifikasiteknis/{ref} (`data` envelope).
-  factory AuditorCertificate.fromJson(Map<String, dynamic> json) {
-    return AuditorCertificate(
-      ref: (json['ref'] ?? json['id'] ?? '').toString(),
-      nama: (json['nama_pelatihan'] ??
-              json['nama'] ??
-              json['nama_sertifikat'] ??
-              '')
-          .toString(),
-      lembaga: (json['lembaga'] ?? json['issuer'] ?? '').toString(),
-      tahun: (json['tahun'] ?? '').toString(),
-      fileUrl: (json['sertifikat_file_url'] ??
-              json['sertifikat_file'] ??
-              json['file_url'] ??
-              '')
-          .toString(),
-    );
-  }
-
-  bool get canDelete => ref.trim().isNotEmpty;
-
-  Map<String, dynamic> toJson() => {
-        'ref': ref,
-        'nama': nama,
-        'lembaga': lembaga,
-        'tahun': tahun,
-        'file_url': fileUrl,
-      };
-}
-
-/// Definisi satu jenis dokumen pendukung auditor (Data Dukung) dari
-/// GET /auditor/dokumen/view (tanpa ref). `field` = nama part multipart yang
-/// dipakai saat upload; tidak boleh di-hardcode karena datang dari backend.
-class AuditorDokumenDef {
-  final String id;
-  final String namaDokumen;
-  final String field;
-  final bool fileRequired;
-  final int order;
-
-  const AuditorDokumenDef({
-    required this.id,
-    required this.namaDokumen,
-    required this.field,
-    required this.fileRequired,
-    required this.order,
-  });
-
-  factory AuditorDokumenDef.fromJson(Map<String, dynamic> json) {
-    return AuditorDokumenDef(
-      id: (json['id'] ?? '').toString(),
-      namaDokumen: (json['nama_dokumen'] ?? json['nama'] ?? '').toString(),
-      field: (json['field'] ?? json['kolom'] ?? '').toString(),
-      // file_required boleh 1/0/true; anggap wajib kecuali eksplisit 0/false.
-      fileRequired: parseInt(json['file_required']) != 0,
-      order: parseInt(json['order']) ?? 0,
-    );
-  }
-}
-
-/// Satu dokumen pendukung auditor dari GET /auditor/dokumen/view?ref=…
-class AuditorDocument {
-  final String id;
-  final String nama;
-  final String nomor;
-  final String field;
-  final int? statusVerifikasi; // 1 = terverifikasi
-  final String catatanVerifikasi;
-  final String url;
-
-  const AuditorDocument({
-    required this.id,
-    required this.nama,
-    required this.nomor,
-    required this.field,
-    required this.statusVerifikasi,
-    required this.catatanVerifikasi,
-    required this.url,
-  });
-
-  factory AuditorDocument.fromJson(Map<String, dynamic> json) {
-    final isi = json['isi'] is Map
-        ? Map<String, dynamic>.from(json['isi'])
-        : const <String, dynamic>{};
-    // Backend memakai key dinamis `url_<field>` untuk file tiap dokumen.
-    final field = _pick(json, const ['field', 'kolom']);
-    final urlKey = field.isEmpty ? null : 'url_$field';
-    final sources = [
-      isi,
-      json,
-      if (json['o_dokumen'] is Map)
-        Map<String, dynamic>.from(json['o_dokumen']),
-      if (isi['o_dokumen'] is Map) Map<String, dynamic>.from(isi['o_dokumen']),
-    ];
-    String first(String key) {
-      for (final source in sources) {
-        final raw = source[key];
-        if (raw == null) continue;
-        final text = raw.toString().trim();
-        if (text.isNotEmpty && text != 'null') return text;
-      }
-      return '';
-    }
-
-    final url = (urlKey != null && first(urlKey).isNotEmpty)
-        ? first(urlKey)
-        : first('url_dokumen');
-
-    return AuditorDocument(
-      id: first('ref').isNotEmpty ? first('ref') : first('id'),
-      nama: first('nama_dokumen').isNotEmpty
-          ? first('nama_dokumen')
-          : first('nama'),
-      nomor: first('nomor'),
-      field: field,
-      statusVerifikasi: _toInt(first('status_verifikasi')),
-      catatanVerifikasi: first('catatan_verifikasi').isNotEmpty
-          ? first('catatan_verifikasi')
-          : first('alasan_verifikasi'),
-      url: url,
-    );
-  }
-
-  static String _pick(Map<String, dynamic> data, List<String> keys) =>
-      pickString(data, keys, fallback: '')!;
-
-  static int? _toInt(String value) => parseInt(value);
-}
-
-/// Riwayat perpanjangan auditor (auditor_ext dari /latik/auditors).
-class AuditorExtension {
-  final String ref;
-  final String auditorRef;
-  final String latikExt;
-  final int? status; // 3 = selesai, 1 = dalam proses
-  final int? statusVerifikasi; // 1 = terverifikasi
-  final String catatanVerifikasi;
-  final DateTime? strTanggalAwal;
-  final DateTime? strTanggalAkhir;
-  final AuditorExtInvoice? invoice;
-
-  const AuditorExtension({
-    required this.ref,
-    required this.auditorRef,
-    required this.latikExt,
-    this.status,
-    this.statusVerifikasi,
-    this.catatanVerifikasi = '',
-    this.strTanggalAwal,
-    this.strTanggalAkhir,
-    this.invoice,
-  });
-
-  factory AuditorExtension.fromJson(Map<String, dynamic> json) {
-    final invoices = json['paid_ext_invoice'];
-    AuditorExtInvoice? invoice;
-    if (invoices is List) {
-      for (final item in invoices.whereType<Map>()) {
-        invoice = AuditorExtInvoice.fromJson(Map<String, dynamic>.from(item));
-        break;
-      }
-    }
-    return AuditorExtension(
-      ref: (json['ref'] ?? json['id'] ?? '').toString(),
-      auditorRef: (json['auditor_ref'] ?? '').toString(),
-      latikExt: (json['latik_ext'] ?? '').toString(),
-      status: _toInt(json['status']),
-      statusVerifikasi: _toInt(json['status_verifikasi']),
-      catatanVerifikasi: (json['catatan_verifikasi'] ?? '').toString(),
-      strTanggalAwal:
-          DateTime.tryParse((json['str_tanggal_awal'] ?? '').toString()),
-      strTanggalAkhir:
-          DateTime.tryParse((json['str_tanggal_akhir'] ?? '').toString()),
-      invoice: invoice,
-    );
-  }
-
-  static int? _toInt(dynamic value) => parseInt(value);
-
-  Map<String, dynamic> toJson() => {
-        'ref': ref,
-        'auditor_ref': auditorRef,
-        'latik_ext': latikExt,
-        'status': status,
-        'status_verifikasi': statusVerifikasi,
-        'catatan_verifikasi': catatanVerifikasi,
-        'str_tanggal_awal': strTanggalAwal?.toIso8601String(),
-        'str_tanggal_akhir': strTanggalAkhir?.toIso8601String(),
-        'paid_ext_invoice': invoice == null ? null : [invoice!.toJson()],
-      };
-}
-
-class AuditorExtInvoice {
-  final String kodeTagihan;
-  final String kode;
-  final int? tagihanTotal;
-  final int? status; // 1 = terhutang, 2 = lunas, 99 = kadaluarsa
-
-  const AuditorExtInvoice({
-    required this.kodeTagihan,
-    required this.kode,
-    this.tagihanTotal,
-    this.status,
-  });
-
-  factory AuditorExtInvoice.fromJson(Map<String, dynamic> json) {
-    return AuditorExtInvoice(
-      kodeTagihan: (json['kode_tagihan'] ?? '').toString(),
-      kode: (json['kode'] ?? '').toString(),
-      tagihanTotal: _toInt(json['tagihan_total'] ?? json['tagihan_auditor']),
-      status: _toInt(json['status']),
-    );
-  }
-
-  static int? _toInt(dynamic value) => parseInt(value);
-
-  Map<String, dynamic> toJson() => {
-        'kode_tagihan': kodeTagihan,
-        'kode': kode,
-        'tagihan_total': tagihanTotal,
-        'status': status,
       };
 }

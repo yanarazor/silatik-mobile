@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/models/auditor_certificate.dart';
+import '../data/models/auditor_document.dart';
 import '../data/models/auditor_model.dart';
 import '../data/repositories/auditor_repository.dart';
 import '../data/services/auditor_service.dart';

@@ -7,7 +7,7 @@ import 'package:open_filex/open_filex.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/url_opener.dart';
-import '../../../data/models/auditor_model.dart';
+import '../../../data/models/auditor_dokumen_def.dart';
 import '../../../data/models/registrasi_model.dart';
 import '../../../providers/auditor_form_provider.dart';
 import '../../shared/dokumen_upload_card.dart';

@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/models/auditor_certificate.dart';
+import '../data/models/auditor_document.dart';
+import '../data/models/auditor_dokumen_def.dart';
 import '../data/models/auditor_model.dart';
 import '../data/models/registrasi_model.dart';
 import '../data/repositories/auditor_repository.dart';
