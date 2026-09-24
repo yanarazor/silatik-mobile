@@ -15,7 +15,7 @@ import '../../providers/invoice_provider.dart';
 import '../../providers/latik_ext_provider.dart';
 import '../../providers/profile_menu_provider.dart';
 import '../auditor/form/auditor_profil_step.dart' show kAuditorFileMaxBytes;
-import '../registration/widgets/step_indicator.dart';
+import '../shared/step_indicator.dart';
 import '../shared/confirm_dialog.dart';
 import '../shared/dokumen_upload_card.dart';
 import '../shared/latik_info_section.dart';

@@ -9,7 +9,7 @@ import '../data/models/registrasi_model.dart';
 import '../data/repositories/latik_ext_repository.dart';
 import '../data/services/latik_service.dart';
 import 'auth_provider.dart';
-import 'registrasi_provider.dart' show latikServiceProvider;
+import 'latik_service_provider.dart';
 
 final latikExtRepoProvider = Provider(
     (ref) => LatikExtRepository(ref.watch(latikServiceProvider)));

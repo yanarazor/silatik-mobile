@@ -15,7 +15,7 @@ import '../../data/models/profil_dokumen.dart';
 import '../../data/models/registrasi_model.dart';
 import '../../data/services/latik_service.dart';
 import '../../providers/profile_menu_provider.dart';
-import '../../providers/registrasi_provider.dart';
+import '../../providers/latik_service_provider.dart';
 import '../shared/dokumen_upload_card.dart';
 import '../auditor/form/auditor_profil_step.dart' show kAuditorFileMaxBytes;
 

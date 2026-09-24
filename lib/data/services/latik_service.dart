@@ -8,38 +8,11 @@ class LatikService {
   final Dio _dio;
   LatikService(this._dio);
 
-  // GET /api/latik/profile
-  Future<Map<String, dynamic>> getProfile() async {
-    final res = await _dio.get(ApiEndpoints.latikProfile);
-    return res.data;
-  }
-
   // GET /api/latik/checknib?nib={nib}
   Future<bool> checkNib(String nib) async {
     final res = await _dio
         .get(ApiEndpoints.latikCheckNib, queryParameters: {'nib': nib});
     return res.data['available'] ?? false;
-  }
-
-  // POST /api/latik/save
-  Future<Map<String, dynamic>> saveLembaga(Map<String, dynamic> data) async {
-    final res = await _dio.post(ApiEndpoints.latikSave, data: data);
-    return res.data;
-  }
-
-  // POST /api/latik/savedokumen (multipart)
-  Future<void> saveDokumen({
-    required String refLatik,
-    required String idDokumenPendukung,
-    required File file,
-    required String fileName,
-  }) async {
-    final formData = FormData.fromMap({
-      'ref_latik': refLatik,
-      'id_dokumen_pendukung': idDokumenPendukung,
-      'file': await MultipartFile.fromFile(file.path, filename: fileName),
-    });
-    await _dio.post(ApiEndpoints.latikSaveDokumen, data: formData);
   }
 
   Future<void> saveDokumenBatch(List<DokumenUpload> uploads) async {
@@ -63,12 +36,6 @@ class LatikService {
     return res.data['data'] ?? res.data;
   }
 
-  // GET /api/dokumen_pendukung/aktif → fetch required document templates
-  Future<List<dynamic>> getDokumenPendukungAktif() async {
-    final res = await _dio.get(ApiEndpoints.dokumenPendukungAktif);
-    return res.data['data'] ?? res.data;
-  }
-
   // POST /api/latik/konfirmasidata — body {is_checked: 1}. Marks
   // org data as confirmed; backend resolves LATIK from token.
   Future<void> konfirmasiData() async {
@@ -80,18 +47,6 @@ class LatikService {
     final res = await _dio.post(ApiEndpoints.latikRequestVerif, data: {
       'ref_latik': refLatik,
     });
-    return res.data;
-  }
-
-  // GET /api/latik/listverifikasi
-  Future<Map<String, dynamic>> getStatusVerifikasi() async {
-    final res = await _dio.get(ApiEndpoints.latikListVerif);
-    return res.data;
-  }
-
-  // GET /api/latik/str_latik
-  Future<Map<String, dynamic>?> getSTR() async {
-    final res = await _dio.get(ApiEndpoints.strLatik);
     return res.data;
   }
 

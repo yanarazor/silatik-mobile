@@ -26,7 +26,6 @@ import 'presentation/profil/dokumen_berkas_screen.dart';
 import 'presentation/profil/profil_lembaga_edit_screen.dart';
 import 'presentation/profil/profil_lembaga_screen.dart';
 import 'presentation/profil/profil_screen.dart';
-import 'presentation/registration/registration_flow_screen.dart';
 import 'presentation/dokumen/dokumen_screen.dart';
 import 'presentation/perpanjangan/perpanjangan_entry_screen.dart';
 import 'presentation/perpanjangan/latik_perpanjangan_screen.dart';
@@ -41,7 +40,6 @@ import 'providers/dokumen_provider.dart';
 import 'providers/invoice_provider.dart';
 import 'providers/notifikasi_provider.dart';
 import 'providers/profile_menu_provider.dart';
-import 'providers/registrasi_provider.dart';
 import 'core/auth/access_control.dart';
 
 Future<void> bootstrap() async {
@@ -81,9 +79,6 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         GoRoute(
             path: AppRoutes.forgotPassword,
             builder: (_, __) => const ForgotPasswordScreen()),
-        GoRoute(
-            path: AppRoutes.registration,
-            builder: (_, __) => const RegistrationFlowScreen()),
         GoRoute(
           path: AppRoutes.pdfViewer,
           builder: (context, state) {
@@ -213,8 +208,7 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
 
   String? _requiredPermission(String location) {
     if (location == AppRoutes.dashboard) return AccessControl.dashboardView;
-    if (location == AppRoutes.registration ||
-        location == AppRoutes.dokumen ||
+    if (location == AppRoutes.dokumen ||
         location == AppRoutes.profilLembaga ||
         location == AppRoutes.profilLembagaEdit ||
         location == AppRoutes.dokumenBerkas ||
@@ -235,7 +229,6 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
         ref.invalidate(latikProfileProvider);
         ref.invalidate(userProfileProvider);
         ref.invalidate(faqProfileProvider);
-        ref.invalidate(registrasiBootstrapProvider);
         ref.invalidate(notifikasiListProvider);
         ref.invalidate(unreadNotificationProvider);
         ref.invalidate(unreadNotificationCountProvider);

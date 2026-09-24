@@ -39,35 +39,6 @@ Gender? genderFromRaw(Object? raw) {
   };
 }
 
-enum DocumentVerificationStatus { unverified, valid, invalid }
-
-enum LatikVerificationStatus {
-  unverified,
-  waitingForVerification,
-  returned,
-  publishingStr,
-  active,
-  expired,
-  freezed,
-  revoked,
-}
-
-enum AuditorStatus { tetap, tidakTetap }
-
-enum AuditorVerificationStatus { unverified, valid, invalid }
-
-enum InvoiceType {
-  registrasiLATIK,
-  perpanjanganLATIK,
-  registrasiAuditor,
-  perpanjanganAuditor,
-  penambahanAuditor,
-}
-
-enum AuditorIsNew { baru, perpanjangan }
-
-enum AuditorStatusType { tetap, tidakTetap }
-
 // ponytail: mirrors SilatikConstant.LATIK_VERIFICATION_STATUS from FE
 class LatikVerificationStatusCode {
   static const registration = '0';

@@ -6,7 +6,7 @@ import '../data/models/profil_dokumen.dart';
 import '../data/models/user_profile.dart';
 import '../data/services/profile_menu_service.dart';
 import 'auth_provider.dart';
-import 'registrasi_provider.dart';
+import 'latik_service_provider.dart';
 
 final profileMenuServiceProvider = Provider((ref) => ProfileMenuService(ref.watch(dioProvider)));
 

@@ -10,7 +10,7 @@ import '../../data/models/latik_profile.dart';
 import '../../data/models/master_data_model.dart';
 import '../../providers/master_data_provider.dart';
 import '../../providers/profile_menu_provider.dart';
-import '../../providers/registrasi_provider.dart';
+import '../../providers/latik_service_provider.dart';
 import 'latik_profile_payload.dart';
 import 'location_picker_field.dart';
 

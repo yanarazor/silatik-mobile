@@ -4,7 +4,7 @@ import '../data/models/auditor_model.dart';
 import '../data/repositories/latik_verifikasi_repository.dart';
 import '../data/services/auditor_ext_payload.dart';
 import '../data/services/latik_service.dart';
-import 'registrasi_provider.dart' show latikServiceProvider;
+import 'latik_service_provider.dart';
 
 final latikVerifikasiRepoProvider = Provider(
     (ref) => LatikVerifikasiRepository(ref.watch(latikServiceProvider)));

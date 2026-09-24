@@ -5,7 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/models/auditor_model.dart';
 import '../../../providers/auditor_form_provider.dart';
 import '../../../providers/auditor_provider.dart';
-import '../../registration/widgets/step_indicator.dart';
+import '../../shared/step_indicator.dart';
 import 'auditor_data_dukung_step.dart';
 import 'auditor_profil_step.dart';
 import 'auditor_sertifikasi_body.dart';

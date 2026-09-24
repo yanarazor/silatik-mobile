@@ -17,21 +17,6 @@ void main() {
     latikService = LatikService(mockDio);
   });
 
-  group('LatikService.getProfile', () {
-    test('returns profile data', () async {
-      when(() => mockDio.get(any())).thenAnswer(
-        (_) async => makeResponse({
-          'nama': 'PT Test',
-          'nib': '1234567890123',
-        }),
-      );
-
-      final result = await latikService.getProfile();
-      expect(result['nama'], 'PT Test');
-      verify(() => mockDio.get('latik/profile')).called(1);
-    });
-  });
-
   group('LatikService.checkNib', () {
     test('returns true when NIB is available', () async {
       when(() => mockDio.get(any(), queryParameters: any(named: 'queryParameters'))).thenAnswer(
@@ -58,19 +43,6 @@ void main() {
 
       final result = await latikService.checkNib('1234567890123');
       expect(result, isFalse);
-    });
-  });
-
-  group('LatikService.saveLembaga', () {
-    test('posts data and returns response', () async {
-      when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
-        (_) async => makeResponse({'ref': 'LATIK-001', 'status': 'saved'}),
-      );
-
-      final result = await latikService.saveLembaga({'nama': 'PT Test'});
-      expect(result['ref'], 'LATIK-001');
-      verify(() => mockDio.post('latik/save', data: {'nama': 'PT Test'}))
-          .called(1);
     });
   });
 
@@ -101,34 +73,6 @@ void main() {
     });
   });
 
-  group('LatikService.getDokumenPendukungAktif', () {
-    test('returns real active document templates', () async {
-      final fixture = loadFixture('dokumen_aktif.json');
-      when(() => mockDio.get(any())).thenAnswer((_) async =>
-          makeResponse(fixture));
-
-      final result = await latikService.getDokumenPendukungAktif();
-      expect(result, hasLength(2));
-      expect(result.first['nama_dokumen'],
-          'Peraturan terkait tugas pokok dan fungsi LATIK');
-      verify(() => mockDio.get('dokumen_pendukung/aktif')).called(1);
-    });
-
-    test('returns active document templates', () async {
-      when(() => mockDio.get(any())).thenAnswer(
-        (_) async => makeResponse({
-          'data': [
-            {'id': '1', 'nama': 'Template 1'},
-          ],
-        }),
-      );
-
-      final result = await latikService.getDokumenPendukungAktif();
-      expect(result, hasLength(1));
-      verify(() => mockDio.get('dokumen_pendukung/aktif')).called(1);
-    });
-  });
-
   group('LatikService.konfirmasiData', () {
     test('posts {is_checked: 1}', () async {
       when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
@@ -149,33 +93,6 @@ void main() {
 
       final result = await latikService.requestVerifikasi('LATIK-001');
       expect(result['status'], 'requested');
-    });
-  });
-
-  group('LatikService.getStatusVerifikasi', () {
-    test('returns verification status', () async {
-      when(() => mockDio.get(any())).thenAnswer(
-        (_) async => makeResponse({'status': 'verified'}),
-      );
-
-      final result = await latikService.getStatusVerifikasi();
-      expect(result['status'], 'verified');
-      verify(() => mockDio.get('latik/listverifikasi')).called(1);
-    });
-  });
-
-  group('LatikService.getSTR', () {
-    test('returns STR data', () async {
-      when(() => mockDio.get(any())).thenAnswer(
-        (_) async => makeResponse({
-          'nomor': 'STR-2024-001',
-          'tanggal_terbit': '2024-01-01',
-        }),
-      );
-
-      final result = await latikService.getSTR();
-      expect(result!['nomor'], 'STR-2024-001');
-      verify(() => mockDio.get('latik/str_latik')).called(1);
     });
   });
 

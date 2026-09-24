@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/models/invoice_model.dart';
-import 'registrasi_provider.dart' show latikServiceProvider;
+import 'latik_service_provider.dart';
 
 final invoiceListProvider =
     FutureProvider.autoDispose<List<InvoiceModel>>((ref) async {
