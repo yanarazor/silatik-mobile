@@ -239,7 +239,16 @@ class AuditorFormNotifier extends StateNotifier<AuditorFormState> {
         lembaga: lembaga,
         sertifikatFile: sertifikatFile,
       );
-      state = state.copyWith(submitting: false);
+      final cert = AuditorCertificate(
+        nama: namaPelatihan,
+        tahun: tahun,
+        lembaga: lembaga,
+        fileUrl: sertifikatFile.path,
+      );
+      state = state.copyWith(
+        submitting: false,
+        certificates: [...state.certificates, cert],
+      );
     } catch (e) {
       state = state.copyWith(submitting: false, error: e.toString());
       rethrow;

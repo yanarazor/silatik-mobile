@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:silatik_mobile/presentation/profil/profil_lembaga_screen.dart';
+import 'package:silatik_mobile/presentation/shared/latik_info_section.dart';
 
 void main() {
   group('latikScopeName', () {
