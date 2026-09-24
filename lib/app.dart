@@ -65,6 +65,7 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
   @override
   void initState() {
     super.initState();
+    onUnauthorized = () => ref.read(authProvider.notifier).logout();
     _router = GoRouter(
       initialLocation: AppRoutes.splash,
       routes: [

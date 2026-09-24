@@ -8,6 +8,8 @@ import '../data/services/api_client.dart';
 import '../core/utils/api_error_handler.dart';
 import '../core/auth/access_control.dart';
 
+void Function()? onUnauthorized;
+
 class AuthState {
   final bool isLoggedIn;
   final bool isLoading;
@@ -162,7 +164,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final storageProvider = Provider((ref) => StorageService());
-final dioProvider = Provider((ref) {
+final dioProvider = Provider<Dio>((ref) {
   final dio = ApiClient.dio;
   final hasAuthInterceptor =
       dio.interceptors.any((i) => i is QueuedInterceptorsWrapper);
@@ -182,6 +184,18 @@ final dioProvider = Provider((ref) {
             }
           }
           return handler.next(options);
+        },
+        onError: (error, handler) async {
+          if (error.response?.statusCode == 401) {
+            final path = error.requestOptions.path.toLowerCase();
+            final isPublicAuthEndpoint = path.endsWith('login') ||
+                path.endsWith('createuser') ||
+                path.contains('forgot-password');
+            if (!isPublicAuthEndpoint) {
+              onUnauthorized?.call();
+            }
+          }
+          handler.next(error);
         },
       ),
     );
