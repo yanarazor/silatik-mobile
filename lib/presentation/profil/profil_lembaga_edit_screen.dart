@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/theme/app_theme.dart';
 import '../../data/models/latik_profile.dart';
-import '../../data/models/master_data_model.dart';
-import '../../providers/master_data_provider.dart';
-import '../../providers/profile_menu_provider.dart';
 import '../../providers/latik_service_provider.dart';
+import '../../providers/profile_menu_provider.dart';
 import 'latik_profile_payload.dart';
-import 'location_picker_field.dart';
+import 'widgets/lembaga/lembaga_form_body.dart';
+import 'widgets/lembaga/save_bar.dart';
 
 class ProfilLembagaEditScreen extends ConsumerStatefulWidget {
   const ProfilLembagaEditScreen({super.key, required this.profile});
@@ -34,10 +31,6 @@ class _ProfilLembagaEditScreenState
   LatLng? _position;
   bool _dirty = false;
   bool _saving = false;
-
-  String? _lastProvinsi;
-  String? _pendingKabupatenName;
-  bool _provinsiResolved = false;
 
   @override
   void initState() {
@@ -73,17 +66,6 @@ class _ProfilLembagaEditScreenState
       'area_operasional': FormControl<String>(value: p.areaOperasional),
       'provinsi': FormControl<String>(),
       'kabupaten': FormControl<String>(),
-    });
-
-    _pendingKabupatenName = p.kabupaten.isEmpty ? null : p.kabupaten;
-
-    form.control('provinsi').valueChanges.listen((value) {
-      final next = value?.toString();
-      if (next == _lastProvinsi) return;
-      _lastProvinsi = next;
-      _pendingKabupatenName = null;
-      form.control('kabupaten').reset();
-      if (mounted) setState(() {});
     });
 
     form.valueChanges.listen((_) => _markDirty());
@@ -220,7 +202,6 @@ class _ProfilLembagaEditScreenState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
@@ -237,415 +218,31 @@ class _ProfilLembagaEditScreenState
           foregroundColor: Colors.white,
           title: const Text('Edit Profil Lembaga'),
         ),
-        body: ReactiveForm(
-          formGroup: form,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
-            children: [
-              _label('Nomor Registrasi', theme, isRequired: false),
-              _readOnlyField(_noPendaftaran, Icons.tag),
-              _label('Nama Lembaga', theme),
-              ReactiveTextField(
-                formControlName: 'nama_latik',
-                validationMessages: _requiredMsg('Nama lembaga'),
-                decoration: const InputDecoration(
-                  hintText: 'Nama lembaga',
-                  prefixIcon: Icon(Icons.account_balance_outlined),
-                ),
-              ),
-              _label('Email', theme, isRequired: false),
-              _readOnlyField(
-                widget.profile.email.isEmpty ? '-' : widget.profile.email,
-                Icons.email_outlined,
-              ),
-              _label('NIB', theme),
-              ReactiveTextField(
-                formControlName: 'no_nib',
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(13),
-                ],
-                validationMessages: {
-                  ValidationMessage.required: (_) => 'NIB wajib diisi',
-                  ValidationMessage.pattern: (_) =>
-                      'NIB harus tepat 13 digit angka',
-                },
-                decoration: const InputDecoration(
-                  hintText: '13 digit',
-                  prefixIcon: Icon(Icons.badge_outlined),
-                  counterText: '',
-                ),
-              ),
-              _label('NPWP', theme),
-              ReactiveTextField(
-                formControlName: 'no_npwp',
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(16),
-                ],
-                validationMessages: {
-                  ValidationMessage.required: (_) => 'NPWP wajib diisi',
-                  ValidationMessage.pattern: (_) =>
-                      'NPWP harus 15-16 digit angka',
-                },
-                decoration: const InputDecoration(
-                  hintText: '15-16 digit',
-                  prefixIcon: Icon(Icons.receipt_long_outlined),
-                  counterText: '',
-                ),
-              ),
-              if (widget.profile.noStr.isNotEmpty) ...[
-                _label('Nomor STR', theme, isRequired: false),
-                _readOnlyField(widget.profile.noStr, Icons.verified_outlined),
-              ],
-              _label('Alamat', theme),
-              ReactiveTextField(
-                formControlName: 'address',
-                maxLines: 2,
-                validationMessages: _requiredMsg('Alamat'),
-                decoration: const InputDecoration(
-                  hintText: 'Alamat lengkap lembaga',
-                  prefixIcon: Icon(Icons.location_on_outlined),
-                ),
-              ),
-              _label('Provinsi', theme),
-              _provinsiDropdown(),
-              _label('Kota/Kabupaten', theme),
-              _kabupatenDropdown(),
-              _label('Nomor Telepon', theme),
-              ReactiveTextField(
-                formControlName: 'phone',
-                keyboardType: TextInputType.phone,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validationMessages: _requiredMsg('Nomor telepon'),
-                decoration: const InputDecoration(
-                  hintText: '08xxxxxxxxxx',
-                  prefixIcon: Icon(Icons.phone_outlined),
-                ),
-              ),
-              _label('Website', theme),
-              ReactiveTextField(
-                formControlName: 'website',
-                keyboardType: TextInputType.url,
-                validationMessages: _requiredMsg('Website'),
-                decoration: const InputDecoration(
-                  hintText: 'www.contoh.com',
-                  prefixIcon: Icon(Icons.language_outlined),
-                ),
-              ),
-              _label('Area Operasional', theme, isRequired: false),
-              ReactiveTextField(
-                formControlName: 'area_operasional',
-                decoration: const InputDecoration(
-                  hintText: 'Contoh: Thamrin',
-                  prefixIcon: Icon(Icons.map_outlined),
-                ),
-              ),
-              _label('Lingkup Pendaftaran', theme),
-              _scopeCheckboxes(),
-              _label('Lokasi Lembaga', theme),
-              LocationPickerField(
-                initial: _position,
-                onChanged: (pos) {
-                  _position = pos;
-                  _markDirty();
-                },
-              ),
-              const SizedBox(height: AppTheme.spacing24),
-            ],
-          ),
+        body: LembagaFormBody(
+          form: form,
+          profile: widget.profile,
+          noPendaftaran: _noPendaftaran,
+          position: _position,
+          scopeAplikasi: _scopeAplikasi,
+          scopeInfrastruktur: _scopeInfrastruktur,
+          onScopeAplikasi: (v) {
+            setState(() => _scopeAplikasi = v);
+            _markDirty();
+          },
+          onScopeInfrastruktur: (v) {
+            setState(() => _scopeInfrastruktur = v);
+            _markDirty();
+          },
+          onPositionChanged: (pos) {
+            _position = pos;
+            _markDirty();
+          },
         ),
-        bottomNavigationBar: _SaveBar(
+        bottomNavigationBar: SaveBar(
           saving: _saving,
           onSave: _save,
         ),
       ),
     );
   }
-
-  Widget _scopeCheckboxes() {
-    return Column(
-      children: [
-        _ScopeTile(
-          label: 'Aplikasi',
-          value: _scopeAplikasi,
-          onChanged: (v) {
-            setState(() => _scopeAplikasi = v);
-            _markDirty();
-          },
-        ),
-        _ScopeTile(
-          label: 'Infrastruktur',
-          value: _scopeInfrastruktur,
-          onChanged: (v) {
-            setState(() => _scopeInfrastruktur = v);
-            _markDirty();
-          },
-        ),
-        // TODO: Intentionally disabled per current fe
-        const _ScopeTile(
-          label: 'Sekuriti (BSSN)',
-          value: false,
-          onChanged: null,
-        ),
-      ],
-    );
-  }
-
-  Widget _provinsiDropdown() {
-    final async = ref.watch(provinsiListProvider);
-    return async.when(
-      loading: () => const _DropdownLoading(),
-      error: (_, __) => _DropdownError(
-        hint: 'Gagal memuat provinsi',
-        onRetry: () => ref.invalidate(provinsiListProvider),
-      ),
-      data: (list) {
-        _resolveProvinsiPrefill(list);
-        return ReactiveDropdownField<String>(
-          formControlName: 'provinsi',
-          isExpanded: true,
-          decoration: const InputDecoration(
-            hintText: 'Pilih Provinsi',
-            prefixIcon: Icon(Icons.map_outlined),
-          ),
-          items: list
-              .map((ProvinsiModel e) =>
-                  DropdownMenuItem(value: e.id, child: Text(e.nama)))
-              .toList(),
-        );
-      },
-    );
-  }
-
-  void _resolveProvinsiPrefill(List<ProvinsiModel> list) {
-    if (_provinsiResolved) return;
-    _provinsiResolved = true;
-    final name = widget.profile.provinsi.trim().toLowerCase();
-    if (name.isEmpty) return;
-    ProvinsiModel? match;
-    for (final e in list) {
-      if (e.nama.trim().toLowerCase() == name) {
-        match = e;
-        break;
-      }
-    }
-    if (match == null) return;
-    _lastProvinsi = match.id;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      form.control('provinsi').value = match!.id;
-    });
-  }
-
-  Widget _kabupatenDropdown() {
-    final provinsiId = form.control('provinsi').value?.toString();
-    if (provinsiId == null || provinsiId.isEmpty) {
-      return ReactiveDropdownField<String>(
-        formControlName: 'kabupaten',
-        decoration: const InputDecoration(
-          hintText: 'Pilih Provinsi dulu',
-          prefixIcon: Icon(Icons.location_city_outlined),
-        ),
-        items: const [],
-      );
-    }
-    final async = ref.watch(kabupatenListProvider(provinsiId));
-    return async.when(
-      loading: () => const _DropdownLoading(),
-      error: (_, __) => _DropdownError(
-        hint: 'Gagal memuat kabupaten',
-        onRetry: () => ref.invalidate(kabupatenListProvider(provinsiId)),
-      ),
-      data: (list) {
-        _resolveKabupatenPrefill(list);
-        return ReactiveDropdownField<String>(
-          formControlName: 'kabupaten',
-          isExpanded: true,
-          decoration: const InputDecoration(
-            hintText: 'Pilih Kota/Kabupaten',
-            prefixIcon: Icon(Icons.location_city_outlined),
-          ),
-          items: list
-              .map((KabupatenModel e) =>
-                  DropdownMenuItem(value: e.id, child: Text(e.nama)))
-              .toList(),
-        );
-      },
-    );
-  }
-
-  void _resolveKabupatenPrefill(List<KabupatenModel> list) {
-    final pendingName = _pendingKabupatenName?.trim().toLowerCase();
-    if (pendingName == null || pendingName.isEmpty) return;
-    KabupatenModel? match;
-    for (final e in list) {
-      if (e.nama.trim().toLowerCase() == pendingName) {
-        match = e;
-        break;
-      }
-    }
-    if (match == null) return;
-    _pendingKabupatenName = null;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (form.control('kabupaten').value != match!.id) {
-        form.control('kabupaten').value = match.id;
-        setState(() {});
-      }
-    });
-  }
-
-  Widget _readOnlyField(String value, IconData icon) {
-    return InputDecorator(
-      decoration: InputDecoration(
-        prefixIcon: Icon(icon),
-        filled: true,
-        fillColor: const Color(0xFFF1F4F9),
-      ),
-      child: Text(
-        value,
-        style: const TextStyle(color: AppColors.textSecondary, fontSize: 15),
-      ),
-    );
-  }
-  
-  Map<String, String Function(Object)> _requiredMsg(String field) => {
-        ValidationMessage.required: (_) => '$field wajib diisi',
-      };
-
-  Widget _label(String text, ThemeData theme, {bool isRequired = true}) {
-    return Padding(
-      padding: const EdgeInsets.only(
-          bottom: AppTheme.spacing8, top: AppTheme.spacing16),
-      child: RichText(
-        text: TextSpan(
-          text: text,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-          children: isRequired
-              ? [
-                  TextSpan(
-                    text: ' *',
-                    style: theme.textTheme.labelLarge
-                        ?.copyWith(color: AppColors.error),
-                  ),
-                ]
-              : const [],
-        ),
-      ),
-    );
-  }
-}
-
-class _ScopeTile extends StatelessWidget {
-  const _ScopeTile({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final disabled = onChanged == null;
-    return CheckboxListTile(
-      value: value,
-      onChanged: disabled ? null : (v) => onChanged!(v ?? false),
-      contentPadding: EdgeInsets.zero,
-      controlAffinity: ListTileControlAffinity.leading,
-      dense: true,
-      title: Text(
-        label,
-        style: TextStyle(
-          color: disabled ? AppColors.textSecondary : AppColors.textPrimary,
-          fontSize: 14,
-        ),
-      ),
-      subtitle: disabled
-          ? const Text('Belum tersedia',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 11))
-          : null,
-    );
-  }
-}
-
-class _SaveBar extends StatelessWidget {
-  const _SaveBar({required this.saving, required this.onSave});
-
-  final bool saving;
-  final VoidCallback onSave;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE4ECF7))),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x140C2D5C),
-            blurRadius: 12,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: FilledButton.icon(
-            onPressed: saving ? null : onSave,
-            icon: saving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
-                  )
-                : const Icon(Icons.save_rounded, size: 20),
-            label: Text(saving ? 'Menyimpan...' : 'Simpan'),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DropdownLoading extends StatelessWidget {
-  const _DropdownLoading();
-  @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.all(12),
-        child: SizedBox(
-          height: 20,
-          width: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      );
-}
-
-class _DropdownError extends StatelessWidget {
-  const _DropdownError({required this.hint, required this.onRetry});
-  final String hint;
-  final VoidCallback onRetry;
-  @override
-  Widget build(BuildContext context) => InkWell(
-        onTap: onRetry,
-        child: InputDecorator(
-          decoration: InputDecoration(
-            hintText: hint,
-            errorText: 'Tap untuk coba lagi',
-            prefixIcon: const Icon(Icons.error_outline),
-          ),
-          child: const SizedBox(height: 20),
-        ),
-      );
 }

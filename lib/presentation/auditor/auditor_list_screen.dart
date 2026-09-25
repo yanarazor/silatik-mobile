@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/utils/formatters.dart';
 import '../../data/models/auditor_model.dart';
 import '../../providers/auditor_provider.dart';
 import '../shared/blue_header_band.dart';
-import '../shared/cached_remote_image.dart';
+import '../shared/error_retry.dart';
 import '../shared/header_filter_pills.dart';
 import '../shared/header_title.dart';
 import 'auditor_detail_screen.dart';
 import 'form/auditor_form_screen.dart';
+import 'widgets/auditor_card.dart';
 
 enum _Filter { semua, aktif, verifikasi, tidakAktif }
 
@@ -203,7 +203,8 @@ class _AuditorListScreenState extends ConsumerState<AuditorListScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (async.hasError && !async.hasValue) {
-      return _ErrorRetry(
+      return ErrorRetry(
+        message: 'Gagal memuat auditor',
         onRetry: () => ref.invalidate(auditorListProvider),
       );
     }
@@ -255,7 +256,7 @@ class _AuditorListScreenState extends ConsumerState<AuditorListScreen> {
               itemCount: filtered.length,
               itemBuilder: (_, i) => Padding(
                 padding: const EdgeInsets.only(bottom: 14),
-                child: _AuditorCard(
+                child: AuditorCard(
                   auditor: filtered[i],
                   onTap: () => Navigator.of(context, rootNavigator: true).push(
                     MaterialPageRoute(
@@ -265,318 +266,6 @@ class _AuditorListScreenState extends ConsumerState<AuditorListScreen> {
                 ),
               ),
             ),
-    );
-  }
-}
-
-class _AuditorCard extends StatelessWidget {
-  const _AuditorCard({required this.auditor, required this.onTap});
-
-  final AuditorModel auditor;
-  final VoidCallback onTap;
-
-  static const _avatarGradients = [
-    [Color(0xFF004A8F), Color(0xFF0074D9)],
-    [Color(0xFFB5651D), Color(0xFFD4943A)],
-    [Color(0xFF4A5568), Color(0xFF718096)],
-    [Color(0xFF004A8F), Color(0xFF0D9488)],
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final initials = auditor.nama
-        .split(' ')
-        .where((p) => p.isNotEmpty)
-        .take(2)
-        .map((p) => p[0])
-        .join()
-        .toUpperCase();
-    final status = auditor.statusVerifikasi ?? 0;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFF1F5F9)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF002E5D).withValues(alpha: 0.07),
-              blurRadius: 8,
-              offset: const Offset(0, -1),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 3,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                _buildAvatar(initials),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        auditor.nama,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF0F172A),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'NIK: ${AppFormatters.maskNik(auditor.nik)}',
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          color: Color(0xFF64748B),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _StatusBadge(verificationStatus: status),
-              ],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Divider(height: 1, color: Color(0xFFF1F5F9)),
-            ),
-            Row(
-              children: [
-                _RoleChip(auditor: auditor),
-                const Spacer(),
-                GestureDetector(
-                  onTap: onTap,
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Detail',
-                        style: TextStyle(
-                          color: AppColors.primaryLight,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(width: 2),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 16,
-                        color: AppColors.primaryLight,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatar(String initials) {
-    final url = auditor.fotoUrl.trim();
-    final colorIdx = auditor.nama.hashCode.abs() % _avatarGradients.length;
-    final gradient = _avatarGradients[colorIdx];
-
-    final avatar = Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: gradient,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: gradient[0].withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: url.isNotEmpty
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: CachedRemoteImage(
-                url: url,
-                width: 48,
-                height: 48,
-                fallback: _initialsText(initials),
-              ),
-            )
-          : _initialsText(initials),
-    );
-
-    if (auditor.statusAktif == 1) {
-      return Stack(
-        clipBehavior: Clip.none,
-        children: [
-          avatar,
-          Positioned(
-            bottom: -2,
-            right: -2,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-              child: const Icon(Icons.check_rounded,
-                  size: 10, color: Colors.white),
-            ),
-          ),
-        ],
-      );
-    }
-    return avatar;
-  }
-
-  Widget _initialsText(String initials) => Text(
-        initials,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: 14,
-          letterSpacing: 1,
-        ),
-      );
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.verificationStatus});
-  final int verificationStatus;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, bg, fg, dotColor) = switch (verificationStatus) {
-      1 => (
-          'Valid',
-          const Color(0xFFECFDF5),
-          const Color(0xFF047857),
-          const Color(0xFF10B981),
-        ),
-      2 => (
-          'Invalid',
-          const Color(0xFFF1F5F9),
-          const Color(0xFF475569),
-          const Color(0xFF94A3B8),
-        ),
-      _ => (
-          'Belum Verifikasi',
-          const Color(0xFFFEF2F2),
-          const Color(0xFFB91C1C),
-          const Color(0xFFEF4444),
-        ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: fg.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              color: fg,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RoleChip extends StatelessWidget {
-  const _RoleChip({required this.auditor});
-  final AuditorModel auditor;
-
-  @override
-  Widget build(BuildContext context) {
-    final isTetap = auditor.statusLabel.toLowerCase().contains('tetap');
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: isTetap ? const Color(0xFFEFF6FF) : const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: isTetap ? const Color(0xFFBFDBFE) : const Color(0xFFE2E8F0),
-        ),
-      ),
-      child: Text(
-        auditor.statusLabel,
-        style: TextStyle(
-          color: isTetap ? const Color(0xFF1D4ED8) : const Color(0xFF475569),
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _ErrorRetry extends StatelessWidget {
-  const _ErrorRetry({required this.onRetry});
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Gagal memuat auditor',
-            style: TextStyle(
-              color: Color(0xFF1C2638),
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 8),
-          FilledButton(
-            onPressed: onRetry,
-            child: const Text('Muat Ulang'),
-          ),
-        ],
-      ),
     );
   }
 }

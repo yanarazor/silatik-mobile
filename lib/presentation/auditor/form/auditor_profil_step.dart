@@ -3,18 +3,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:open_filex/open_filex.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/url_opener.dart';
 import '../../../core/utils/validators.dart';
-import '../../../data/models/master_data_model.dart';
 import '../../../data/models/registrasi_model.dart';
 import '../../../providers/auditor_form_provider.dart';
-import '../../../providers/master_data_provider.dart';
-import '../../shared/dokumen_upload_card.dart';
+import '../../shared/field_label.dart';
+import 'widgets/profil_step_fields.dart';
 
 /// Batas ukuran foto/sertifikat per dokumen (10MB, sesuai handover doc).
 /// FileUtils.maxSizeBytes tetap 5MB untuk alur registrasi lain.
@@ -187,7 +184,6 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
     final profil =
         ref.watch(auditorFormProvider(widget.formKey).select((s) => s.profil));
     _prefill(profil);
-    final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(22, 0, 22, 22),
@@ -195,7 +191,7 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
         formGroup: form,
         child: ListView(
           children: [
-            _label('Nama Lengkap', theme),
+            const FieldLabel('Nama Lengkap'),
             ReactiveTextField(
               formControlName: 'nama',
               decoration: const InputDecoration(
@@ -203,7 +199,7 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
                 prefixIcon: Icon(Icons.person_outline),
               ),
             ),
-            _label('NIK', theme),
+            const FieldLabel('NIK'),
             ReactiveTextField(
               formControlName: 'nik',
               keyboardType: TextInputType.number,
@@ -217,7 +213,7 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
                 counterText: '',
               ),
             ),
-            _label('Email', theme),
+            const FieldLabel('Email'),
             ReactiveTextField(
               formControlName: 'email',
               keyboardType: TextInputType.emailAddress,
@@ -226,7 +222,7 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
                 prefixIcon: Icon(Icons.email_outlined),
               ),
             ),
-            _label('Tempat Lahir', theme),
+            const FieldLabel('Tempat Lahir'),
             ReactiveTextField(
               formControlName: 'tempat_lahir',
               decoration: const InputDecoration(
@@ -234,9 +230,12 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
                 prefixIcon: Icon(Icons.location_city_outlined),
               ),
             ),
-            _label('Tanggal Lahir', theme),
-            _datePicker(theme),
-            _label('Nomor Telepon', theme, isRequired: false),
+            const FieldLabel('Tanggal Lahir'),
+            DateField(
+              value: _tanggalLahir,
+              onPick: (d) => setState(() => _tanggalLahir = d),
+            ),
+            const FieldLabel('Nomor Telepon', isRequired: false),
             ReactiveTextField(
               formControlName: 'phone',
               keyboardType: TextInputType.phone,
@@ -245,11 +244,16 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
                 prefixIcon: Icon(Icons.phone_outlined),
               ),
             ),
-            _label('Provinsi', theme, isRequired: false),
-            _provinsiDropdown(),
-            _label('Kota/Kabupaten', theme, isRequired: false),
-            _kabupatenDropdown(),
-            _label('Kode Pos', theme, isRequired: false),
+            const FieldLabel('Provinsi', isRequired: false),
+            ProfilWilayahFields(
+              form: form,
+              pendingKabupaten: _pendingKabupaten,
+              onKabupatenApplied: () {
+                _pendingKabupaten = null;
+                setState(() {});
+              },
+            ),
+            const FieldLabel('Kode Pos', isRequired: false),
             ReactiveTextField(
               formControlName: 'kode_post',
               keyboardType: TextInputType.number,
@@ -263,9 +267,9 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
                 counterText: '',
               ),
             ),
-            _label('Agama', theme, isRequired: false),
-            _agamaDropdown(),
-            _label('Status Auditor', theme, isRequired: false),
+            const FieldLabel('Agama', isRequired: false),
+            AgamaDropdown(form: form),
+            const FieldLabel('Status Auditor', isRequired: false),
             ReactiveDropdownField<String>(
               formControlName: 'status',
               decoration: const InputDecoration(
@@ -276,7 +280,7 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
                 DropdownMenuItem(value: '0', child: Text('Tidak Tetap')),
               ],
             ),
-            _label('Keterangan', theme, isRequired: false),
+            const FieldLabel('Keterangan', isRequired: false),
             ReactiveTextField(
               formControlName: 'keterangan',
               maxLines: 2,
@@ -286,7 +290,7 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
               ),
             ),
             const SizedBox(height: AppTheme.spacing16),
-            _fotoCard(),
+            FotoField(foto: _foto, onPick: _pickFoto),
             const SizedBox(height: AppTheme.spacing24),
             ElevatedButton(
               onPressed: () {
@@ -307,221 +311,10 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
     );
   }
 
-  Widget _datePicker(ThemeData theme) {
-    final hasValue = _tanggalLahir != null;
-    // Pakai InputDecorator agar tampilannya sama persis dengan field lain.
-    return InkWell(
-      onTap: () async {
-        final date = await showDatePicker(
-          context: context,
-          firstDate: DateTime(1940),
-          lastDate: DateTime.now(),
-          initialDate: _tanggalLahir ?? DateTime(1990),
-        );
-        if (date != null) setState(() => _tanggalLahir = date);
-      },
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          prefixIcon: Icon(Icons.cake_outlined),
-          suffixIcon: Icon(Icons.calendar_today_outlined, size: 18),
-        ),
-        child: Text(
-          hasValue
-              ? _tanggalLahir!.toString().split(' ').first
-              : 'Pilih tanggal lahir',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: hasValue ? AppColors.textPrimary : theme.hintColor,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _provinsiDropdown() {
-    final async = ref.watch(provinsiListProvider);
-    return async.when(
-      loading: () => const _DropdownLoading(),
-      error: (_, __) => _DropdownError(
-        hint: 'Gagal memuat provinsi',
-        onRetry: () => ref.invalidate(provinsiListProvider),
-      ),
-      data: (list) => ReactiveDropdownField<String>(
-        formControlName: 'provinsi',
-        isExpanded: true,
-        decoration: const InputDecoration(
-          hintText: 'Pilih Provinsi',
-          prefixIcon: Icon(Icons.map_outlined),
-        ),
-        items: list
-            .map((ProvinsiModel e) =>
-                DropdownMenuItem(value: e.id, child: Text(e.nama)))
-            .toList(),
-      ),
-    );
-  }
-
-  Widget _kabupatenDropdown() {
-    final provinsiId = form.control('provinsi').value?.toString();
-    if (provinsiId == null || provinsiId.isEmpty) {
-      return ReactiveDropdownField<String>(
-        formControlName: 'kabupaten',
-        decoration: const InputDecoration(
-          hintText: 'Pilih Provinsi dulu',
-          prefixIcon: Icon(Icons.location_on_outlined),
-        ),
-        items: const [],
-      );
-    }
-    final async = ref.watch(kabupatenListProvider(provinsiId));
-    return async.when(
-      loading: () => const _DropdownLoading(),
-      error: (_, __) => _DropdownError(
-        hint: 'Gagal memuat kabupaten',
-        onRetry: () => ref.invalidate(kabupatenListProvider(provinsiId)),
-      ),
-      data: (list) {
-        final pending = _pendingKabupaten;
-        if (pending != null &&
-            form.control('kabupaten').value != pending &&
-            list.any((e) => e.id == pending)) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            form.control('kabupaten').value = pending;
-            _pendingKabupaten = null;
-            setState(() {});
-          });
-        }
-        return ReactiveDropdownField<String>(
-          formControlName: 'kabupaten',
-          isExpanded: true,
-          decoration: const InputDecoration(
-            hintText: 'Pilih Kota/Kabupaten',
-            prefixIcon: Icon(Icons.location_on_outlined),
-          ),
-          items: list
-              .map((KabupatenModel e) =>
-                  DropdownMenuItem(value: e.id, child: Text(e.nama)))
-              .toList(),
-        );
-      },
-    );
-  }
-
-  Widget _agamaDropdown() {
-    final async = ref.watch(agamaListProvider);
-    return async.when(
-      loading: () => const _DropdownLoading(),
-      // Agama opsional: kalau endpoint gagal, jangan blokir form.
-      error: (_, __) => ReactiveDropdownField<String>(
-        formControlName: 'agama',
-        decoration: const InputDecoration(
-          hintText: 'Agama tidak tersedia',
-          prefixIcon: Icon(Icons.self_improvement_outlined),
-        ),
-        items: const [],
-      ),
-      data: (list) => ReactiveDropdownField<String>(
-        formControlName: 'agama',
-        isExpanded: true,
-        decoration: const InputDecoration(
-          hintText: 'Pilih Agama',
-          prefixIcon: Icon(Icons.self_improvement_outlined),
-        ),
-        items: list
-            .map((AgamaModel e) =>
-                DropdownMenuItem(value: e.id, child: Text(e.nama)))
-            .toList(),
-      ),
-    );
-  }
-
-  Widget _fotoCard() {
-    return DokumenUploadCard(
-      title: 'Foto Auditor',
-      requiredDoc: true,
-      file: _foto,
-      onPick: _pickFoto,
-      onPreview: _previewFoto,
-      leadingIcon: Icons.image_outlined,
-      leadingColor: AppColors.primary,
-      formatHint: 'Format JPG/PNG (maks. 10 MB)',
-      imageThumbnail: true,
-    );
-  }
-
-  Future<void> _previewFoto() async {
-    final path = _foto?.path.trim() ?? '';
-    if (path.isEmpty) return;
-    if (path.toLowerCase().startsWith('http')) {
-      await openFileUrl(context, path);
-      return;
-    }
-    final result = await OpenFilex.open(path);
-    if (result.type != ResultType.done && mounted) {
-      _snack('Gagal membuka foto: ${result.message}');
-    }
-  }
-
-  Widget _label(String text, ThemeData theme, {bool isRequired = true}) {
-    return Padding(
-      padding: const EdgeInsets.only(
-          bottom: AppTheme.spacing8, top: AppTheme.spacing16),
-      child: RichText(
-        text: TextSpan(
-          text: text,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-          children: isRequired
-              ? [
-                  TextSpan(
-                    text: ' *',
-                    style: theme.textTheme.labelLarge
-                        ?.copyWith(color: AppColors.error),
-                  ),
-                ]
-              : const [],
-        ),
-      ),
-    );
-  }
-
   void _snack(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
   }
-}
-
-class _DropdownLoading extends StatelessWidget {
-  const _DropdownLoading();
-  @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.all(12),
-        child: SizedBox(
-          height: 20,
-          width: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      );
-}
-
-class _DropdownError extends StatelessWidget {
-  const _DropdownError({required this.hint, required this.onRetry});
-  final String hint;
-  final VoidCallback onRetry;
-  @override
-  Widget build(BuildContext context) => InkWell(
-        onTap: onRetry,
-        child: InputDecorator(
-          decoration: InputDecoration(
-            hintText: hint,
-            errorText: 'Tap untuk coba lagi',
-            prefixIcon: const Icon(Icons.error_outline),
-          ),
-          child: const SizedBox(height: 20),
-        ),
-      );
 }

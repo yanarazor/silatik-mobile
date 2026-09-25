@@ -2,14 +2,12 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_filex/open_filex.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/api_response_utils.dart';
-import '../../core/utils/formatters.dart';
 import '../../core/utils/url_opener.dart';
 import '../../data/models/profil_dokumen.dart';
 import '../../data/models/registrasi_model.dart';
@@ -18,6 +16,10 @@ import '../../providers/profile_menu_provider.dart';
 import '../../providers/latik_service_provider.dart';
 import '../shared/dokumen_upload_card.dart';
 import '../auditor/form/auditor_profil_step.dart' show kAuditorFileMaxBytes;
+import 'widgets/berkas/doc_edit.dart';
+import 'widgets/berkas/doc_extra_fields.dart';
+import 'widgets/berkas/edit_scaffold.dart';
+import 'widgets/berkas/item_divider.dart';
 
 class DokumenBerkasEditScreen extends ConsumerStatefulWidget {
   const DokumenBerkasEditScreen({super.key});
@@ -27,20 +29,9 @@ class DokumenBerkasEditScreen extends ConsumerStatefulWidget {
       _DokumenBerkasEditScreenState();
 }
 
-class _DocEdit {
-  FileItem? file;
-  bool newlyPicked;
-  final TextEditingController nomor;
-  DateTime? tanggal;
-
-  _DocEdit({this.file, String nomor = '', this.tanggal})
-      : newlyPicked = false,
-        nomor = TextEditingController(text: nomor);
-}
-
 class _DokumenBerkasEditScreenState
     extends ConsumerState<DokumenBerkasEditScreen> {
-  final Map<int, _DocEdit> _edits = {};
+  final Map<int, DocEdit> _edits = {};
   List<ProfilDokumen> _docs = const [];
   bool _initialized = false;
   bool _submitting = false;
@@ -50,7 +41,7 @@ class _DokumenBerkasEditScreenState
     _edits.clear();
     for (final d in docs) {
       if (d.id == null) continue;
-      _edits[d.id!] = _DocEdit(
+      _edits[d.id!] = DocEdit(
         file: d.url.trim().isEmpty
             ? null
             : FileItem(path: d.url, name: _fileNameFromUrl(d.url), size: 0),
@@ -180,10 +171,10 @@ class _DokumenBerkasEditScreenState
   Widget build(BuildContext context) {
     final docsAsync = ref.watch(dokumenBerkasProvider);
     return docsAsync.when(
-      loading: () => const _Scaffold(
+      loading: () => const EditScaffold(
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => _Scaffold(
+      error: (_, __) => EditScaffold(
         child: Center(
           child: TextButton(
             onPressed: () => ref.invalidate(dokumenBerkasProvider),
@@ -207,7 +198,7 @@ class _DokumenBerkasEditScreenState
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           for (var i = 0; i < docs.length; i++) ...[
-            if (i > 0) const _ItemDivider(),
+            if (i > 0) const ItemDivider(),
             _docGroup(docs[i]),
           ],
         ],
@@ -253,71 +244,13 @@ class _DokumenBerkasEditScreenState
             if (f != null) _preview(f);
           },
         ),
-        if (hasExtra) _extraFields(d),
+        if (hasExtra)
+          DocExtraFields(
+            doc: d,
+            edit: _edits[d.id]!,
+            onPickDate: _pickDate,
+          ),
       ],
-    );
-  }
-
-  Widget _extraFields(ProfilDokumen d) {
-    final e = _edits[d.id]!;
-    return Padding(
-      padding: const EdgeInsets.only(top: AppTheme.spacing12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (d.nomorRequired) ...[
-            _fieldLabel('Nomor Dokumen', required: true),
-            const SizedBox(height: 6),
-            TextField(
-              controller: e.nomor,
-              inputFormatters: [LengthLimitingTextInputFormatter(100)],
-              decoration: const InputDecoration(
-                hintText: 'Nomor dokumen',
-                prefixIcon: Icon(Icons.tag),
-              ),
-            ),
-          ],
-          if (d.tanggalRequired) ...[
-            if (d.nomorRequired) const SizedBox(height: AppTheme.spacing12),
-            _fieldLabel('Tanggal Dokumen', required: true),
-            const SizedBox(height: 6),
-            InkWell(
-              onTap: () => _pickDate(d.id!, e.tanggal),
-              child: InputDecorator(
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.calendar_today_outlined),
-                ),
-                child: Text(
-                  e.tanggal == null
-                      ? 'Pilih tanggal'
-                      : AppFormatters.formatShortDate(e.tanggal),
-                  style: TextStyle(
-                    color: e.tanggal == null
-                        ? Theme.of(context).hintColor
-                        : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _fieldLabel(String text, {bool required = false}) {
-    return RichText(
-      text: TextSpan(
-        text: text,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-        ),
-        children: required
-            ? const [TextSpan(text: ' *', style: TextStyle(color: AppColors.error))]
-            : const [],
-      ),
     );
   }
 
@@ -347,24 +280,4 @@ class _DokumenBerkasEditScreenState
     final seg = clean.split('/').where((s) => s.isNotEmpty).toList();
     return seg.isEmpty ? 'dokumen' : Uri.decodeComponent(seg.last);
   }
-}
-
-class _ItemDivider extends StatelessWidget {
-  const _ItemDivider();
-  @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppTheme.spacing20),
-        child: Divider(height: 1, thickness: 1, color: Color(0xFFE5EAF3)),
-      );
-}
-
-class _Scaffold extends StatelessWidget {
-  const _Scaffold({required this.child});
-  final Widget child;
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('Edit Dokumen')),
-        body: child,
-      );
 }

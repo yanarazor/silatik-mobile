@@ -1,7 +1,4 @@
-﻿import 'dart:async';
-
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,38 +6,14 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 import 'core/constants/app_routes.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'data/models/latik_profile.dart';
-import 'data/models/auditor_model.dart';
-import 'presentation/auditor/auditor_list_screen.dart';
-import 'presentation/auditor/penambahan_confirm_screen.dart';
-import 'presentation/auth/forgot_password_screen.dart';
-import 'presentation/auth/login_screen.dart';
-import 'presentation/auth/activation_notice_screen.dart';
-import 'presentation/auth/register_screen.dart';
-import 'presentation/dashboard/dashboard_screen.dart';
-import 'presentation/notifikasi/notifikasi_screen.dart';
-import 'presentation/profil/data_pengguna_screen.dart';
-import 'presentation/profil/dokumen_berkas_edit_screen.dart';
-import 'presentation/profil/dokumen_berkas_screen.dart';
-import 'presentation/profil/profil_lembaga_edit_screen.dart';
-import 'presentation/profil/profil_lembaga_screen.dart';
-import 'presentation/profil/profil_screen.dart';
-import 'presentation/dokumen/dokumen_screen.dart';
-import 'presentation/perpanjangan/perpanjangan_entry_screen.dart';
-import 'presentation/perpanjangan/latik_perpanjangan_screen.dart';
-import 'presentation/perpanjangan/auditor_perpanjangan_screen.dart';
-import 'presentation/transaksi/transaksi_screen.dart';
-import 'presentation/verifikasi/latik_verifikasi_screen.dart';
-import 'presentation/shared/app_bottom_nav.dart';
-import 'presentation/shared/pdf_viewer_screen.dart';
-import 'providers/auth_provider.dart';
 import 'providers/auditor_provider.dart';
+import 'providers/auth_provider.dart';
 import 'providers/dokumen_provider.dart';
 import 'providers/invoice_provider.dart';
 import 'providers/notifikasi_provider.dart';
 import 'providers/profile_menu_provider.dart';
-import 'core/auth/access_control.dart';
 
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,161 +37,7 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
   void initState() {
     super.initState();
     onUnauthorized = () => ref.read(authProvider.notifier).logout();
-    _router = GoRouter(
-      initialLocation: AppRoutes.splash,
-      routes: [
-        GoRoute(
-            path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
-        GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
-        GoRoute(
-            path: AppRoutes.register,
-            builder: (_, __) => const RegisterScreen()),
-        GoRoute(
-            path: AppRoutes.activationNotice,
-            builder: (_, __) => const ActivationNoticeScreen()),
-        GoRoute(
-            path: AppRoutes.forgotPassword,
-            builder: (_, __) => const ForgotPasswordScreen()),
-        GoRoute(
-          path: AppRoutes.pdfViewer,
-          builder: (context, state) {
-            final ref = state.uri.queryParameters['ref']?.trim();
-            final url = state.uri.queryParameters['url']?.trim();
-            return PdfViewerScreen(
-              invoiceRef: ref?.isNotEmpty == true ? ref : null,
-              url: url?.isNotEmpty == true ? url : null,
-            );
-          },
-        ),
-        GoRoute(
-          path: AppRoutes.dokumen,
-          builder: (_, __) => const DokumenScreen(),
-        ),
-        GoRoute(
-          path: AppRoutes.profilLembaga,
-          builder: (_, __) => const ProfilLembagaScreen(),
-        ),
-        GoRoute(
-          path: AppRoutes.profilLembagaEdit,
-          builder: (_, state) => ProfilLembagaEditScreen(
-            profile: state.extra as LatikProfile,
-          ),
-        ),
-        GoRoute(
-          path: AppRoutes.dataPengguna,
-          builder: (_, __) => const DataPenggunaScreen(),
-        ),
-        GoRoute(
-          path: AppRoutes.dokumenBerkas,
-          builder: (_, __) => const DokumenBerkasScreen(),
-        ),
-        GoRoute(
-          path: AppRoutes.dokumenBerkasEdit,
-          builder: (_, __) => const DokumenBerkasEditScreen(),
-        ),
-        GoRoute(
-          path: AppRoutes.transaksi,
-          builder: (_, __) => const TransaksiScreen(),
-        ),
-        GoRoute(
-          path: AppRoutes.perpanjangan,
-          builder: (_, __) => const PerpanjanganEntryScreen(),
-        ),
-        GoRoute(
-          path: AppRoutes.perpanjanganLatik,
-          builder: (_, state) =>
-              LatikPerpanjanganScreen(refExt: state.extra as String),
-        ),
-        GoRoute(
-          path: AppRoutes.perpanjanganAuditor,
-          builder: (_, state) =>
-              AuditorPerpanjanganScreen(refExt: state.extra as String),
-        ),
-        GoRoute(
-          path: AppRoutes.penambahanAuditor,
-          builder: (_, state) =>
-              PenambahanConfirmScreen(auditor: state.extra as AuditorModel),
-        ),
-        GoRoute(
-          path: AppRoutes.verifikasiLatik,
-          builder: (_, state) =>
-              LatikVerifikasiScreen(profile: state.extra as LatikProfile),
-        ),
-        StatefulShellRoute.indexedStack(
-          builder: (context, state, navigationShell) {
-            return ScaffoldWithNavBar(navigationShell: navigationShell);
-          },
-          branches: [
-            StatefulShellBranch(routes: [
-              GoRoute(
-                  path: AppRoutes.dashboard,
-                  builder: (_, __) => const DashboardScreen()),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(
-                  path: AppRoutes.auditors,
-                  builder: (_, __) => const AuditorListScreen()),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(
-                  path: AppRoutes.notifications,
-                  builder: (_, __) => const NotifikasiScreen()),
-            ]),
-            StatefulShellBranch(routes: [
-              GoRoute(
-                  path: AppRoutes.profile,
-                  builder: (_, __) => const ProfilScreen()),
-            ]),
-          ],
-        ),
-      ],
-      redirect: (context, state) {
-        final auth = ref.read(authProvider);
-        final location = state.matchedLocation;
-        final publicRoutes = {
-          AppRoutes.splash,
-          AppRoutes.login,
-          AppRoutes.register,
-          AppRoutes.activationNotice,
-          AppRoutes.forgotPassword,
-        };
-
-        if (!auth.isLoggedIn && !publicRoutes.contains(location)) {
-          return AppRoutes.login;
-        }
-        if (auth.isLoggedIn && !AccessControl.canUseMobile(auth.user)) {
-          return AppRoutes.login;
-        }
-        final requiredPermission = _requiredPermission(location);
-        if (auth.isLoggedIn &&
-            requiredPermission != null &&
-            !AccessControl.hasPermission(auth.user, requiredPermission)) {
-          return AppRoutes.dashboard;
-        }
-        if (auth.isLoggedIn &&
-            (location == AppRoutes.login ||
-                location == AppRoutes.register ||
-                location == AppRoutes.forgotPassword)) {
-          return AppRoutes.dashboard;
-        }
-        return null;
-      },
-    );
-  }
-
-  String? _requiredPermission(String location) {
-    if (location == AppRoutes.dashboard) return AccessControl.dashboardView;
-    if (location == AppRoutes.dokumen ||
-        location == AppRoutes.profilLembaga ||
-        location == AppRoutes.profilLembagaEdit ||
-        location == AppRoutes.dokumenBerkas ||
-        location == AppRoutes.dokumenBerkasEdit ||
-        location == AppRoutes.transaksi ||
-        location == AppRoutes.verifikasiLatik ||
-        location == AppRoutes.auditors) {
-      return AccessControl.latikProfile;
-    }
-    return null;
+    _router = createRouter(ref);
   }
 
   @override
@@ -252,126 +71,5 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
   void dispose() {
     _router.dispose();
     super.dispose();
-  }
-}
-
-class ScaffoldWithNavBar extends StatelessWidget {
-  const ScaffoldWithNavBar({super.key, required this.navigationShell});
-
-  final StatefulNavigationShell navigationShell;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
-        extendBody: true,
-        backgroundColor: const Color(0xFFF7FAFE),
-        body: navigationShell,
-        bottomNavigationBar: AppBottomNav(
-          selectedIndex: navigationShell.currentIndex,
-          onItemTapped: (index) {
-            navigationShell.goBranch(
-              index,
-              initialLocation: index == navigationShell.currentIndex,
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  ConsumerState<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends ConsumerState<SplashScreen> {
-  Timer? _redirectTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _bootstrapAuth();
-  }
-
-  Future<void> _bootstrapAuth() async {
-    await ref.read(authProvider.notifier).checkAuth();
-    if (!mounted) return;
-    _redirectTimer = Timer(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      final isLoggedIn = ref.read(authProvider).isLoggedIn;
-      context.go(isLoggedIn ? AppRoutes.dashboard : AppRoutes.login);
-    });
-  }
-
-  @override
-  void dispose() {
-    _redirectTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFFF7FAFE),
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Color(0xFF003D7A),
-                  borderRadius: BorderRadius.all(Radius.circular(18)),
-                ),
-                child: SizedBox(
-                  width: 76,
-                  height: 76,
-                  child: Icon(Icons.account_balance_outlined,
-                      color: Colors.white, size: 42),
-                ),
-              ),
-              SizedBox(height: 22),
-              Text(
-                'SILATIK',
-                style: TextStyle(
-                  color: Color(0xFF003D7A),
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              SizedBox(height: 6),
-              Text(
-                'Sistem Informasi LATIK - BBRIN',
-                style: TextStyle(
-                  color: Color(0xFF6E7B91),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              SizedBox(height: 70),
-              SizedBox(
-                width: 74,
-                child: LinearProgressIndicator(
-                  minHeight: 4,
-                  backgroundColor: Color(0xFFE4ECF7),
-                  color: Color(0xFFFFB51B),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
