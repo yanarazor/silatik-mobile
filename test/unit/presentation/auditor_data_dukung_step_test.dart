@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:silatik_mobile/data/models/auditor_model.dart';
+import 'package:silatik_mobile/data/models/auditor_dokumen_def.dart';
 import 'package:silatik_mobile/data/models/registrasi_model.dart';
 import 'package:silatik_mobile/data/repositories/auditor_repository.dart';
 import 'package:silatik_mobile/data/services/auditor_payload.dart';

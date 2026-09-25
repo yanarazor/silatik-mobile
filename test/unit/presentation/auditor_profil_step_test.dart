@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+import 'package:silatik_mobile/data/models/auditor_document.dart';
 import 'package:silatik_mobile/data/models/auditor_model.dart';
 import 'package:silatik_mobile/data/models/master_data_model.dart';
 import 'package:silatik_mobile/data/repositories/auditor_repository.dart';

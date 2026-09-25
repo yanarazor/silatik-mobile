@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:silatik_mobile/data/models/auditor_certificate.dart';
+import 'package:silatik_mobile/data/models/auditor_document.dart';
 import 'package:silatik_mobile/data/models/auditor_model.dart';
 
 void main() {
