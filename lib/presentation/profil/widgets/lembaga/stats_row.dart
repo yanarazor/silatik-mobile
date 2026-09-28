@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_routes.dart';
 import '../../../../data/models/latik_profile.dart';
 import 'lembaga_cards.dart';
 import 'lembaga_colors.dart';
@@ -31,6 +33,7 @@ class StatsRow extends StatelessWidget {
               icon: Icons.group_rounded,
               label: 'Total Auditor',
               value: '$count Orang',
+              onTap: () => context.go(AppRoutes.auditors),
             ),
           ),
           const SizedBox(width: 12),
