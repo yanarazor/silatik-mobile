@@ -74,10 +74,12 @@ class ProfilLembagaScreen extends ConsumerWidget {
         },
       ),
       bottomNavigationBar: profileAsync.maybeWhen(
-        data: (data) => EditFooter(
-          onEdit: () =>
-              context.push(AppRoutes.profilLembagaEdit, extra: data),
-        ),
+        data: (data) => data.editable
+            ? EditFooter(
+                onEdit: () =>
+                    context.push(AppRoutes.profilLembagaEdit, extra: data),
+              )
+            : null,
         orElse: () => null,
       ),
     );

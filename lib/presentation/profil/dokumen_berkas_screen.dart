@@ -14,6 +14,7 @@ class DokumenBerkasScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final docsAsync = ref.watch(dokumenBerkasProvider);
+    final profileAsync = ref.watch(latikProfileProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -44,7 +45,8 @@ class DokumenBerkasScreen extends ConsumerWidget {
         ),
         data: (docs) => DocsView(docs: docs),
       ),
-      bottomNavigationBar: docsAsync.hasValue
+      bottomNavigationBar: docsAsync.hasValue &&
+              profileAsync.valueOrNull?.editable != false
           ? SafeArea(
               minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: SizedBox(
