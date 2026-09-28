@@ -53,13 +53,14 @@ class DataLatikStep extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppTheme.spacing8),
-            Text(
-              'Periksa data lembaga sebelum melanjutkan. Perubahan data '
-              'dilakukan melalui menu Profil Lembaga.',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: AppTheme.spacing16),
+            if (data.editable)
+              Text(
+                'Periksa data lembaga sebelum melanjutkan. Perubahan data '
+                'dilakukan melalui menu Profil Lembaga.',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: AppColors.textSecondary),
+              ),
+            if (data.editable) const SizedBox(height: AppTheme.spacing16),
             LatikInfoSection(data: data),
             if (LatikLocationCard.maybeBuild(data) case final map?) ...[
               const SizedBox(height: AppTheme.spacing16),

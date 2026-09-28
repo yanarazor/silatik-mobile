@@ -29,13 +29,14 @@ class DataStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppTheme.spacing8),
-          Text(
-            'Periksa data lembaga sebelum melanjutkan. Perubahan data '
-            'dilakukan melalui menu Profil Lembaga.',
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: AppTheme.spacing16),
+          if (profile.editable)
+            Text(
+              'Periksa data lembaga sebelum melanjutkan. Perubahan data '
+              'dilakukan melalui menu Profil Lembaga.',
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: AppColors.textSecondary),
+            ),
+          if (profile.editable) const SizedBox(height: AppTheme.spacing16),
           LatikInfoSection(data: profile),
           if (LatikLocationCard.maybeBuild(profile) case final map?) ...[
             const SizedBox(height: AppTheme.spacing16),
