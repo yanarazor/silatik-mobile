@@ -146,6 +146,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState();
   }
 
+  Future<void> logoutDueToSessionExpired() async {
+    try {
+      await _repo.logout();
+    } catch (e) {
+      debugPrint('[AUTH_PROVIDER] server logout failed (continuing local): $e');
+    }
+    await _storage.deleteToken();
+    ApiClient.dio.options.headers.remove('Authorization');
+    state = const AuthState(
+      error: 'Sesi Anda telah berakhir. Silakan masuk kembali.',
+    );
+  }
+
   Map<String, dynamic>? _extractUser(Map<String, dynamic> response) {
     final result = response['result'];
     if (result is Map<String, dynamic>) {

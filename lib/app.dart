@@ -36,7 +36,7 @@ class _SilatikAppState extends ConsumerState<SilatikApp> {
   @override
   void initState() {
     super.initState();
-    onUnauthorized = () => ref.read(authProvider.notifier).logout();
+    onUnauthorized = () => ref.read(authProvider.notifier).logoutDueToSessionExpired();
     _router = createRouter(ref);
   }
 
