@@ -16,6 +16,7 @@
   static const dokumenBerkas = '/dokumen-berkas';
   static const dokumenBerkasEdit = '/dokumen-berkas/edit';
   static const transaksi = '/transaksi';
+  static const transactionDetail = '/transaction-detail';
   static const perpanjangan = '/perpanjangan';
   static const perpanjanganLatik = '/perpanjangan/latik';
   static const perpanjanganAuditor = '/perpanjangan/auditor';

@@ -25,6 +25,7 @@ import '../../presentation/shared/pdf_viewer_screen.dart';
 import '../../presentation/shared/scaffold_with_nav_bar.dart';
 import '../../presentation/splash/splash_screen.dart';
 import '../../presentation/transaksi/transaksi_screen.dart';
+import '../../presentation/transaksi/transaction_detail_screen.dart';
 import '../../presentation/verifikasi/latik_verifikasi_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../auth/access_control.dart';
@@ -56,6 +57,14 @@ GoRouter createRouter(WidgetRef ref) {
             invoiceRef: ref?.isNotEmpty == true ? ref : null,
             url: url?.isNotEmpty == true ? url : null,
           );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.transactionDetail,
+        builder: (context, state) {
+          final ref = state.uri.queryParameters['ref']?.trim();
+          final id = (ref == null || ref.isEmpty) ? '' : ref;
+          return TransactionDetailScreen(id: id);
         },
       ),
       GoRoute(
@@ -182,6 +191,7 @@ String? _requiredPermission(String location) {
       location == AppRoutes.dokumenBerkas ||
       location == AppRoutes.dokumenBerkasEdit ||
       location == AppRoutes.transaksi ||
+      location == AppRoutes.transactionDetail ||
       location == AppRoutes.verifikasiLatik ||
       location == AppRoutes.auditors) {
     return AccessControl.latikProfile;

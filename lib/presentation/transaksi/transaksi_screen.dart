@@ -136,7 +136,7 @@ class _TransaksiScreenState extends ConsumerState<TransaksiScreen> {
   Future<void> _openInvoice(InvoiceModel inv) async {
     if (inv.ref.isEmpty) return;
     context.push(
-      '${AppRoutes.pdfViewer}?ref=${Uri.encodeQueryComponent(inv.ref)}',
+      '${AppRoutes.transactionDetail}?ref=${Uri.encodeQueryComponent(inv.ref)}',
     );
   }
 
