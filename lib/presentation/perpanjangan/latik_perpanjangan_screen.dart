@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,12 +10,17 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/api_error_handler.dart';
+import '../../core/utils/api_response_utils.dart';
+import '../../core/utils/file_downloader.dart';
 import '../../core/utils/url_opener.dart';
+import '../../data/models/profil_dokumen.dart';
 import '../../data/models/registrasi_model.dart';
 import '../../providers/invoice_provider.dart';
 import '../../providers/latik_ext_provider.dart';
+import '../../providers/profile_menu_provider.dart' show dokumenBerkasProvider;
 import '../auditor/form/auditor_profil_step.dart' show kAuditorFileMaxBytes;
 import '../shared/confirm_dialog.dart';
+import '../shared/doc_reuse_picker.dart';
 import '../shared/step_indicator.dart';
 import '../shared/wizard_header.dart';
 import 'latik/steps/data_latik_step.dart';
@@ -95,7 +102,77 @@ class _LatikPerpanjanganScreenState
     }
   }
 
+  Future<void> _reuseFromProfile(int id) async {
+    final targetMatches =
+        ref.read(latikExtProvider(_key)).dokumen.where((d) => d.def.id == id);
+    if (targetMatches.isEmpty) return;
+    final target = targetMatches.first;
+
+    final List<ProfilDokumen> docs;
+    try {
+      docs = await ref.read(dokumenBerkasProvider.future);
+    } catch (e) {
+      if (mounted) _snack(ApiErrorHandler.messageFrom(e));
+      return;
+    }
+    if (!mounted) return;
+
+    final sources = [
+      for (final d in docs)
+        if (d.nama.trim().isNotEmpty || d.url.trim().isNotEmpty)
+          DocReuseSource(
+            nama: d.nama,
+            meta: d.catatan,
+            statusVerifikasi: d.statusVerifikasi,
+            nomor: d.nomor,
+            tanggal: d.tanggal,
+            url: d.url,
+          ),
+    ];
+    final picked = await showDocReusePicker(
+      context,
+      title: 'Pilih Dokumen Tersimpan',
+      targetName: target.def.namaDokumen,
+      targetRequired: target.def.fileRequired,
+      sources: sources,
+    );
+    if (picked == null || !mounted) return;
+
+    await _applyReuse(target, picked);
+  }
+
+  Future<void> _applyReuse(ExtDokumenDraft draft, DocReuseSource picked) async {
+    final id = draft.def.id;
+    _snack('Mengunduh dokumen...', error: false);
+    final File file;
+    try {
+      file = await downloadToFile(picked.url);
+    } catch (e) {
+      if (mounted) _snack(ApiErrorHandler.messageFrom(e));
+      return;
+    }
+    if (!mounted) return;
+
+    final notifier = ref.read(latikExtProvider(_key).notifier);
+    final name =
+        picked.nama.trim().isEmpty ? file.uri.pathSegments.last : picked.nama;
+    notifier.setFile(
+      id,
+      FileItem(path: file.path, name: name, size: file.lengthSync()),
+    );
+    if (draft.def.nomorRequired && picked.nomor.trim().isNotEmpty) {
+      notifier.setNomor(id, picked.nomor);
+    }
+    if (draft.def.tanggalRequired) {
+      final t = parseFlexibleDate(picked.tanggal);
+      if (t != null) notifier.setTanggal(id, t);
+    }
+    _snack('Dokumen tersimpan dipakai', error: false);
+    setState(() {});
+  }
+
   void _goData() => setState(() => _step = 0);
+
   void _goDokumen() => setState(() => _step = 1);
 
   void _goKonfirmasi() {
@@ -178,6 +255,7 @@ class _LatikPerpanjanganScreenState
           onNomor: (id, v) =>
               ref.read(latikExtProvider(_key).notifier).setNomor(id, v),
           onTanggal: _pickTanggal,
+          onReuse: _reuseFromProfile,
           onBack: _goData,
           onNext: _goKonfirmasi,
         );

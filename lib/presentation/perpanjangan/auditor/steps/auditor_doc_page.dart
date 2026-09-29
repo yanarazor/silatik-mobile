@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,14 +7,19 @@ import 'package:open_filex/open_filex.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/api_error_handler.dart';
+import '../../../../core/utils/file_downloader.dart';
 import '../../../../core/utils/url_opener.dart';
+import '../../../../data/models/auditor_document.dart';
 import '../../../../data/models/auditor_model.dart';
 import '../../../../data/models/latik_ext_model.dart';
 import '../../../../data/models/registrasi_model.dart';
 import '../../../../providers/auditor_ext_provider.dart';
+import '../../../../providers/auditor_provider.dart' show auditorDocsProvider;
 import '../../../auditor/form/auditor_profil_step.dart'
     show kAuditorFileMaxBytes;
 import '../../../shared/dokumen_upload_card.dart';
+import '../../../shared/doc_reuse_picker.dart';
 import '../../../shared/widgets/nomor_tanggal_fields.dart';
 
 /// Sub-halaman pengisian dokumen satu auditor. Murni state klien (provider);
@@ -76,6 +83,76 @@ class AuditorDocPage extends ConsumerWidget {
     if (picked != null) {
       ref.read(auditorExtProvider(refExt).notifier).setTanggal(docId, picked);
     }
+  }
+
+  Future<void> _reuseFromAuditor(
+    BuildContext context,
+    WidgetRef ref,
+    ExtDokumen d,
+  ) async {
+    final List<AuditorDocument> docs;
+    try {
+      docs = await ref.read(auditorDocsProvider(auditor.id).future);
+    } catch (e) {
+      if (context.mounted) _snack(context, ApiErrorHandler.messageFrom(e));
+      return;
+    }
+    if (!context.mounted) return;
+
+    final sources = [
+      for (final doc in docs)
+        if (doc.nama.trim().isNotEmpty || doc.url.trim().isNotEmpty)
+          DocReuseSource(
+            nama: doc.nama,
+            meta: doc.catatanVerifikasi,
+            statusVerifikasi: doc.statusVerifikasi,
+            nomor: doc.nomor,
+            url: doc.url,
+          ),
+    ];
+    final picked = await showDocReusePicker(
+      context,
+      title: 'Pilih Dokumen Tersimpan',
+      targetName: d.namaDokumen,
+      targetRequired: d.fileRequired,
+      sources: sources,
+    );
+    if (picked == null || !context.mounted) return;
+
+    _snack(context, 'Mengunduh dokumen...', error: false);
+    final File file;
+    try {
+      file = await downloadToFile(picked.url);
+    } catch (e) {
+      if (context.mounted) _snack(context, ApiErrorHandler.messageFrom(e));
+      return;
+    }
+    if (!context.mounted) return;
+
+    final notifier = ref.read(auditorExtProvider(refExt).notifier);
+    final name =
+        picked.nama.trim().isEmpty ? file.uri.pathSegments.last : picked.nama;
+    notifier.setFile(
+      d.id,
+      FileItem(path: file.path, name: name, size: file.lengthSync()),
+    );
+    // AuditorDocument has nomor but no tanggal, so only nomor is copyable.
+    if (d.nomorRequired && picked.nomor.trim().isNotEmpty) {
+      notifier.setNomor(d.id, picked.nomor);
+    }
+    _snack(context, 'Dokumen tersimpan dipakai', error: false);
+  }
+
+  void _snack(BuildContext context, String message, {bool error = true}) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: error ? AppColors.error : AppColors.success,
+        ),
+      );
   }
 
   @override
@@ -147,16 +224,17 @@ class AuditorDocPage extends ConsumerWidget {
         final f = draft?.displayFile;
         if (f != null) _preview(context, f);
       },
+      onReuse: () => _reuseFromAuditor(context, ref, d),
       extraFields: (d.nomorRequired || d.tanggalRequired)
           ? NomorTanggalFields(
               showNomor: d.nomorRequired,
               showTanggal: d.tanggalRequired,
               nomor: draft?.nomor ?? '',
               tanggal: draft?.tanggal,
-              onNomor: (v) =>
-                  ref.read(auditorExtProvider(refExt).notifier).setNomor(d.id, v),
-              onTanggal: () =>
-                  _pickTanggal(context, ref, d.id, draft?.tanggal),
+              onNomor: (v) => ref
+                  .read(auditorExtProvider(refExt).notifier)
+                  .setNomor(d.id, v),
+              onTanggal: () => _pickTanggal(context, ref, d.id, draft?.tanggal),
             )
           : null,
     );

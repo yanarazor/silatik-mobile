@@ -23,6 +23,7 @@ class DokumenUploadCard extends ConsumerWidget {
     this.formatHint = 'Format PDF (maks. 10 MB)',
     this.imageThumbnail = false,
     this.extraFields,
+    this.onReuse,
   });
 
   final String title;
@@ -86,6 +87,18 @@ class DokumenUploadCard extends ConsumerWidget {
           ),
           const SizedBox(height: AppTheme.spacing12),
           file == null ? _uploadZone(theme) : _fileBox(context, ref, theme),
+          if (onReuse != null) ...[
+            const SizedBox(height: AppTheme.spacing8),
+            SizedBox(
+              width: double.infinity,
+              child: _smallButton(
+                icon: Icons.copy_all_outlined,
+                label: 'Gunakan Tersimpan',
+                color: AppColors.primary,
+                onTap: onReuse!,
+              ),
+            ),
+          ],
           if (extraFields != null) ...[
             const SizedBox(height: AppTheme.spacing12),
             extraFields!,

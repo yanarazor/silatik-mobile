@@ -17,6 +17,7 @@ class DokumenStep extends StatelessWidget {
     required this.onPreview,
     required this.onNomor,
     required this.onTanggal,
+    required this.onReuse,
     required this.onBack,
     required this.onNext,
   });
@@ -28,6 +29,8 @@ class DokumenStep extends StatelessWidget {
   final void Function(int id, DateTime? current) onTanggal;
   final VoidCallback onBack;
   final VoidCallback onNext;
+
+  final void Function(int id) onReuse;
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +83,7 @@ class DokumenStep extends StatelessWidget {
                 final f = d.displayFile;
                 if (f != null) onPreview(f);
               },
+              onReuse: () => onReuse(d.def.id),
               extraFields: (d.def.nomorRequired || d.def.tanggalRequired)
                   ? NomorTanggalFields(
                       showNomor: d.def.nomorRequired,
