@@ -36,10 +36,8 @@ class PdfViewerScreen extends ConsumerStatefulWidget {
 }
 
 class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
-  /// Native handler registered in MainActivity (Android only): saves into the
-  /// shared Downloads folder via MediaStore without storage permissions.
-  static const MethodChannel _saverChannel =
-      MethodChannel('silatik_mobile/pdf_saver');
+  static const MethodChannel _downloadsChannel =
+      MethodChannel('silatik_mobile/downloads');
 
   late Future<Uint8List> _bytesFuture;
   bool _saving = false;
@@ -87,24 +85,23 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     setState(() => _bytesFuture = _download());
   }
 
-  /// Reuses the already-downloaded bytes so the button works even before the
-  /// viewer finishes loading.
   Future<void> _saveToDisk() async {
     if (_saving) return;
     setState(() => _saving = true);
     try {
-      final bytes = await _bytesFuture;
       final name = _fileName();
-      switch (defaultTargetPlatform) {
-        case TargetPlatform.android:
-          final location = await _saveAndroid(bytes, name);
-          _snack('PDF tersimpan di $location');
-        case TargetPlatform.iOS:
-          // The share sheet is the feedback here; no snackbar on success.
-          await _shareIos(bytes, name);
-        default:
-          final file = await _writeToFirstWritableDir(bytes, name);
-          _snack('PDF tersimpan di ${file.path}');
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        await _enqueueAndroidDownload(name);
+        _snack('PDF sedang diunduh, cek notifikasi');
+        return;
+      }
+      final bytes = await _bytesFuture;
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        // The share sheet is the feedback here; no snackbar on success.
+        await _shareIos(bytes, name);
+      } else {
+        final file = await _writeToFirstWritableDir(bytes, name);
+        _snack('PDF tersimpan di ${file.path}');
       }
     } catch (e) {
       // Keep the real error in the log so a failed save is locatable; the
@@ -116,20 +113,29 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     }
   }
 
-  Future<String> _saveAndroid(Uint8List bytes, String name) async {
-    try {
-      return await _saverChannel.invokeMethod<String>(
-        'saveToDownloads',
-        {'fileName': name, 'bytes': bytes},
-      ) ?? 'folder Downloads';
-    } on Exception catch (e) {
-      debugPrint(
-        'PdfViewerScreen: MediaStore save gagal: $e, '
-        'fallback ke direktori aplikasi',
-      );
-      final file = await _writeToFirstWritableDir(bytes, name);
-      return file.path;
-    }
+  Future<void> _enqueueAndroidDownload(String name) async {
+    await _downloadsChannel.invokeMethod<void>('enqueueDownload', {
+      'url': _absoluteDownloadUrl(),
+      'fileName': name,
+      'headers': await _downloadHeaders(),
+    });
+  }
+
+  /// Absolute URL for the file, resolving the invoice API path against the
+  /// client's base URL (which always ends in "/").
+  String _absoluteDownloadUrl() {
+    if (_isNetworkUrl) return widget.url!;
+    final base = ref.read(dioProvider).options.baseUrl;
+    return '$base${ApiEndpoints.latikInvoice}/${widget.invoiceRef}';
+  }
+
+  /// Headers the app's API client would send. External URLs are pre-signed and
+  /// need no auth; the invoice endpoint requires the bearer token.
+  Future<Map<String, String>> _downloadHeaders() async {
+    if (_isNetworkUrl) return const {};
+    final token = await ref.read(storageProvider).getToken();
+    if (token == null || token.isEmpty) return const {};
+    return {'Authorization': 'Bearer $token'};
   }
 
   Future<void> _shareIos(Uint8List bytes, String name) async {
@@ -157,7 +163,6 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   Future<File> _writeToFirstWritableDir(Uint8List bytes, String name) async {
     final candidates = [
       await getDownloadsDirectory(),
-      await getExternalStorageDirectory(),
       await getApplicationDocumentsDirectory(),
     ].whereType<Directory>().toList();
     Object? lastError;
@@ -180,14 +185,14 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   );
   static final _leadingNumericId = RegExp(r'^\d{8,}[_-]?');
 
+  static final _controlChars = RegExp(r'[\x00-\x1F\x7F]');
+  static final _invalidFileChars = RegExp(r'[\\/:*?"<>|]');
+  static final _whitespaceRuns = RegExp(r'\s+');
+
   String _fileName() {
     final url = widget.url;
     if (url != null) {
-      final cleaned = (Uri.tryParse(url)?.pathSegments.last ?? '')
-          .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
-          .replaceFirst(_leadingUuid, '')
-          .replaceFirst(_leadingNumericId, '')
-          .trim();
+      final cleaned = _sanitizeFileName(Uri.tryParse(url)?.pathSegments.last ?? '');
       if (cleaned.isNotEmpty) {
         return cleaned.toLowerCase().endsWith('.pdf') ? cleaned : '$cleaned.pdf';
       }
@@ -200,6 +205,16 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     String two(int v) => v.toString().padLeft(2, '0');
     return 'dokumen-${now.year}-${two(now.month)}-${two(now.day)}'
         '-${two(now.hour)}-${two(now.minute)}-${two(now.second)}.pdf';
+  }
+
+  static String _sanitizeFileName(String raw) {
+    return raw
+        .replaceAll(_controlChars, ' ')
+        .replaceAll(_invalidFileChars, '_')
+        .replaceFirst(_leadingUuid, '')
+        .replaceFirst(_leadingNumericId, '')
+        .replaceAll(_whitespaceRuns, ' ')
+        .trim();
   }
 
   @override
