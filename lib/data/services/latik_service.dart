@@ -69,6 +69,11 @@ class LatikService {
     return extractList(res.data);
   }
 
+  Future<Map<String, dynamic>> getInvoiceText(String id) async {
+    final res = await _dio.get('${ApiEndpoints.latikInvoiceText}/$id');
+    return extractMap(res.data);
+  }
+
   // POST /api/latik/createinvoice (multipart) — INITIAL REGISTRATION mode
   // (is_new=1). `auditor` = JSON string of selected auditors.
   // Returns invoice `ref`.

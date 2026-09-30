@@ -42,6 +42,8 @@
   static const String latikBilling = 'latik/billing';
   static const String latikCheckBilling = 'latik/checkbilling';
   static const String latikInvoice = 'latik/invoice'; // + /{ref}
+  static const String latikInvoiceText =
+      'latik/invoicetext'; // + /{ref_invoice}
   static const String latikListInvoices = 'latik/listinvoices';
 
   // LATIK EXTENSION

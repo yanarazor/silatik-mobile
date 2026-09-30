@@ -17,6 +17,23 @@ void main() {
     latikService = LatikService(mockDio);
   });
 
+  group('LatikService.getInvoiceText', () {
+    test('fetches invoice detail by ref_invoice and unwraps data', () async {
+      when(() => mockDio.get(any())).thenAnswer(
+        (_) async => makeResponse({
+          'code': 200,
+          'success': true,
+          'data': {'ref_invoice': 'INV-REF', 'kode': 'L12025041539910'},
+        }),
+      );
+
+      final result = await latikService.getInvoiceText('INV-REF');
+
+      expect(result, {'ref_invoice': 'INV-REF', 'kode': 'L12025041539910'});
+      verify(() => mockDio.get('latik/invoicetext/INV-REF')).called(1);
+    });
+  });
+
   group('LatikService.checkNib', () {
     test('returns true when NIB is available', () async {
       when(() => mockDio.get(any(), queryParameters: any(named: 'queryParameters'))).thenAnswer(

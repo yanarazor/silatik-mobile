@@ -15,7 +15,7 @@ class InvoiceAuditorModel {
 }
 
 class InvoiceDetailModel {
-  final String refInvoicice; // canonical id (`ref_invoice`)
+  final String refInvoice;
   final String refLatik; // owner LATIK id (`ref_latik`), used by the billing request
   final String kode; // invoice number (`kode`), shown as "Tagihan {kode}"
   final int isNew; // 1 = registration, else extension (drives the LATIK row label + tariff)
@@ -30,7 +30,7 @@ class InvoiceDetailModel {
   final List<InvoiceAuditorModel> auditors;
 
   const InvoiceDetailModel({
-    required this.refInvoicice,
+    required this.refInvoice,
     required this.refLatik,
     required this.kode,
     required this.isNew,
@@ -48,7 +48,7 @@ class InvoiceDetailModel {
   factory InvoiceDetailModel.fromJson(Map<String, dynamic> json) {
     final rawAuditors = json['auditors'];
     return InvoiceDetailModel(
-      refInvoicice: meaningfulString(json['ref_invoice']) ?? '',
+      refInvoice: meaningfulString(json['ref_invoice']) ?? '',
       refLatik: meaningfulString(json['ref_latik']) ?? '',
       kode: meaningfulString(json['kode']) ?? '-',
       isNew: parseInt(json['is_new']) ?? 0,
