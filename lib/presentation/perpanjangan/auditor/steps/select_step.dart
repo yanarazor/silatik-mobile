@@ -45,7 +45,7 @@ class SelectStep extends ConsumerWidget {
         ),
       ),
       data: (all) {
-        final renewable = all.where((a) => !a.editableRenew).toList();
+        final renewable = all.where((a) => a.editableRenew).toList();
         if (renewable.isEmpty) {
           return Center(
             child: Padding(
