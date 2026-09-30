@@ -15,6 +15,7 @@ enum InvoiceType {
 /// One LATIK invoice/transaction from GET /latik/listinvoices.
 class InvoiceModel {
   final String ref;
+  final String? refInvoice;
   final String kode; // invoice number shown to the user
   final String kodeTagihan; // billing/VA code the user pays against ('' if none)
   final String namaLatik;
@@ -28,6 +29,7 @@ class InvoiceModel {
 
   const InvoiceModel({
     required this.ref,
+    required this.refInvoice,
     required this.kode,
     required this.kodeTagihan,
     required this.namaLatik,
@@ -43,6 +45,7 @@ class InvoiceModel {
   factory InvoiceModel.fromJson(Map<String, dynamic> json) {
     return InvoiceModel(
       ref: (json['ref'] ?? '').toString(),
+      refInvoice: meaningfulString(json['ref_invoice']),
       kode: meaningfulString(json['kode']) ?? '-',
       kodeTagihan: meaningfulString(json['kode_tagihan']) ?? '',
       namaLatik: meaningfulString(json['nama_latik']) ?? '-',
