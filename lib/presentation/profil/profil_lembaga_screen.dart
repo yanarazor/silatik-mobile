@@ -10,6 +10,7 @@ import '../shared/latik_info_section.dart';
 import '../shared/latik_location_card.dart';
 import 'widgets/lembaga/edit_footer.dart';
 import 'widgets/lembaga/empty_profile_state.dart';
+import 'widgets/lembaga/experience_section.dart';
 import 'widgets/lembaga/identity_card.dart';
 import 'widgets/lembaga/stats_row.dart';
 
@@ -65,6 +66,8 @@ class ProfilLembagaScreen extends ConsumerWidget {
               StatsRow(data: data, auditorCount: auditorCount),
               const SizedBox(height: 16),
               LatikInfoSection(data: data),
+              const SizedBox(height: 16),
+              ExperienceSection(profile: data),
               if (LatikLocationCard.maybeBuild(data) case final map?) ...[
                 const SizedBox(height: 16),
                 map,
