@@ -1,4 +1,5 @@
 import '../../core/utils/api_response_utils.dart';
+import 'latik_experience.dart';
 import 'profil_dokumen.dart';
 
 /// Typed model of the merged LATIK profile (from `/latik/profile`,
@@ -55,6 +56,9 @@ class LatikProfile {
   /// Uploaded completeness documents from `dokumen_kelengkapan`.
   final List<ProfilDokumen> documents;
 
+  /// Experience records returned at the top level by `/latik/profile`.
+  final List<LatikExperience> experiences;
+
   /// The raw merged response map. Retained for data-layer transforms that need
   /// fields beyond the typed surface (e.g. registration form pre-fill reading
   /// per-document file URLs). UI code should use the typed getters, not this.
@@ -90,6 +94,7 @@ class LatikProfile {
     this.auditorCount = 0,
     this.scopeSource,
     this.documents = const [],
+    this.experiences = const [],
     this.raw = const {},
   });
 
@@ -182,22 +187,25 @@ class LatikProfile {
           json['ruang_lingkup'] ??
           json['scope'],
       documents: ProfilDokumen.listFrom(json),
+      experiences: (json['experiences'] is List)
+          ? (json['experiences'] as List)
+              .whereType<Map>()
+              .map((item) =>
+                  LatikExperience.fromJson(Map<String, dynamic>.from(item)))
+              .toList()
+          : const [],
       raw: json,
     );
   }
 
   /// STR document URL from `file_str` (and variants), used to open the STR
   /// file. Empty when absent.
-  String get fileStr =>
-      pickString(raw, const ['file_str', 'str_file'],
-          deep: true, fallback: '')!;
+  String get fileStr => pickString(raw, const ['file_str', 'str_file'],
+      deep: true, fallback: '')!;
 
   /// True when the profile carries no meaningful institution data.
   bool get isEmpty =>
-      namaLatik.isEmpty &&
-      noNib.isEmpty &&
-      email.isEmpty &&
-      alamat.isEmpty;
+      namaLatik.isEmpty && noNib.isEmpty && email.isEmpty && alamat.isEmpty;
 
   /// Best available human status text (nama_status → nama_status_str →
   /// status_verifikasi), or '' when none present. Screens apply their own

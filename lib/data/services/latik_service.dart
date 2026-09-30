@@ -106,9 +106,18 @@ class LatikService {
     await _dio.post(ApiEndpoints.latikSavePengalaman, data: data);
   }
 
+  // PUT /api/latik/pengalaman/{ref}
+  Future<void> updatePengalaman(String ref, Map<String, dynamic> data) async {
+    await _dio.put(
+      '${ApiEndpoints.latikUpdatePengalaman}/${Uri.encodeComponent(ref)}',
+      data: data,
+    );
+  }
+
   // DELETE /api/latik/pengalaman/{ref}
   Future<void> deletePengalaman(String ref) async {
-    await _dio.delete('${ApiEndpoints.latikDeletePengalaman}/$ref');
+    await _dio.delete(
+        '${ApiEndpoints.latikDeletePengalaman}/${Uri.encodeComponent(ref)}');
   }
 
   // ---------------------------------------------------------- EXTENSION

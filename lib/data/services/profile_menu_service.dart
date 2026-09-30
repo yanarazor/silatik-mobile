@@ -97,6 +97,9 @@ class ProfileMenuService {
       profile,
       _extractLatikRecord(viewResponse.data, ref),
     ]);
+    if (profile['experiences'] is List) {
+      merged['experiences'] = profile['experiences'];
+    }
     return LatikProfile.fromJson(merged);
   }
 
@@ -127,6 +130,7 @@ class ProfileMenuService {
       return {
         ...data,
         ...Map<String, dynamic>.from(nested),
+        if (data['experiences'] is List) 'experiences': data['experiences'],
       };
     }
     return data;
@@ -183,5 +187,4 @@ class ProfileMenuService {
     }
     return true;
   }
-
 }
