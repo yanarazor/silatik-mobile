@@ -77,11 +77,9 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ),
                     IconButton(
-                      onPressed: () =>
-                          context.go(AppRoutes.notifications),
+                      onPressed: () => context.go(AppRoutes.notifications),
                       icon: Badge(
-                        isLabelVisible: (unreadCountAsync.valueOrNull ?? 0) >
-                            0,
+                        isLabelVisible: (unreadCountAsync.valueOrNull ?? 0) > 0,
                         label: Text(
                           '${unreadCountAsync.valueOrNull ?? 0}',
                           style: const TextStyle(fontSize: 10),
@@ -155,9 +153,10 @@ class DashboardScreen extends ConsumerWidget {
                         return InkWell(
                           onTap: actionUrl != null && actionUrl.isNotEmpty
                               ? () {
-                                  final uri = Uri.tryParse(actionUrl);
-                                  if (uri != null &&
-                                      _invoiceRefFromUrl(uri) != null) {
+                                  if (invoiceRefFromNotificationAction(
+                                        actionUrl,
+                                      ) !=
+                                      null) {
                                     ref
                                         .read(notifikasiListProvider.notifier)
                                         .markAsRead(item.id);
@@ -267,25 +266,14 @@ class DashboardScreen extends ConsumerWidget {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
 
-    final invoiceRef = _invoiceRefFromUrl(uri);
+    final invoiceRef = invoiceRefFromNotificationAction(url);
     if (invoiceRef != null) {
       context.push(
-          '${AppRoutes.pdfViewer}?ref=${Uri.encodeQueryComponent(invoiceRef)}');
+        '${AppRoutes.transactionDetail}?ref=${Uri.encodeQueryComponent(invoiceRef)}',
+      );
       return;
     }
 
     await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-
-  static String? _invoiceRefFromUrl(Uri uri) {
-    final segments =
-        uri.pathSegments.where((s) => s.trim().isNotEmpty).toList();
-    for (var i = 0; i < segments.length; i++) {
-      if ((segments[i] == 'invoice' || segments[i] == 'transaction') &&
-          i + 1 < segments.length) {
-        return segments[i + 1];
-      }
-    }
-    return null;
   }
 }

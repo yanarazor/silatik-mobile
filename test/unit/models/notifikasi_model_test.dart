@@ -169,4 +169,33 @@ void main() {
       expect(model.toJson()['action_url'], isNull);
     });
   });
+
+  group('invoiceRefFromNotificationAction', () {
+    test('extracts ref_invoice from transaction action URL variants', () {
+      expect(
+        invoiceRefFromNotificationAction(
+          'https://testlatik.brin.go.id//dashboards/transaction/'
+          'acdfc4fe-8d76-413e-a0fa-0c03ed715f46',
+        ),
+        'acdfc4fe-8d76-413e-a0fa-0c03ed715f46',
+      );
+      expect(
+        invoiceRefFromNotificationAction(
+          'https://testlatik.brin.go.id/dashboards/transaction/'
+          'bfcdfc5b-0082-4f90-b524-0b82c98f1927',
+        ),
+        'bfcdfc5b-0082-4f90-b524-0b82c98f1927',
+      );
+    });
+
+    test('returns null for missing and unrelated actions', () {
+      expect(invoiceRefFromNotificationAction(null), isNull);
+      expect(
+        invoiceRefFromNotificationAction(
+          'https://testlatik.brin.go.id/dashboards/profile',
+        ),
+        isNull,
+      );
+    });
+  });
 }

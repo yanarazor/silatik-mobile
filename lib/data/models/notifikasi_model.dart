@@ -1,4 +1,4 @@
-﻿class NotifikasiModel {
+class NotifikasiModel {
   final String id;
   final String judul;
   final String isi;
@@ -72,4 +72,18 @@
         'is_read': isRead,
         'action_url': actionUrl,
       };
+}
+
+String? invoiceRefFromNotificationAction(String? actionUrl) {
+  final uri = Uri.tryParse((actionUrl ?? '').trim());
+  if (uri == null) return null;
+  final segments =
+      uri.pathSegments.where((segment) => segment.trim().isNotEmpty).toList();
+  for (var i = 0; i < segments.length; i++) {
+    if ((segments[i] == 'invoice' || segments[i] == 'transaction') &&
+        i + 1 < segments.length) {
+      return segments[i + 1];
+    }
+  }
+  return null;
 }

@@ -79,9 +79,8 @@ class NotificationCard extends ConsumerWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: unread
-                                      ? notifTitleColor
-                                      : notifBodyColor,
+                                  color:
+                                      unread ? notifTitleColor : notifBodyColor,
                                   fontSize: 14,
                                   height: 1.3,
                                   fontWeight: unread
@@ -137,8 +136,7 @@ class NotificationCard extends ConsumerWidget {
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color:
-                                  unread ? notifBodyColor : notifMutedColor,
+                              color: unread ? notifBodyColor : notifMutedColor,
                               fontSize: 12.5,
                               height: 1.45,
                             ),
@@ -151,7 +149,8 @@ class NotificationCard extends ConsumerWidget {
               ),
               if (hasAction) ...[
                 const SizedBox(height: 14),
-                const Divider(height: 1, thickness: 1, color: notifDividerColor),
+                const Divider(
+                    height: 1, thickness: 1, color: notifDividerColor),
                 const SizedBox(height: 11),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -179,6 +178,7 @@ class NotificationCard extends ConsumerWidget {
 
   String _timeAgo(DateTime waktu) {
     final d = DateTime.now().difference(waktu);
+    if (d.inSeconds < 60) return '${d.inSeconds} detik lalu';
     if (d.inMinutes < 60) return '${d.inMinutes} menit lalu';
     if (d.inHours < 24) return '${d.inHours} jam lalu';
     if (d.inDays == 1) return 'Kemarin';
@@ -190,30 +190,19 @@ class NotificationCard extends ConsumerWidget {
       ref.read(notifikasiListProvider.notifier).markAsRead(item.id);
     }
 
-    final uri = Uri.tryParse((item.actionUrl ?? '').trim());
-    if (uri == null || uri.toString().isEmpty) return;
-
-    final invoiceRef = _invoiceRefFromUrl(uri);
+    final invoiceRef = invoiceRefFromNotificationAction(item.actionUrl);
     if (invoiceRef != null) {
       context.push(
-          '${AppRoutes.pdfViewer}?ref=${Uri.encodeQueryComponent(invoiceRef)}');
+        '${AppRoutes.transactionDetail}?ref=${Uri.encodeQueryComponent(invoiceRef)}',
+      );
       return;
     }
+
+    final uri = Uri.tryParse((item.actionUrl ?? '').trim());
+    if (uri == null || uri.toString().isEmpty) return;
 
     // Relative or schemeless action URLs cannot be launched externally.
     if (!uri.hasScheme) return;
     await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-  }
-
-  String? _invoiceRefFromUrl(Uri uri) {
-    final segments =
-        uri.pathSegments.where((s) => s.trim().isNotEmpty).toList();
-    for (var i = 0; i < segments.length; i++) {
-      if ((segments[i] == 'invoice' || segments[i] == 'transaction') &&
-          i + 1 < segments.length) {
-        return segments[i + 1];
-      }
-    }
-    return null;
   }
 }
