@@ -19,10 +19,12 @@ class TransactionDetailScreen extends ConsumerStatefulWidget {
   final String id;
 
   @override
-  ConsumerState<TransactionDetailScreen> createState() => _TransactionDetailScreenState();
+  ConsumerState<TransactionDetailScreen> createState() =>
+      _TransactionDetailScreenState();
 }
 
-class _TransactionDetailScreenState extends ConsumerState<TransactionDetailScreen> {
+class _TransactionDetailScreenState
+    extends ConsumerState<TransactionDetailScreen> {
   bool _requesting = false;
 
   @override
@@ -35,7 +37,8 @@ class _TransactionDetailScreenState extends ConsumerState<TransactionDetailScree
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Detail Transaksi', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+        title: const Text('Detail Transaksi',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -46,15 +49,7 @@ class _TransactionDetailScreenState extends ConsumerState<TransactionDetailScree
         data: (model) => ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
-            TransactionDetailHeaderCard(invoice: model),
-            const SizedBox(height: AppTheme.spacing16),
-            TransactionDetailBilledPartyCard(invoice: model),
-            const SizedBox(height: AppTheme.spacing12),
-            TransactionDetailTagihanCard(invoice: model),
-            const SizedBox(height: AppTheme.spacing12),
-            TransactionDetailLineItemsCard(invoice: model),
-            const SizedBox(height: AppTheme.spacing12),
-            TransactionDetailFooterCard(invoice: model),
+            TransactionInvoiceDocument(invoice: model),
             const SizedBox(height: AppTheme.spacing24),
             _buildActions(model),
           ],
@@ -65,8 +60,9 @@ class _TransactionDetailScreenState extends ConsumerState<TransactionDetailScree
 
   Widget _buildActions(InvoiceDetailModel model) {
     final due = model.tanggalKadaluarsa;
+    final paid = model.tanggalPembayaran != null;
     final billingDisabled =
-        _requesting || (due != null && due.isAfter(DateTime.now()));
+        _requesting || paid || (due != null && due.isAfter(DateTime.now()));
 
     return Column(
       children: [
@@ -87,59 +83,62 @@ class _TransactionDetailScreenState extends ConsumerState<TransactionDetailScree
             ),
           ),
         ),
-        const SizedBox(height: AppTheme.spacing12),
-        SizedBox(
-          height: 52,
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: billingDisabled ? null : () => _requestBilling(model),
-            icon: _requesting
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh, size: 20),
-            label: const Text(
-              'Request Kode Billing',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-            ),
-            style: ButtonStyle(
-              foregroundColor: WidgetStatePropertyAll(
-                billingDisabled ? const Color(0xFF9CA3AF) : AppColors.primary,
+        if (!paid) ...[
+          const SizedBox(height: AppTheme.spacing12),
+          SizedBox(
+            height: 52,
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: billingDisabled ? null : () => _requestBilling(model),
+              icon: _requesting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh, size: 20),
+              label: const Text(
+                'Request Kode Billing',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
               ),
-              iconColor: WidgetStatePropertyAll(
-                billingDisabled ? const Color(0xFF9CA3AF) : AppColors.primary,
-              ),
-              side: WidgetStatePropertyAll(
-                BorderSide(
-                  color: billingDisabled
-                      ? const Color(0xFFD1D5DB)
-                      : AppColors.primary,
+              style: ButtonStyle(
+                foregroundColor: WidgetStatePropertyAll(
+                  billingDisabled ? const Color(0xFF9CA3AF) : AppColors.primary,
                 ),
-              ),
-              shape: WidgetStatePropertyAll(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
+                iconColor: WidgetStatePropertyAll(
+                  billingDisabled ? const Color(0xFF9CA3AF) : AppColors.primary,
+                ),
+                side: WidgetStatePropertyAll(
+                  BorderSide(
+                    color: billingDisabled
+                        ? const Color(0xFFD1D5DB)
+                        : AppColors.primary,
+                  ),
+                ),
+                shape: WidgetStatePropertyAll(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 6),
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.info_outline, size: 14, color: AppColors.warning),
-            SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                'Tombol aktif setelah melewati tanggal jatuh tempo',
-                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+          const SizedBox(height: 6),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.info_outline, size: 14, color: AppColors.warning),
+              SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  'Tombol aktif setelah melewati tanggal jatuh tempo',
+                  style:
+                      TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ],
     );
   }

@@ -4,7 +4,7 @@ class AppFormatters {
   static final _idDate = DateFormat('dd MMMM yyyy', 'id_ID');
   static final _idShortDate = DateFormat('dd MMM yyyy', 'id_ID');
   static final _idRupiah =
-      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp', decimalDigits: 0);
 
   static String formatDate(DateTime? date) {
     if (date == null) return '-';
