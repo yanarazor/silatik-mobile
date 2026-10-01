@@ -28,6 +28,32 @@ class AuditorExtBatch {
   const AuditorExtBatch({required this.auditorRef, required this.dokumens});
 }
 
+class AuditorRevisiDokumenUpload {
+  final File file;
+  final String fileName;
+  final String nomor;
+  final DateTime? tanggal;
+
+  const AuditorRevisiDokumenUpload({
+    required this.file,
+    required this.fileName,
+    required this.nomor,
+    this.tanggal,
+  });
+}
+
+class AuditorRevisiBatch {
+  final String auditorRef;
+  final String? refExt;
+  final List<AuditorRevisiDokumenUpload> dokumens;
+
+  const AuditorRevisiBatch({
+    required this.auditorRef,
+    this.refExt,
+    required this.dokumens,
+  });
+}
+
 class AuditorExtInvoiceItem {
   final String nama;
   final String ref;
@@ -65,6 +91,33 @@ Future<FormData> buildAuditorExtSaveDokumenFormData({
     }
   }
 
+  return FormData.fromMap(map);
+}
+
+Future<FormData> buildAuditorRevisiSaveDokumenFormData({
+  required String latikRef,
+  required List<AuditorRevisiBatch> batches,
+}) async {
+  final map = <String, dynamic>{'ref_latik': latikRef};
+  for (var i = 0; i < batches.length; i++) {
+    final batch = batches[i];
+    map['auditors[$i][ref_auditor]'] = batch.auditorRef;
+    if (batch.refExt != null) {
+      map['auditors[$i][ref_ext]'] = batch.refExt;
+    }
+    for (var j = 0; j < batch.dokumens.length; j++) {
+      final doc = batch.dokumens[j];
+      final base = 'auditors[$i][dokumens][$j]';
+      map['$base[nomor]'] = doc.nomor;
+      if (doc.tanggal != null) {
+        map['$base[tanggal]'] = _auditorExtUploadDate.format(doc.tanggal!);
+      }
+      map['$base[fileDokumen]'] = await MultipartFile.fromFile(
+        doc.file.path,
+        filename: doc.fileName,
+      );
+    }
+  }
   return FormData.fromMap(map);
 }
 

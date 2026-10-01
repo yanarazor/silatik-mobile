@@ -38,7 +38,7 @@ class RevisiDokumenMetadata extends StatelessWidget {
           _buildFieldLabel(theme, 'Nomor Dokumen'),
           const SizedBox(height: 4),
           TextFormField(
-            key: ValueKey('nomor_$title'),
+            key: ValueKey('nomor_${title}_$nomor'),
             initialValue: nomor,
             enabled: !isValid,
             onChanged: onNomorChanged,

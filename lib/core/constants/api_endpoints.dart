@@ -79,6 +79,22 @@
   static const String auditorRequestVerif =
       'auditor/penambahan/requestverifikasi';
 
+  // REVISION
+  static const String auditorAddRevision =
+      'auditor/add/revisi'; // TODO: integrate; web path, absent from API docs
+  static const String auditorExtRequestRevision =
+      'auditorext/requestverifikasi/revisi'; // TODO: integrate; web path
+  static const String auditorAddRequestRevision =
+      'auditor/add/requestverifikasi/revisi'; // TODO: integrate; web path
+  static const String auditorExtRevisiGetDokumen =
+      'auditorext/dokumen/revisi/view';
+  static const String auditorAddRevisiGetDokumen =
+      'auditor/add/dokumen/revisi/view';
+  static const String auditorExtRevisiSaveDokumen =
+      'auditorext/revisi/savedokumen';
+  static const String auditorAddRevisiSaveDokumen =
+      'auditor/add/revisi/savedokumen';
+
   // NOTIFICATION
   static const String notificationAll = 'notification/all';
   static const String notificationUnread = 'notification/unread';
