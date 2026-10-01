@@ -21,6 +21,10 @@ import '../../presentation/profil/dokumen_berkas_screen.dart';
 import '../../presentation/profil/profil_lembaga_edit_screen.dart';
 import '../../presentation/profil/profil_lembaga_screen.dart';
 import '../../presentation/profil/profil_screen.dart';
+import '../../presentation/revisi/auditor/auditor_revisi_screen.dart';
+import '../../presentation/revisi/latik/latik_revisi_screen.dart';
+import '../../presentation/revisi/penambahan/auditor_add_revisi_screen.dart';
+import '../../presentation/revisi/revisi_entry_screen.dart';
 import '../../presentation/shared/pdf_viewer_screen.dart';
 import '../../presentation/shared/scaffold_with_nav_bar.dart';
 import '../../presentation/splash/splash_screen.dart';
@@ -36,12 +40,10 @@ GoRouter createRouter(WidgetRef ref) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
     routes: [
-      GoRoute(
-          path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
+      GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
       GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
       GoRoute(
-          path: AppRoutes.register,
-          builder: (_, __) => const RegisterScreen()),
+          path: AppRoutes.register, builder: (_, __) => const RegisterScreen()),
       GoRoute(
           path: AppRoutes.activationNotice,
           builder: (_, __) => const ActivationNoticeScreen()),
@@ -121,6 +123,22 @@ GoRouter createRouter(WidgetRef ref) {
         builder: (_, state) =>
             LatikVerifikasiScreen(profile: state.extra as LatikProfile),
       ),
+      GoRoute(
+        path: AppRoutes.revisiEntry,
+        builder: (_, __) => const RevisiEntryScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.revisiLatik,
+        builder: (_, __) => const LatikRevisiScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.revisiAuditor,
+        builder: (_, __) => const AuditorRevisiScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.revisiAddAuditor,
+        builder: (_, __) => const AuditorAddRevisiScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavBar(navigationShell: navigationShell);
@@ -193,7 +211,11 @@ String? _requiredPermission(String location) {
       location == AppRoutes.transaksi ||
       location == AppRoutes.transactionDetail ||
       location == AppRoutes.verifikasiLatik ||
-      location == AppRoutes.auditors) {
+      location == AppRoutes.auditors ||
+      location == AppRoutes.revisiEntry ||
+      location == AppRoutes.revisiLatik ||
+      location == AppRoutes.revisiAuditor ||
+      location == AppRoutes.revisiAddAuditor) {
     return AccessControl.latikProfile;
   }
   return null;

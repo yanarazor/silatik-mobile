@@ -115,17 +115,25 @@ class DashboardScreen extends ConsumerWidget {
                       label: 'Dokumen',
                       onTap: () => context.push(AppRoutes.dokumen),
                     ),
-                    const SizedBox(width: 18),
                     QuickAction(
                       icon: Icons.receipt_long_outlined,
                       label: 'Transaksi',
                       onTap: () => context.push(AppRoutes.transaksi),
                     ),
-                    const SizedBox(width: 18),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
                     QuickAction(
                       icon: Icons.autorenew_rounded,
                       label: 'Perpanjangan',
                       onTap: () => context.push(AppRoutes.perpanjangan),
+                    ),
+                    QuickAction(
+                      icon: Icons.edit_note_rounded,
+                      label: 'Revisi Ajuan',
+                      onTap: () => context.push(AppRoutes.revisiEntry),
                     ),
                   ],
                 ),

@@ -22,4 +22,8 @@
   static const perpanjanganAuditor = '/perpanjangan/auditor';
   static const penambahanAuditor = '/penambahan/auditor';
   static const verifikasiLatik = '/verifikasi/latik';
+  static const revisiEntry = '/revisi';
+  static const revisiLatik = '/revisi/latik';
+  static const revisiAuditor = '/revisi/auditor';
+  static const revisiAddAuditor = '/revisi/add-auditor';
 }
