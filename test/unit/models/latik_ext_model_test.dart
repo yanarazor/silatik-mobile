@@ -63,6 +63,8 @@ void main() {
       String? nomor,
       String? tanggal,
       String? url,
+      int? statusVerifikasi,
+      String? catatanVerifikasi,
     }) =>
         {
           'id': id,
@@ -74,6 +76,8 @@ void main() {
             'nomor': nomor,
             'tanggal': tanggal,
             'url_dokumen': url,
+            'status_verifikasi': statusVerifikasi,
+            'catatan_verifikasi': catatanVerifikasi,
           },
         };
 
@@ -108,12 +112,39 @@ void main() {
       expect(d.fileUrl, 'https://cdn/x.pdf');
     });
 
+    test('parses nested verification status and verifier note', () {
+      final invalid = ExtDokumen.fromJson(doc(
+        id: 1,
+        nomorReq: 1,
+        tanggalReq: 1,
+        fileReq: 1,
+        statusVerifikasi: 2,
+        catatanVerifikasi: 'Dokumen buram',
+      ));
+      expect(invalid.statusVerifikasi, 2);
+      expect(invalid.catatanVerifikasi, 'Dokumen buram');
+      expect(invalid.isValid, isFalse);
+      expect(invalid.isReadOnly, isFalse);
+
+      final valid = ExtDokumen.fromJson(doc(
+        id: 2,
+        nomorReq: 0,
+        tanggalReq: 0,
+        fileReq: 1,
+        statusVerifikasi: 1,
+      ));
+      expect(valid.isValid, isTrue);
+      expect(valid.isReadOnly, isTrue);
+    });
+
     test('leaves prefill empty when isi values are null', () {
       final d = ExtDokumen.fromJson(
           doc(id: 3, nomorReq: 0, tanggalReq: 0, fileReq: 1));
       expect(d.nomor, isEmpty);
       expect(d.tanggal, isEmpty);
       expect(d.fileUrl, isEmpty);
+      expect(d.statusVerifikasi, 0);
+      expect(d.catatanVerifikasi, isEmpty);
     });
   });
 }

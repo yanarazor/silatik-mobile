@@ -122,6 +122,12 @@ class LatikService {
 
   // ---------------------------------------------------------- EXTENSION
 
+  // GET /api/latikext/revisi — daftar pengajuan perpanjangan LATIK yang dikembalikan.
+  Future<List<dynamic>> getRevisiExt() async {
+    final res = await _dio.get(ApiEndpoints.latikExtRevision);
+    return extractList(res.data);
+  }
+
   // POST /api/latikext — resolve/create extension reference for this LATIK.
   Future<Map<String, dynamic>> resolveExt(String refLatik) async {
     final res = await _dio.post(ApiEndpoints.latikExt, data: {

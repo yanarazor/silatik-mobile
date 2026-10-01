@@ -6,6 +6,8 @@ class LatikExtRepository {
 
   final LatikService _service;
 
+  Future<List<dynamic>> getRevisi() => _service.getRevisiExt();
+
   Future<ExtResolution?> resolve(String refLatik) async {
     final data = await _service.resolveExt(refLatik);
     return ExtResolution.fromResponse(data);

@@ -52,6 +52,8 @@ class ExtDokumen {
   final bool nomorRequired;
   final bool tanggalRequired;
   final bool fileRequired;
+  final int statusVerifikasi; // 0 = Belum Diverifikasi, 1 = Valid, 2 = Tidak Valid
+  final String catatanVerifikasi;
 
   final String nomor;
   final String tanggal;
@@ -63,10 +65,15 @@ class ExtDokumen {
     required this.nomorRequired,
     required this.tanggalRequired,
     required this.fileRequired,
+    this.statusVerifikasi = 0,
+    this.catatanVerifikasi = '',
     this.nomor = '',
     this.tanggal = '',
     this.fileUrl = '',
   });
+
+  bool get isValid => statusVerifikasi == 1;
+  bool get isReadOnly => isValid;
 
   factory ExtDokumen.fromJson(Map<String, dynamic> json) {
     final isi = json['isi'] is Map
@@ -79,6 +86,8 @@ class ExtDokumen {
       nomorRequired: parseInt(json['nomor_required']) == 1,
       tanggalRequired: parseInt(json['tanggal_required']) == 1,
       fileRequired: parseInt(json['file_required']) == 1,
+      statusVerifikasi: parseInt(isi['status_verifikasi']) ?? 0,
+      catatanVerifikasi: meaningfulString(isi['catatan_verifikasi']) ?? '',
       nomor: meaningfulString(isi['nomor']) ?? '',
       tanggal: meaningfulString(isi['tanggal']) ?? '',
       fileUrl: meaningfulString(isi['url_dokumen']) ??
