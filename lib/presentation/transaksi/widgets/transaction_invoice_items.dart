@@ -24,7 +24,7 @@ class TransactionInvoiceItems extends StatelessWidget {
               ? 'Verifikasi Registrasi - LATIK'
               : 'Verifikasi Perpanjangan - LATIK',
           subtitle: _value(invoice.name),
-          amount: isNew ? 5000000 : 3750000,
+          amount: invoice.tagihanLatik,
         ),
       );
     }

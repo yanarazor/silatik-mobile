@@ -26,12 +26,12 @@ class InvoiceDetailModel {
       refLatik; // owner LATIK id (`ref_latik`), used by the billing request
   final String kode; // invoice number (`kode`), shown as "Tagihan {kode}"
   final String? kodeTagihan;
-  final int
-      isNew; // 1 = registration, else extension (drives the LATIK row label + tariff)
+  final int isNew; // 1 = registration, else extension
   final String? name;
   final String? address;
   final String? phone;
   final String? email;
+  final int tagihanLatik;
   final int tagihanTotal;
   final int?
       invoiceType; // null -> defaulted to 1 by the caller (LATIK row visible)
@@ -51,6 +51,7 @@ class InvoiceDetailModel {
     this.address,
     this.phone,
     this.email,
+    required this.tagihanLatik,
     required this.tagihanTotal,
     this.invoiceType,
     this.tanggalTagihan,
@@ -71,6 +72,7 @@ class InvoiceDetailModel {
       address: meaningfulString(json['address']),
       phone: meaningfulString(json['phone']),
       email: meaningfulString(json['email']),
+      tagihanLatik: parseInt(json['tagihan_latik']) ?? 0,
       tagihanTotal: parseInt(json['tagihan_total']) ?? 0,
       invoiceType: parseInt(json['invoice_type']),
       tanggalTagihan: parseFlexibleDate(json['tanggal_tagihan']),
