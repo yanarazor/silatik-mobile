@@ -178,4 +178,70 @@ class AuditorService {
       queryParameters: {'latik_ext': refExt},
     );
   }
+
+  // ------------------------------------------------------------- REVISION
+
+  Future<List<dynamic>> getRevisiAuditorExt() async {
+    final res = await _dio.get(ApiEndpoints.auditorExtRevision);
+    return extractList(res.data);
+  }
+
+  Future<List<dynamic>> getRevisiAddAuditor() async {
+    final res = await _dio.get(ApiEndpoints.auditorAddRevision);
+    return extractList(res.data);
+  }
+
+  Future<List<dynamic>> getDokumenRevisiAuditorExt(
+    List<Map<String, String>> auditors,
+  ) async {
+    final res = await _dio.post(
+      ApiEndpoints.auditorExtRevisiGetDokumen,
+      data: auditors,
+    );
+    return extractList(res.data);
+  }
+
+  Future<List<dynamic>> getDokumenRevisiAddAuditor(
+    List<Map<String, String>> auditors,
+  ) async {
+    final res = await _dio.post(
+      ApiEndpoints.auditorAddRevisiGetDokumen,
+      data: auditors,
+    );
+    return extractList(res.data);
+  }
+
+  Future<void> saveDokumenRevisiAuditorExt({
+    required String latikRef,
+    required List<AuditorRevisiBatch> batches,
+  }) async {
+    final form = await buildAuditorRevisiSaveDokumenFormData(
+      latikRef: latikRef,
+      batches: batches,
+    );
+    await _dio.post(ApiEndpoints.auditorExtRevisiSaveDokumen, data: form);
+  }
+
+  Future<void> saveDokumenRevisiAddAuditor({
+    required String latikRef,
+    required List<AuditorRevisiBatch> batches,
+  }) async {
+    final form = await buildAuditorRevisiSaveDokumenFormData(
+      latikRef: latikRef,
+      batches: batches,
+    );
+    await _dio.post(ApiEndpoints.auditorAddRevisiSaveDokumen, data: form);
+  }
+
+  Future<void> requestVerifikasiRevisiAuditorExt(
+    List<Map<String, String>> auditors,
+  ) async {
+    await _dio.post(ApiEndpoints.auditorExtRequestRevision, data: auditors);
+  }
+
+  Future<void> requestVerifikasiRevisiAddAuditor(
+    List<Map<String, String>> auditors,
+  ) async {
+    await _dio.post(ApiEndpoints.auditorAddRequestRevision, data: auditors);
+  }
 }

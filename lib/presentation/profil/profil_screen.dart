@@ -21,7 +21,7 @@ class ProfilScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final topInset = MediaQuery.paddingOf(context).top;
-    // debugPrint('[topInset] ${topInset}');
+
     final user = UserProfile.fromJson(ref.watch(authProvider).user ?? const {});
     final profileAsync = ref.watch(latikProfileProvider);
 
