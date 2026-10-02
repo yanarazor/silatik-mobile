@@ -9,11 +9,15 @@ class QuickAction extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.iconBackgroundColor = const Color(0xFFEAF2FF),
+    this.iconColor = AppColors.primary,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color iconBackgroundColor;
+  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +31,10 @@ class QuickAction extends StatelessWidget {
               width: 58,
               height: 58,
               decoration: BoxDecoration(
-                color: const Color(0xFFEAF2FF),
+                color: iconBackgroundColor,
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: Icon(icon, color: AppColors.primary, size: 26),
+              child: Icon(icon, color: iconColor, size: 26),
             ),
             const SizedBox(height: 10),
             Text(

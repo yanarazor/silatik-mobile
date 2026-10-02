@@ -5,7 +5,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../data/models/latik_profile.dart';
 import '../../../providers/latik_verifikasi_provider.dart';
-import 'summary_line.dart';
 
 /// Registration-status card on the dashboard. Tapping routes by verification
 /// status (wizard / transaksi / read-only detail).
@@ -16,16 +15,17 @@ class LatikSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nomorStr = data.noStr.isEmpty ? '-' : data.noStr;
     final nomorRegistrasi =
         data.noPendaftaran.isEmpty ? '-' : data.noPendaftaran;
-    final namaLatik = data.namaLatik.isEmpty ? '-' : data.namaLatik;
     final fallbackStatus = data.noStr.isEmpty ? 'Data LATIK' : 'STR Aktif';
     final status = data.statusText.isEmpty ? fallbackStatus : data.statusText;
     final isVerified = data.isVerified;
     final statusIcon =
         isVerified ? Icons.check_circle_rounded : Icons.hourglass_top_rounded;
     final statusColor = isVerified ? const Color(0xFF25B45B) : AppColors.accent;
+    final statusVerifikasi = data.statusVerifikasi.trim();
+    final canContinue =
+        statusVerifikasi == '0' || statusVerifikasi == '2';
 
     return Material(
       color: Colors.transparent,
@@ -85,12 +85,48 @@ class LatikSummaryCard extends StatelessWidget {
                       color: Color(0xFFA7B0C3)),
                 ],
               ),
-              const SizedBox(height: 18),
-              SummaryLine(label: 'No. Registrasi', value: nomorRegistrasi),
-              const SizedBox(height: 6),
-              SummaryLine(label: 'No. STR', value: nomorStr),
-              const SizedBox(height: 6),
-              SummaryLine(label: 'Nama LATIK', value: namaLatik),
+              const SizedBox(height: 14),
+              Text(
+                'No. Registrasi · $nomorRegistrasi',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF5B6880),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (canContinue) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () =>
+                        context.push(AppRoutes.verifikasiLatik, extra: data),
+                    child: const Text('Lanjutkan Verifikasi Ajuan'),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => _onCardTap(context, data),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    foregroundColor: AppColors.primary,
+                  ),
+                  child: const Text(
+                    'Lihat Detail Data Registrasi ›',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

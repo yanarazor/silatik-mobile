@@ -1,31 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../data/models/latik_profile.dart';
 import '../../data/models/notifikasi_model.dart';
+import '../../providers/auditor_provider.dart';
 import '../../providers/notifikasi_provider.dart';
 import '../../providers/profile_menu_provider.dart';
+import '../notifikasi/widgets/notification_card.dart';
 import '../shared/blue_header_band.dart';
+import '../shared/error_retry.dart';
+import 'widgets/auditor_summary_section.dart';
 import 'widgets/error_card.dart';
 import 'widgets/latik_summary_card.dart';
 import 'widgets/loading_card.dart';
 import 'widgets/quick_action.dart';
+import 'widgets/str_validity_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifAsync = ref.watch(unreadNotificationProvider);
-    final unreadCountAsync = ref.watch(unreadNotificationCountProvider);
     final latikAsync = ref.watch(latikProfileProvider);
-    final latik = latikAsync.valueOrNull;
-    final namaLatik =
-        (latik?.namaLatik.isNotEmpty ?? false) ? latik!.namaLatik : 'LATIK';
+    final notifAsync = ref.watch(unreadNotificationProvider);
+    final unreadCount =
+        ref.watch(unreadNotificationCountProvider).valueOrNull ?? 0;
+
+    final hour = DateTime.now().hour;
+    final greeting = hour < 11
+        ? 'Selamat pagi,'
+        : hour < 15
+            ? 'Selamat siang,'
+            : hour < 18
+                ? 'Selamat sore,'
+                : 'Selamat malam,';
+    final namaLatik = (latikAsync.valueOrNull?.namaLatik.isNotEmpty ?? false)
+        ? latikAsync.valueOrNull!.namaLatik
+        : 'LATIK';
 
     return Stack(
       children: [
@@ -36,6 +50,7 @@ class DashboardScreen extends ConsumerWidget {
               ref.invalidate(latikProfileProvider);
               ref.invalidate(unreadNotificationProvider);
               ref.invalidate(unreadNotificationCountProvider);
+              ref.invalidate(auditorListProvider);
               await Future.wait([
                 ref
                     .read(latikProfileProvider.future)
@@ -54,12 +69,12 @@ class DashboardScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Dashboard',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
+                          Text(
+                            greeting,
+                            style: const TextStyle(
+                              color: Color(0xD1EAF2FF),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -68,9 +83,9 @@ class DashboardScreen extends ConsumerWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: Color(0xDDEAF2FF),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
                         ],
@@ -79,9 +94,9 @@ class DashboardScreen extends ConsumerWidget {
                     IconButton(
                       onPressed: () => context.go(AppRoutes.notifications),
                       icon: Badge(
-                        isLabelVisible: (unreadCountAsync.valueOrNull ?? 0) > 0,
+                        isLabelVisible: unreadCount > 0,
                         label: Text(
-                          '${unreadCountAsync.valueOrNull ?? 0}',
+                          '$unreadCount',
                           style: const TextStyle(fontSize: 10),
                         ),
                         child: const Icon(Icons.notifications_rounded,
@@ -97,6 +112,13 @@ class DashboardScreen extends ConsumerWidget {
                   error: (_, __) => ErrorCard(
                     onRetry: () => ref.invalidate(latikProfileProvider),
                   ),
+                ),
+                const SizedBox(height: 16),
+                latikAsync.when(
+                  data: (data) =>
+                      StrValidityCard(strTanggalAkhir: data.strTanggalAkhir),
+                  loading: () => const _StrValiditySkeleton(),
+                  error: (_, __) => const SizedBox.shrink(),
                 ),
                 const SizedBox(height: 24),
                 const Text(
@@ -122,137 +144,80 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
                 Row(
                   children: [
-                    QuickAction(
-                      icon: Icons.autorenew_rounded,
-                      label: 'Perpanjangan',
-                      onTap: () => context.push(AppRoutes.perpanjangan),
-                    ),
                     QuickAction(
                       icon: Icons.edit_note_rounded,
                       label: 'Revisi Ajuan',
                       onTap: () => context.push(AppRoutes.revisiEntry),
                     ),
+                    QuickAction(
+                      icon: Icons.autorenew_rounded,
+                      label: 'Perpanjangan',
+                      onTap: () => context.push(AppRoutes.perpanjangan),
+                      iconBackgroundColor: const Color(0xFFF0F3F8),
+                      iconColor: const Color(0xFF8794AA),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 28),
-                const Text(
-                  'Notifikasi Terbaru',
-                  style: TextStyle(
-                    color: Color(0xFF0C2D5C),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                  ),
+                const AuditorSummarySection(),
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Notifikasi Terbaru',
+                        style: TextStyle(
+                          color: Color(0xFF0C2D5C),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go(AppRoutes.notifications),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        foregroundColor: AppColors.primary,
+                      ),
+                      child: const Text(
+                        'Lihat semua ›',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 14),
                 notifAsync.when(
                   data: (items) {
-                    final latest = items.take(2).toList();
+                    final latest = items.take(3).toList();
                     if (latest.isEmpty) {
-                      return const Text('Belum ada notifikasi');
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Center(child: Text('Belum ada notifikasi.')),
+                      );
                     }
                     return Column(
-                      children: latest.map((item) {
-                        final isWarning =
-                            item.kategori == 'Tindakan Diperlukan';
-                        final actionUrl = item.actionUrl?.trim();
-                        return InkWell(
-                          onTap: actionUrl != null && actionUrl.isNotEmpty
-                              ? () {
-                                  if (invoiceRefFromNotificationAction(
-                                        actionUrl,
-                                      ) !=
-                                      null) {
-                                    ref
-                                        .read(notifikasiListProvider.notifier)
-                                        .markAsRead(item.id);
-                                  }
-                                  _openAction(context, actionUrl);
-                                }
-                              : null,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 11,
-                                  height: 11,
-                                  decoration: BoxDecoration(
-                                    color: isWarning
-                                        ? AppColors.accent
-                                        : AppColors.primary,
-                                    borderRadius: BorderRadius.circular(99),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.judul,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Color(0xFF1C2638),
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      if (item.isi.trim().isNotEmpty) ...[
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          item.isi,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            color: Color(0xFF6B778C),
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  _timeAgo(item.waktu),
-                                  style: const TextStyle(
-                                    color: Color(0xFF8A96AA),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                if (actionUrl != null &&
-                                    actionUrl.isNotEmpty) ...[
-                                  const SizedBox(width: 6),
-                                  const Icon(Icons.open_in_new,
-                                      size: 14, color: AppColors.primary),
-                                ],
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                      children: [
+                        for (var i = 0; i < latest.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 12),
+                          NotificationCard(item: latest[i]),
+                        ],
+                      ],
                     );
                   },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (_, __) => const Text('Gagal memuat notifikasi'),
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.center,
-                  child: TextButton(
-                    onPressed: () => context.go(AppRoutes.notifications),
-                    child: const Text(
-                      'Lihat semua notifikasi  >',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
+                  loading: () => const _NotificationSkeletonList(),
+                  error: (_, __) => ErrorRetry(
+                    message: 'Gagal memuat notifikasi.',
+                    onRetry: () =>
+                        ref.invalidate(unreadNotificationProvider),
                   ),
                 ),
               ],
@@ -262,26 +227,43 @@ class DashboardScreen extends ConsumerWidget {
       ],
     );
   }
+}
 
-  static String _timeAgo(DateTime waktu) {
-    final d = DateTime.now().difference(waktu);
-    if (d.inMinutes < 60) return '${d.inMinutes} mnt lalu';
-    if (d.inHours < 24) return '${d.inHours} jam lalu';
-    return '${d.inDays} hari lalu';
+class _StrValiditySkeleton extends StatelessWidget {
+  const _StrValiditySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 86,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEDF1F7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE4ECF7)),
+      ),
+    );
   }
+}
 
-  static Future<void> _openAction(BuildContext context, String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
+class _NotificationSkeletonList extends StatelessWidget {
+  const _NotificationSkeletonList();
 
-    final invoiceRef = invoiceRefFromNotificationAction(url);
-    if (invoiceRef != null) {
-      context.push(
-        '${AppRoutes.transactionDetail}?ref=${Uri.encodeQueryComponent(invoiceRef)}',
-      );
-      return;
-    }
-
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < 3; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          Container(
+            height: 96,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEDF1F7),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE4ECF7)),
+            ),
+          ),
+        ],
+      ],
+    );
   }
 }
