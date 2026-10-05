@@ -2,14 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/url_opener.dart';
 
 /// STR validity card on the dashboard. Shows the remaining validity window of
 /// the LATIK STR with day-count-based coloring, or a neutral state when no STR
-/// date is available.
+/// date is available. Includes an action to open the STR file if available.
 class StrValidityCard extends StatelessWidget {
-  const StrValidityCard({super.key, required this.strTanggalAkhir});
+  const StrValidityCard({
+    super.key,
+    required this.strTanggalAkhir,
+    this.fileUrl = '',
+  });
 
   final DateTime? strTanggalAkhir;
+  final String fileUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +42,8 @@ class StrValidityCard extends StatelessWidget {
       }
     }
 
+    final hasAction = fileUrl.trim().isNotEmpty;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -50,60 +58,75 @@ class StrValidityCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'MASA BERLAKU STR LATIK',
-                  style: TextStyle(
-                    color: Color(0xFF5B6880),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'MASA BERLAKU STR LATIK',
+                      style: TextStyle(
+                        color: Color(0xFF5B6880),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        color: valueColor,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        height: 1.1,
+                      ),
+                    ),
+                    if (subLine != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subLine,
+                        style: const TextStyle(
+                          color: Color(0xFF8A96AA),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: valueColor,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    height: 1.1,
-                  ),
-                ),
-                if (subLine != null) ...[
-                  const SizedBox(height: 4),
+              ),
+            ],
+          ),
+          if (hasAction) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1, color: Color(0xFFE4ECF7)),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: () => openFileUrl(context, fileUrl),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
                   Text(
-                    subLine,
-                    style: const TextStyle(
-                      color: Color(0xFF8A96AA),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    'Buka',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                  SizedBox(width: 5),
+                  Icon(Icons.open_in_new_rounded,
+                      size: 15, color: AppColors.primary),
                 ],
-              ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEAF2FF),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.calendar_month_rounded,
-              color: AppColors.primary,
-              size: 22,
-            ),
-          ),
+          ],
         ],
       ),
     );

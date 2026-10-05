@@ -115,111 +115,66 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 latikAsync.when(
-                  data: (data) =>
-                      StrValidityCard(strTanggalAkhir: data.strTanggalAkhir),
+                  data: (data) => StrValidityCard(
+                    strTanggalAkhir: data.strTanggalAkhir,
+                    fileUrl: data.fileStr,
+                  ),
                   loading: () => const _StrValiditySkeleton(),
                   error: (_, __) => const SizedBox.shrink(),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Aksi Cepat',
-                  style: TextStyle(
-                    color: Color(0xFF0C2D5C),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    QuickAction(
-                      icon: Icons.description_outlined,
-                      label: 'Dokumen',
-                      onTap: () => context.push(AppRoutes.dokumen),
-                    ),
-                    QuickAction(
-                      icon: Icons.receipt_long_outlined,
-                      label: 'Transaksi',
-                      onTap: () => context.push(AppRoutes.transaksi),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    QuickAction(
-                      icon: Icons.edit_note_rounded,
-                      label: 'Revisi Ajuan',
-                      onTap: () => context.push(AppRoutes.revisiEntry),
-                    ),
-                    QuickAction(
-                      icon: Icons.autorenew_rounded,
-                      label: 'Perpanjangan',
-                      onTap: () => context.push(AppRoutes.perpanjangan),
-                      iconBackgroundColor: const Color(0xFFF0F3F8),
-                      iconColor: const Color(0xFF8794AA),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 28),
-                const AuditorSummarySection(),
-                const SizedBox(height: 28),
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Notifikasi Terbaru',
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: _sectionDecoration(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Aksi Cepat',
                         style: TextStyle(
                           color: Color(0xFF0C2D5C),
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () => context.go(AppRoutes.notifications),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(0, 0),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        foregroundColor: AppColors.primary,
-                      ),
-                      child: const Text(
-                        'Lihat semua ›',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                notifAsync.when(
-                  data: (items) {
-                    final latest = items.take(3).toList();
-                    if (latest.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Center(child: Text('Belum ada notifikasi.')),
-                      );
-                    }
-                    return Column(
-                      children: [
-                        for (var i = 0; i < latest.length; i++) ...[
-                          if (i > 0) const SizedBox(height: 12),
-                          NotificationCard(item: latest[i]),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          QuickAction(
+                            icon: Icons.description_outlined,
+                            label: 'Dokumen',
+                            onTap: () => context.push(AppRoutes.dokumen),
+                          ),
+                          const SizedBox(width: 12),
+                          QuickAction(
+                            icon: Icons.receipt_long_outlined,
+                            label: 'Transaksi',
+                            onTap: () => context.push(AppRoutes.transaksi),
+                          ),
                         ],
-                      ],
-                    );
-                  },
-                  loading: () => const _NotificationSkeletonList(),
-                  error: (_, __) => ErrorRetry(
-                    message: 'Gagal memuat notifikasi.',
-                    onRetry: () =>
-                        ref.invalidate(unreadNotificationProvider),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          QuickAction(
+                            icon: Icons.edit_note_rounded,
+                            label: 'Revisi Ajuan',
+                            onTap: () => context.push(AppRoutes.revisiEntry),
+                          ),
+                          const SizedBox(width: 12),
+                          QuickAction(
+                            icon: Icons.autorenew_rounded,
+                            label: 'Perpanjangan',
+                            onTap: () => context.push(AppRoutes.perpanjangan),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 28),
+                const AuditorSummarySection(),
+                ..._buildNotificationSection(context, notifAsync, ref),
               ],
             ),
           ),
@@ -227,7 +182,82 @@ class DashboardScreen extends ConsumerWidget {
       ],
     );
   }
+
+  List<Widget> _buildNotificationSection(
+    BuildContext context,
+    AsyncValue<List<NotifikasiModel>> notifAsync,
+    WidgetRef ref,
+  ) {
+    return notifAsync.when(
+      data: (items) {
+        final latest = items.take(3).toList();
+        if (latest.isEmpty) return [];
+        return [
+          const SizedBox(height: 28),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Notifikasi Terbaru',
+                  style: TextStyle(
+                    color: Color(0xFF0C2D5C),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => context.go(AppRoutes.notifications),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  foregroundColor: AppColors.primary,
+                ),
+                child: const Text(
+                  'Lihat semua ›',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          for (var i = 0; i < latest.length; i++) ...[
+            if (i > 0) const SizedBox(height: 12),
+            NotificationCard(item: latest[i]),
+          ],
+        ];
+      },
+      loading: () => [
+        const SizedBox(height: 28),
+        const _NotificationSkeletonList(),
+      ],
+      error: (_, __) => [
+        const SizedBox(height: 28),
+        ErrorRetry(
+          message: 'Gagal memuat notifikasi.',
+          onRetry: () => ref.invalidate(unreadNotificationProvider),
+        ),
+      ],
+    );
+  }
 }
+
+BoxDecoration _sectionDecoration() => BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: const Color(0xFFE4ECF7)),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF0B2D5C).withValues(alpha: 0.04),
+          blurRadius: 12,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    );
 
 class _StrValiditySkeleton extends StatelessWidget {
   const _StrValiditySkeleton();

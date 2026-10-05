@@ -19,6 +19,7 @@ enum VerifikasiAction {
 
 VerifikasiAction verifikasiActionFor(String status) {
   switch (status.trim()) {
+    case '': // No status yet — treat as fresh draft
     case '0': // Not Verified / Registration (draft)
     case '2': // Returned (resubmit)
       return VerifikasiAction.wizard;

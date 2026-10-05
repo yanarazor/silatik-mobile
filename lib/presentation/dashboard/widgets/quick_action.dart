@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 
-/// Square quick-action button used in the dashboard shortcuts row.
+/// Rectangular quick-action button used in the dashboard shortcuts row.
 class QuickAction extends StatelessWidget {
   const QuickAction({
     super.key,
@@ -24,30 +24,48 @@ class QuickAction extends StatelessWidget {
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Column(
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: iconBackgroundColor,
-                borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE4ECF7)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0B2D5C).withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-              child: Icon(icon, color: iconColor, size: 26),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Color(0xFF243552),
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: iconBackgroundColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF243552),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

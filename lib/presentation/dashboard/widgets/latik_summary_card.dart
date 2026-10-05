@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../data/models/latik_profile.dart';
-import '../../../providers/latik_verifikasi_provider.dart';
 
 /// Registration-status card on the dashboard. Tapping routes by verification
 /// status (wizard / transaksi / read-only detail).
@@ -24,8 +23,9 @@ class LatikSummaryCard extends StatelessWidget {
         isVerified ? Icons.check_circle_rounded : Icons.hourglass_top_rounded;
     final statusColor = isVerified ? const Color(0xFF25B45B) : AppColors.accent;
     final statusVerifikasi = data.statusVerifikasi.trim();
-    final canContinue =
-        statusVerifikasi == '0' || statusVerifikasi == '2';
+    final parsedStatus = int.tryParse(statusVerifikasi);
+    final canContinue = data.editable &&
+        (statusVerifikasi.isEmpty || parsedStatus == 0 || parsedStatus == 2);
 
     return Material(
       color: Colors.transparent,
@@ -97,36 +97,37 @@ class LatikSummaryCard extends StatelessWidget {
                 ),
               ),
               if (canContinue) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () =>
                         context.push(AppRoutes.verifikasiLatik, extra: data),
-                    child: const Text('Lanjutkan Verifikasi Ajuan'),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () => _onCardTap(context, data),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(0, 0),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    foregroundColor: AppColors.primary,
-                  ),
-                  child: const Text(
-                    'Lihat Detail Data Registrasi ›',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.arrow_forward_rounded, size: 18),
+                        SizedBox(width: 8),
+                        Text('Lanjutkan Verifikasi Ajuan'),
+                      ],
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -135,17 +136,6 @@ class LatikSummaryCard extends StatelessWidget {
   }
 
   void _onCardTap(BuildContext context, LatikProfile data) {
-    if (data.editable) {
-      context.push(AppRoutes.verifikasiLatik, extra: data);
-      return;
-    }
-
-    switch (verifikasiActionFor(data.statusVerifikasi)) {
-      case VerifikasiAction.transaksi:
-        context.push(AppRoutes.transaksi);
-      case VerifikasiAction.wizard:
-      case VerifikasiAction.detail:
-        context.push(AppRoutes.profilLembaga);
-    }
+    context.push(AppRoutes.profilLembaga);
   }
 }

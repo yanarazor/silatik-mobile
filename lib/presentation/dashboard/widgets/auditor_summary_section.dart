@@ -7,10 +7,8 @@ import '../../../core/constants/app_routes.dart';
 import '../../../data/models/auditor_model.dart';
 import '../../../providers/auditor_provider.dart';
 
-/// Dashboard section summarising the LATIK auditor roster: total, STR
-/// near-expiry, STR expired, and unverified counts. Counts are derived on the
-/// client from [auditorListProvider] so the tile numbers always agree with the
-/// auditor list screen.
+/// Dashboard section summarising the LATIK auditor roster: Total Personil,
+/// STR expiring within 7 days, expired STR, and unverified auditors.
 class AuditorSummarySection extends ConsumerWidget {
   const AuditorSummarySection({super.key});
 
@@ -18,21 +16,52 @@ class AuditorSummarySection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auditorsAsync = ref.watch(auditorListProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeader(total: auditorsAsync.valueOrNull?.length),
-        const SizedBox(height: 14),
-        auditorsAsync.when(
-          data: (auditors) => _buildGrid(context, auditors),
-          loading: () => const _SkeletonGrid(),
-          error: (_, __) => _buildErrorGrid(context),
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE4ECF7)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0B2D5C).withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Ringkasan Auditor',
+            style: TextStyle(
+              color: Color(0xFF0C2D5C),
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 14),
+          auditorsAsync.when(
+            data: (auditors) => _buildGrid(auditors),
+            loading: () => const _SkeletonGrid(),
+            error: (_, __) => const _TilesGrid(
+              total: '-',
+              expiringSoon: '-',
+              expired: '-',
+              unverified: '-',
+            ),
+          ),
+          const SizedBox(height: 14),
+          _ManageAuditorButton(
+            onTap: () => context.go(AppRoutes.auditors),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildGrid(BuildContext context, List<AuditorModel> auditors) {
+  Widget _buildGrid(List<AuditorModel> auditors) {
     final now = DateTime.now();
     final total = auditors.length;
     final expiringSoon = auditors.where((a) {
@@ -53,52 +82,6 @@ class AuditorSummarySection extends ConsumerWidget {
       expiringSoon: '$expiringSoon',
       expired: '$expired',
       unverified: '$unverified',
-    );
-  }
-
-  Widget _buildErrorGrid(BuildContext context) {
-    return const _TilesGrid(
-      total: '-',
-      expiringSoon: '-',
-      expired: '-',
-      unverified: '-',
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({this.total});
-
-  final int? total;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(
-          child: Text(
-            'Ringkasan Auditor',
-            style: TextStyle(
-              color: Color(0xFF0C2D5C),
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: () => context.push(AppRoutes.auditors),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: const Size(0, 0),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            foregroundColor: AppColors.primary,
-          ),
-          child: Text(
-            total == null ? 'Semua ›' : 'Semua ($total) ›',
-            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -124,18 +107,19 @@ class _TilesGrid extends StatelessWidget {
           children: [
             Expanded(
               child: _StatTile(
-                value: total,
                 label: 'Total Auditor LATIK',
+                value: total,
+                unit: 'Auditor',
                 numberColor: AppColors.primary,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _StatTile(
-                value: expiringSoon,
                 label: 'STR akan kadaluarsa (≤7 hari)',
+                value: expiringSoon,
+                unit: 'Auditor',
                 numberColor: const Color(0xFFB87A00),
-                background: const Color(0xFFFFF9EE),
               ),
             ),
           ],
@@ -145,19 +129,19 @@ class _TilesGrid extends StatelessWidget {
           children: [
             Expanded(
               child: _StatTile(
-                value: expired,
                 label: 'STR telah kadaluarsa',
+                value: expired,
+                unit: 'Auditor',
                 numberColor: AppColors.error,
-                background: const Color(0xFFFEF3F3),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _StatTile(
-                value: unverified,
                 label: 'Auditor belum terverifikasi',
+                value: unverified,
+                unit: 'Auditor',
                 numberColor: const Color(0xFFB47E00),
-                background: const Color(0xFFFFFAEE),
               ),
             ),
           ],
@@ -169,23 +153,23 @@ class _TilesGrid extends StatelessWidget {
 
 class _StatTile extends StatelessWidget {
   const _StatTile({
-    required this.value,
     required this.label,
+    required this.value,
+    required this.unit,
     required this.numberColor,
-    this.background = Colors.white,
   });
 
-  final String value;
   final String label;
+  final String value;
+  final String unit;
   final Color numberColor;
-  final Color background;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 96,
       decoration: BoxDecoration(
-        color: background,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE4ECF7)),
       ),
@@ -196,30 +180,49 @@ class _StatTile extends StatelessWidget {
           Container(width: 4, color: numberColor),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    value,
-                    style: TextStyle(
-                      color: numberColor,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      height: 1.05,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        value,
+                        style: TextStyle(
+                          color: numberColor,
+                          fontSize: 25,
+                          fontWeight: FontWeight.w900,
+                          height: 1.05,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          unit,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF6B778C),
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
                   Text(
                     label,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Color(0xFF6B778C),
-                      fontSize: 10.5,
+                      color: Color(0xFF5B6880),
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      height: 1.25,
+                      height: 1.2,
                     ),
                   ),
                 ],
@@ -227,6 +230,48 @@ class _StatTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ManageAuditorButton extends StatelessWidget {
+  const _ManageAuditorButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFEAF2FF),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+        height: 46,
+          width: double.infinity,
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+                Text(
+                  'Kelola Auditor',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: AppColors.primary,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
