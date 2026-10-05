@@ -43,6 +43,41 @@ class AuditorDetailScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(
             AppTheme.spacing16, AppTheme.spacing16, AppTheme.spacing16, 32),
         children: [
+          if (!_auditor.editableAdd)
+            Container(
+              margin: const EdgeInsets.only(bottom: AppTheme.spacing16),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spacing12,
+                vertical: AppTheme.spacing12,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.hourglass_top_rounded,
+                    color: AppColors.warning,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppTheme.spacing8),
+                  Expanded(
+                    child: Text(
+                      'Ajuan sedang dalam proses',
+                      style: TextStyle(
+                        color: AppColors.warning,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           AuditorDetailHeader(auditor: _auditor),
           const SizedBox(height: AppTheme.spacing16),
           DetailSectionCard(

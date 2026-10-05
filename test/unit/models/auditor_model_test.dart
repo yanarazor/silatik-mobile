@@ -398,6 +398,7 @@ void main() {
         'str_no': strNo,
         'active_invoice_count': activeInvoiceCount,
         if (auditorStep != null) 'auditor_step': auditorStep,
+        'editable_add': true,
       });
 
   group('AuditorModel.canEdit (add-auditor isEditable)', () {
@@ -420,6 +421,16 @@ void main() {
     test('STR set wins over returned step', () {
       expect(aud(strNo: 'STR-1', auditorStep: 3).canEdit, isFalse);
     });
+
+    test('false when editable_add is false', () {
+      expect(
+        AuditorModel.fromJson({
+          'ref': 'A1',
+          'editable_add': false,
+        }).canEdit,
+        isFalse,
+      );
+    });
   });
 
   group('AuditorModel.canDelete (add-auditor isDeleteable)', () {
@@ -437,6 +448,16 @@ void main() {
 
     test('false when returned (auditor_step == 3)', () {
       expect(aud(auditorStep: 3).canDelete, isFalse);
+    });
+
+    test('false when editable_add is false', () {
+      expect(
+        AuditorModel.fromJson({
+          'ref': 'A1',
+          'editable_add': false,
+        }).canDelete,
+        isFalse,
+      );
     });
   });
 }

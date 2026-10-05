@@ -249,12 +249,14 @@ class AuditorModel {
   }
 
   bool get canEdit {
+    if (!editableAdd) return false;
     if (strNo.trim().isNotEmpty) return false;
     if (activeInvoiceCount > 0) return false;
     return activeInvoiceCount == 0 || auditorStep == 3;
   }
 
   bool get canDelete {
+    if (!editableAdd) return false;
     if (strNo.trim().isNotEmpty) return false;
     if (activeInvoiceCount > 0) return false;
     if (auditorStep == 3) return false;
