@@ -8,12 +8,22 @@ extension IdentityTypeX on IdentityType {
         IdentityType.ktp => 'KTP',
         IdentityType.passport => 'Paspor',
       };
+
+  String get value => switch (this) {
+        IdentityType.ktp => '1',
+        IdentityType.passport => '2',
+      };
 }
 
 extension GenderX on Gender {
   String get label => switch (this) {
         Gender.male => 'Laki-laki',
         Gender.female => 'Perempuan',
+      };
+
+  String get value => switch (this) {
+        Gender.male => '1',
+        Gender.female => '2',
       };
 }
 

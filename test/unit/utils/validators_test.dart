@@ -122,4 +122,59 @@ void main() {
       expect(AppValidators.postalCode('60112'), isNull);
     });
   });
+
+  group('AppValidators.password', () {
+    const invalidMsg =
+        'Password minimal 8 karakter dan memuat huruf kecil, huruf kapital, angka dan simbol';
+
+    test('returns error when value is null or empty', () {
+      expect(AppValidators.password(null), 'Password wajib diisi');
+      expect(AppValidators.password(''), 'Password wajib diisi');
+    });
+
+    test('rejects passwords shorter than 8 characters', () {
+      expect(AppValidators.password('Ab1!'), invalidMsg);
+    });
+
+    test('rejects passwords missing lowercase', () {
+      expect(AppValidators.password('ABC12345!'), invalidMsg);
+    });
+
+    test('rejects passwords missing uppercase', () {
+      expect(AppValidators.password('abc12345!'), invalidMsg);
+    });
+
+    test('rejects passwords missing a digit', () {
+      expect(AppValidators.password('Abcdefg!'), invalidMsg);
+    });
+
+    test('rejects passwords missing a symbol', () {
+      expect(AppValidators.password('Abcdefg1'), invalidMsg);
+    });
+
+    test('rejects a lowercase-only word of sufficient length', () {
+      expect(AppValidators.password('abcdefgh'), invalidMsg);
+    });
+
+    test('accepts a password meeting every rule', () {
+      expect(AppValidators.password('!Demodemo1'), isNull);
+      expect(AppValidators.password('Abcdef1!'), isNull);
+    });
+  });
+
+  group('AppValidators.confirmPassword', () {
+    test('returns error when confirmation is empty', () {
+      expect(AppValidators.confirmPassword('', 'Abcdef1!'),
+          'Konfirmasi password wajib diisi');
+    });
+
+    test('returns error when confirmation does not match', () {
+      expect(AppValidators.confirmPassword('Abcdef1?', 'Abcdef1!'),
+          'Konfirmasi password tidak cocok');
+    });
+
+    test('returns null when confirmation matches', () {
+      expect(AppValidators.confirmPassword('Abcdef1!', 'Abcdef1!'), isNull);
+    });
+  });
 }

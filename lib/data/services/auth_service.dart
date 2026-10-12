@@ -42,17 +42,24 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> register({
-    required String nama,
+    required String namaLengkap,
     required String email,
     required String password,
-    required String noHp,
+    required String konfirmasiPassword,
+    required String jenisIdentitas,
+    required String nomorIdentitas,
+    required String jenisKelamin,
+    required String birthData,
   }) async {
     final response = await _dio.post(ApiEndpoints.register, data: {
-      'name': nama,
+      'nama_lengkap': namaLengkap,
       'email': email,
       'password': password,
-      'password_confirmation': password,
-      'no_hp': noHp,
+      'konfirmasi_password': konfirmasiPassword,
+      'jenis_identitas': jenisIdentitas,
+      'nomor_identitas': nomorIdentitas,
+      'jenis_kelamin': jenisKelamin,
+      'birth_data': birthData,
     });
     return response.data;
   }

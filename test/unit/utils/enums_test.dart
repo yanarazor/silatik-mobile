@@ -35,4 +35,25 @@ void main() {
       expect(genderFromRaw('other'), isNull);
     });
   });
+
+  group('enum value getters (backend codes)', () {
+    test('IdentityType.value exposes the numeric jenis_identitas code', () {
+      expect(IdentityType.ktp.value, '1');
+      expect(IdentityType.passport.value, '2');
+    });
+
+    test('Gender.value exposes the numeric jenis_kelamin code', () {
+      expect(Gender.male.value, '1');
+      expect(Gender.female.value, '2');
+    });
+
+    test('value round-trips through the fromRaw parsers', () {
+      for (final e in IdentityType.values) {
+        expect(identityTypeFromRaw(e.value), e);
+      }
+      for (final g in Gender.values) {
+        expect(genderFromRaw(g.value), g);
+      }
+    });
+  });
 }

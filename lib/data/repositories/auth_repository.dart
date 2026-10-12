@@ -9,10 +9,14 @@ class AuthRepository {
 
   Future<Map<String, dynamic>> register(Map<String, dynamic> payload) =>
       _service.register(
-        nama: payload['nama'] ?? '',
+        namaLengkap: payload['nama_lengkap'] ?? '',
         email: payload['email'] ?? '',
         password: payload['password'] ?? '',
-        noHp: payload['phone'] ?? '',
+        konfirmasiPassword: payload['konfirmasi_password'] ?? '',
+        jenisIdentitas: payload['jenis_identitas'] ?? '',
+        nomorIdentitas: payload['nomor_identitas'] ?? '',
+        jenisKelamin: payload['jenis_kelamin'] ?? '',
+        birthData: payload['birth_data'] ?? '',
       );
 
   Future<void> forgotPassword(String email) => _service.forgotPassword(email);
