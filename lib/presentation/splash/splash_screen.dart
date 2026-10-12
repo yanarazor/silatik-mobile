@@ -114,7 +114,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               ),
               SizedBox(height: 6),
               Text(
-                'Sistem Informasi LATIK - BBRIN',
+                'Sistem Informasi LATIK - BRIN',
                 style: TextStyle(
                   color: Color(0xFF6E7B91),
                   fontSize: 12,

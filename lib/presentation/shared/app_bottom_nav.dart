@@ -14,48 +14,51 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(22, 0, 22, 20),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0B2D5C).withValues(alpha: 0.14),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _NavItem(
-            icon: Icons.home_rounded,
-            label: 'Home',
-            selected: selectedIndex == 0,
-            onTap: () => onItemTapped(0),
-          ),
-          _NavItem(
-            icon: Icons.groups_2_outlined,
-            label: 'Auditor',
-            selected: selectedIndex == 1,
-            onTap: () => onItemTapped(1),
-          ),
-          _NavItem(
-            icon: Icons.notifications_none_rounded,
-            label: 'Notifikasi',
-            selected: selectedIndex == 2,
-            onTap: () => onItemTapped(2),
-          ),
-          _NavItem(
-            icon: Icons.person_outline_rounded,
-            label: 'Profil',
-            selected: selectedIndex == 3,
-            onTap: () => onItemTapped(3),
-          ),
-        ],
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(22, 0, 22, 20),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0B2D5C).withValues(alpha: 0.14),
+              blurRadius: 28,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _NavItem(
+              icon: Icons.home_rounded,
+              label: 'Home',
+              selected: selectedIndex == 0,
+              onTap: () => onItemTapped(0),
+            ),
+            _NavItem(
+              icon: Icons.groups_2_outlined,
+              label: 'Auditor',
+              selected: selectedIndex == 1,
+              onTap: () => onItemTapped(1),
+            ),
+            _NavItem(
+              icon: Icons.notifications_none_rounded,
+              label: 'Notifikasi',
+              selected: selectedIndex == 2,
+              onTap: () => onItemTapped(2),
+            ),
+            _NavItem(
+              icon: Icons.person_outline_rounded,
+              label: 'Profil',
+              selected: selectedIndex == 3,
+              onTap: () => onItemTapped(3),
+            ),
+          ],
+        ),
       ),
     );
   }
