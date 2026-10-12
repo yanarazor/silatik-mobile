@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/utils/validators.dart';
 import '../../providers/auth_provider.dart';
+import '../shared/landing_slider_dialog.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -27,6 +29,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     _loadRememberedUsername();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) showLandingSliderDialog(context, ref);
+    });
   }
 
   Future<void> _loadRememberedUsername() async {
@@ -77,15 +82,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(28, 54, 28, 24),
+              padding: const EdgeInsets.fromLTRB(28, 40, 28, 24),
               children: [
-                const Text(
-                  'Selamat Datang!',
-                  style: TextStyle(
-                    color: Color(0xFF0C2D5C),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
+                const Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Selamat Datang!',
+                        style: TextStyle(
+                          color: Color(0xFF0C2D5C),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    _AppVersionLabel(),
+                  ],
                 ),
                 const SizedBox(height: 6),
                 const Text(
@@ -268,6 +281,29 @@ class _Label extends StatelessWidget {
           fontWeight: FontWeight.w800,
         ),
       ),
+    );
+  }
+}
+
+class _AppVersionLabel extends StatelessWidget {
+  const _AppVersionLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final version = snapshot.data?.version;
+        if (version == null) return const SizedBox.shrink();
+        return Text(
+          'v$version',
+          style: const TextStyle(
+            color: Color(0xFF8A97AC),
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        );
+      },
     );
   }
 }
