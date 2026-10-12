@@ -10,6 +10,7 @@ import '../../../../data/models/registrasi_model.dart';
 import '../../../../providers/master_data_provider.dart';
 import '../../../shared/dokumen_upload_card.dart';
 import '../../../shared/dropdown_states.dart';
+import '../../../shared/field_label.dart';
 
 /// Birth-date field sharing the ConsoleUploadCard input look. Tapping opens the
 /// native date picker.
@@ -145,8 +146,10 @@ class ProfilWilayahFields extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _provinsiDropdown(ref),
+        const FieldLabel('Kota/Kabupaten', isRequired: false),
         _kabupatenDropdown(context, ref),
       ],
     );
