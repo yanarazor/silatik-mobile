@@ -52,6 +52,7 @@ class _WilayahFieldsState extends ConsumerState<WilayahFields> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const FieldLabel('Provinsi'),
         _provinsiDropdown(),

@@ -17,7 +17,7 @@ class DataPenggunaScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        title: const Text('Data Pengguna'),
+        title: const Text('Data Penanggung Jawab'),
       ),
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -26,7 +26,7 @@ class DataPenggunaScreen extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Gagal memuat data pengguna.',
+                'Gagal memuat data penanggung jawab.',
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 14,

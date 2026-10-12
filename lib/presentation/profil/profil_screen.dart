@@ -67,7 +67,7 @@ class ProfilScreen extends ConsumerWidget {
                       ),
                       MenuItemData(
                         icon: Icons.person_outline_rounded,
-                        label: 'Data Pengguna',
+                        label: 'Data Penanggung Jawab',
                         onTap: () => context.push(AppRoutes.dataPengguna),
                       ),
                       MenuItemData(
