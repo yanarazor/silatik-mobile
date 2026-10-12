@@ -1,8 +1,19 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../constants/app_routes.dart';
+
+String storeUrl() {
+  final playStoreUrl = dotenv.env['PLAY_STORE_URL'] ?? '';
+  final appStoreUrl = dotenv.env['APP_STORE_URL'] ?? '';
+  if (!kIsWeb && Platform.isIOS) return appStoreUrl;
+  return playStoreUrl;
+}
 
 bool isPdfUrl(String url) =>
     url.trim().toLowerCase().split(RegExp(r'[?#]')).first.endsWith('.pdf');

@@ -5,11 +5,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/cache_utils.dart';
 import '../../core/utils/file_utils.dart';
+import '../../core/utils/url_opener.dart';
 import '../../data/models/app_settings.dart';
 import '../../data/models/user_profile.dart';
 import '../../providers/app_settings_provider.dart';
 import '../../providers/profile_menu_provider.dart';
-import 'widgets/app_version_footer.dart';
 import 'widgets/pengaturan/settings_section.dart';
 
 class PengaturanScreen extends ConsumerWidget {
@@ -211,9 +211,11 @@ class PengaturanScreen extends ConsumerWidget {
   }
 
   Future<void> _rateApp(BuildContext context) async {
-    // TODO(settings): point at the real listing id once the app is published.
-    final uri = Uri.parse('market://details?id=com.brin.silatik');
-    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    // Store links are platform-specific and configured via .env.
+    final url = storeUrl();
+    final uri = url.isEmpty ? null : Uri.tryParse(url);
+    final ok = uri != null &&
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tidak dapat membuka toko aplikasi')),

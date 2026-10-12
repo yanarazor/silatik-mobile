@@ -1,7 +1,7 @@
-import 'dart:io' show Platform;
-
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:package_info_plus/package_info_plus.dart';
+
+import '../../core/utils/url_opener.dart';
 
 class ForceUpdateInfo {
   final bool updateAvailable;
@@ -20,14 +20,8 @@ class ForceUpdateInfo {
 class ForceUpdateService {
   // TODO(force-update): read the store version from the API instead
   static const _dummyLatestVersion = '1.0.0';
+
   static const _dummyForceUpdate = false;
-
-  /// TODO: replace it with actual url
-  static const _playStoreUrl =
-      'https://play.google.com/store/apps/details?id=id.go.brin.silatik';
-
-  /// TODO: replace it with actual url
-  static const _appStoreUrl = 'https://apps.apple.com/app/id0000000000';
 
   Future<ForceUpdateInfo> check() async {
     final installedVersion = (await PackageInfo.fromPlatform()).version;
@@ -39,12 +33,7 @@ class ForceUpdateService {
       updateAvailable: updateAvailable,
       forceUpdate: _dummyForceUpdate,
       latestVersion: _dummyLatestVersion,
-      updateUrl: _storeUrl(),
+      updateUrl: storeUrl(),
     );
-  }
-
-  static String _storeUrl() {
-    if (kIsWeb) return _playStoreUrl;
-    return Platform.isIOS ? _appStoreUrl : _playStoreUrl;
   }
 }

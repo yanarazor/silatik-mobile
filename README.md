@@ -1,86 +1,235 @@
-# 📱 SILATIK Mobile App
+# SILATIK Mobile
 
-Aplikasi Mobile Sistem Informasi Layanan Sertifikasi (SILATIK) hasil kerja sama dengan BRIN (Badan Riset dan Inovasi Nasional). Aplikasi ini memfasilitasi pengguna/lembaga dalam melakukan pendaftaran, manajemen auditor, melengkapi dokumen akreditasi, hingga meninjau status sertifikasi SPBE.
-
----
-
-## 🛠 Tech Stack
-
-Proyek ini dibangun menggunakan **Flutter** dengan library/arsitektur pendukung berikut:
-
-- **State Management**: [Riverpod](https://pub.dev/packages/flutter_riverpod) (`flutter_riverpod`) digunakan sebagai pusat pengelolaan _state_, logika bisnis, dan _dependency injection_.
-- **Routing & Navigation**: [GetX](https://pub.dev/packages/get) (`get`) digunakan untuk manajemen rute aplikasi secara ringkas (`Get.toNamed`, `Get.offAllNamed`) serta pemanggilan dialog dan snackbar.
-- **Networking/API**: [Dio](https://pub.dev/packages/dio) digunakan untuk melakukan _HTTP request_ ke Backend. Dio telah dikonfigurasi menggunakan _interceptor_ untuk memberikan _Bearer Token_ otomatis.
-- **Form Validation**: [Reactive Forms](https://pub.dev/packages/reactive_forms) untuk model-driven form validation yang reaktif.
-- **Local Storage**: [Flutter Secure Storage](https://pub.dev/packages/flutter_secure_storage) disiapkan untuk menyimpan data sensitif seperti JWT _Token_ secara aman, dilengkapi dengan SharedPreferences.
+> **Aplikasi mobile SILATIK, Sistem Informasi Layanan Sertifikasi hasil kerja sama dengan BRIN (Badan Riset dan Inovasi Nasional).**
+> Lembaga pengguna dapat mendaftar, mengelola data auditor, melengkapi dokumen akreditasi, dan memantau status sertifikasi SPBE.
 
 ---
 
-## 📂 Struktur Folder Aplikasi (`/lib`)
+## Daftar Isi
 
-Proyek diatur menggunakan pola **Feature-wise/Layered Architecture**:
+- [Tentang Aplikasi](#tentang-aplikasi)
+- [Tech Stack](#tech-stack)
+- [Arsitektur](#arsitektur)
+- [Struktur Folder](#struktur-folder)
+- [Peta Fitur](#peta-fitur)
+- [Konfigurasi Environment](#konfigurasi-environment)
+- [Memulai Proyek](#memulai-proyek)
+- [Menjalankan Tes dan Analisis](#menjalankan-tes-dan-analisis)
+- [Dokumentasi API](#dokumentasi-api)
+- [Panduan Pengembangan](#panduan-pengembangan)
+- [Catatan Rilis](#catatan-rilis)
+
+---
+
+## Tentang Aplikasi
+
+SILATIK Mobile adalah sisi pengguna dari sistem LATIK (Lembaga Terakreditasi). Alur utamanya:
+
+1. Lembaga **registrasi** dan login, lalu menunggu aktivasi akun.
+2. Lembaga melengkapi **profil lembaga**, **data pengguna**, dan **dokumen berkas**.
+3. Lembaga menambahkan **auditor** dan melengkapi data pendukungnya.
+4. Lembaga mengajukan **verifikasi** LATIK, memantau **notifikasi**, dan merespons **revisi** dari verifikator.
+5. Lembaga memperpanjang sertifikasi (**perpanjangan**) dan memantau **transaksi** serta invoice.
+
+---
+
+## Tech Stack
+
+| Kategori | Library |
+|---|---|
+| Framework | Flutter, Dart SDK `>=3.4.0 <4.0.0` |
+| State management & DI | [Riverpod](https://pub.dev/packages/flutter_riverpod) (`flutter_riverpod`) |
+| Routing | [go_router](https://pub.dev/packages/go_router) dengan redirect autentikasi |
+| HTTP | [Dio](https://pub.dev/packages/dio) dengan interceptor untuk Bearer token dan logging |
+| Form & validasi | [Reactive Forms](https://pub.dev/packages/reactive_forms) |
+| Penyimpanan token | [flutter_secure_storage](https://pub.dev/packages/flutter_secure_storage) |
+| Preferensi lokal | [shared_preferences](https://pub.dev/packages/shared_preferences) |
+| Konfigurasi | [flutter_dotenv](https://pub.dev/packages/flutter_dotenv) |
+| Gambar & peta | `cached_network_image`, `flutter_map`, `latlong2` |
+| Dokumen | `file_picker`, `syncfusion_flutter_pdfviewer`, `open_filex`, `share_plus` |
+| Notifikasi lokal | `flutter_local_notifications` |
+| Tipografi & animasi | `google_fonts`, `lottie`, `shimmer` |
+
+---
+
+## Arsitektur
+
+Proyek memakai pemisahan lapisan sederhana: **presentation** (UI) membaca **providers** (Riverpod), providers memanggil **repositories**, dan repositories memakai **services** yang berbicara langsung dengan API melalui Dio. Model di `data/models` menjadi bentuk data yang dipakai di seluruh lapisan.
+
+```
+Presentation (screen & widget)
+      │ watch / read
+      ▼
+Providers (Riverpod)
+      │ memanggil
+      ▼
+Repositories (data/repositories)
+      │ memakai
+      ▼
+Services (data/services) ──▶ ApiClient (Dio + Bearer token) ──▶ REST API BRIN
+                         └──▶ StorageService (secure storage, shared preferences)
+```
+
+### Alur Sesi
+
+```
+App start
+    │
+    ├── Splash: cek force update, lalu AuthNotifier.checkAuth()
+    │       ├── Token tidak ada                            ──▶ Login
+    │       ├── GET user/me gagal (termasuk 401)           ──▶ logout ──▶ Login
+    │       ├── User tidak lolos AccessControl.canUseMobile ──▶ logout ──▶ Login
+    │       └── Token valid                                ──▶ Dashboard
+    │
+    └── Login ──▶ token disimpan di secure storage ──▶ Dashboard
+```
+
+Saat request lain di tengah sesi menerima 401, interceptor di `providers/auth_provider.dart` memanggil `onUnauthorized`, yang memicu `logoutDueToSessionExpired()` lalu mengarahkan pengguna ke halaman login.
+
+---
+
+## Struktur Folder
 
 ```text
 lib/
-├── core/               # Konfigurasi inti (API endpoints, utility, formatter, konstanta, theme)
+├── core/
+│   ├── auth/           # Pemeriksaan hak akses (access_control.dart)
+│   ├── constants/      # api_endpoints.dart, app_routes.dart, enums.dart, map_config.dart
+│   ├── router/         # app_router.dart, konfigurasi GoRouter dan redirect
+│   ├── theme/          # app_theme.dart
+│   └── utils/          # ApiErrorHandler, validators, formatters, file & url helper
 ├── data/
-│   ├── models/         # Data class & parsing JSON
-│   ├── repositories/   # Lapisan perantara data (Repository pattern)
-│   └── services/       # Komunikasi langsung dengan pihak ketiga (API/Dio, Storage)
-├── presentation/       # Tampilan antarmuka aplikasi dibagi per-fitur (auth, dashboard, registration)
-├── providers/          # Riverpod State/Notifier untuk state management tiap fitur
-├── app.dart            # Inisialisasi awal GetX Router, Thema, dan root Widget
-└── main.dart           # Entry point aplikasi
+│   ├── models/         # Data class dan parsing JSON
+│   ├── repositories/   # Lapisan perantara antara provider dan service
+│   └── services/       # Pemanggilan API (Dio) dan StorageService
+├── presentation/       # Layar dan widget, dikelompokkan per fitur
+│   ├── auditor/        ├── dashboard/      ├── dokumen/
+│   ├── auth/           ├── notifikasi/     ├── perpanjangan/
+│   ├── profil/         ├── revisi/         ├── shared/
+│   ├── splash/         ├── transaksi/      └── verifikasi/
+├── providers/          # Riverpod provider dan notifier per fitur
+├── app.dart            # Bootstrap: dotenv, locale id_ID, ProviderScope, MaterialApp.router
+└── main.dart           # Entry point, mengatur pesan error Dio yang ramah pengguna
 ```
 
 ---
 
-## 🚀 Cara Menjalankan Proyek (Getting Started)
+## Peta Fitur
+
+| Fitur | Folder presentation | Service / repository |
+|---|---|---|
+| Login, registrasi, lupa password | `auth/` | `auth_service.dart` |
+| Dashboard | `dashboard/` | `latik_service.dart` |
+| Data auditor | `auditor/` | `auditor_service.dart`, `auditor_repository.dart` |
+| Dokumen akreditasi | `dokumen/`, `profil/dokumen_berkas*` | `dokumen_service.dart`, `dokumen_repository.dart` |
+| Profil lembaga dan data pengguna | `profil/` | `latik_service.dart`, `profile_menu_service.dart` |
+| Verifikasi LATIK | `verifikasi/` | `latik_verifikasi_repository.dart` |
+| Revisi | `revisi/` | `auditor_ext_repository.dart`, `latik_ext_repository.dart` |
+| Perpanjangan | `perpanjangan/` | `auditor_ext_repository.dart`, `latik_ext_repository.dart` |
+| Transaksi dan invoice | `transaksi/` | `invoice_provider.dart` |
+| Notifikasi | `notifikasi/` | `notifikasi_service.dart`, `notifikasi_repository.dart` |
+| Data master | Dropdown di seluruh form | `master_data_service.dart`, `master_data_repository.dart` |
+| Force update dan slider landing | `splash/`, `shared/` | `force_update_service.dart`, `slider_service.dart` |
+
+---
+
+## Konfigurasi Environment
+
+Konfigurasi dibaca dari file `.env` di root proyek. File ini **wajib ada**, karena `bootstrap()` memuatnya saat startup (`dotenv.load`) sebelum aplikasi berjalan.
+
+| Variabel | Wajib | Default | Keterangan |
+|---|---|---|---|
+| `API_BASE_URL` | Tidak | `https://testapilatik.brin.go.id/api` | Base URL API. Path `/api` ditambahkan otomatis jika belum ada. |
+| `MAP_TILE_URL` | Tidak | OpenStreetMap | Template tile peta dengan `{z}/{x}/{y}`. Untuk produksi gunakan penyedia dengan SLA. |
+| `PLAY_STORE_URL` | Tidak | Play Store `id.go.brin.silatik` | Link toko untuk Android dan fallback web. Dipakai oleh dialog force update dan tombol "Beri rating" di Pengaturan. |
+| `APP_STORE_URL` | Tidak | `https://apps.apple.com/app/id0000000000` | Link toko untuk iOS. Nilai default masih placeholder, ganti dengan App ID asli sebelum rilis. |
+
+Langkah menyiapkan `.env`:
+
+```bash
+cp .env.example .env
+```
+
+> `.env` terdaftar sebagai asset di `pubspec.yaml`, sehingga **isinya ikut terbundel ke dalam aplikasi**. Jangan menyimpan secret atau kunci privat di sana. File `.env` juga sudah masuk `.gitignore`.
+
+---
+
+## Memulai Proyek
 
 ### Prasyarat
 
-- Flutter SDK (Versi Stabil Terbaru)
-- Dart SDK
-- Android Studio / Xcode untuk emulator/simulator.
+| Kebutuhan | Versi |
+|---|---|
+| Flutter SDK | Stable terbaru, kompatibel dengan Dart `>=3.4.0` |
+| Android Studio atau Xcode | Untuk emulator atau simulator |
 
 ### Instalasi
 
-1. Clone / buka repositori ini di VS Code atau IDE favorit Anda.
-2. Unduh semua dependensi pub:
+1. Buka repositori di IDE favorit Anda.
+2. Salin konfigurasi environment:
+   ```bash
+   cp .env.example .env
+   ```
+3. Unduh dependensi:
    ```bash
    flutter pub get
    ```
-3. _(Opsional)_ Jika ada _file_ `.env`, pastikan Anda menyalin dari `.env.example` ke `.env` dan mengisi _value_ yang benar. (Secara default `ApiClient` menggunakan `https://testapilatik.brin.go.id/api`).
+4. Jalankan aplikasi:
+   ```bash
+   flutter run
+   ```
 
-### Menjalankan Mode Development
+---
+
+## Menjalankan Tes dan Analisis
 
 ```bash
-flutter run
+flutter analyze
+flutter test
 ```
 
----
+Tes berada di `test/`:
 
-## 🌐 Dokumentasi API
-
-- **Base URL Development:** `https://testapilatik.brin.go.id/api`
-- **Swagger UI:** [API Documentation](https://testapilatik.brin.go.id/api/documentation)
-
-Semua perutean endpoint sudah didaftarkan pada direktori `lib/core/constants/api_endpoints.dart`.  
-Pemanggilan API berada di dalam _directory_ `lib/data/services/` (contoh: `auth_service.dart`, `latik_service.dart`).
+- `test/unit/` mencakup providers, repositories, services, models, utils, dan presentation helper.
+- `test/fixtures/` berisi contoh respons JSON dari API.
+- `test/helpers/mock_helpers.dart` berisi helper mock bersama.
+- `test/tooling/file_length_test.dart` gagal jika ada file `lib/**/*.dart` lebih dari 350 baris.
 
 ---
 
-## 💡 Panduan Pengembangan (Development Guidelines)
+## Dokumentasi API
 
-1. **Membuat Screen Baru**:
-   - Letakkan di folder `lib/presentation/<nama_fitur>/`.
-   - Gunakan `ConsumerWidget` atau `ConsumerStatefulWidget` dari _Riverpod_ jika butuh memantau state.
-2. **Setup Rute Baru**:
-   - Daftarkan rute baru di `lib/core/constants/app_routes.dart` (contoh: `static const String myPage = '/mypage';`).
-   - Daftarkan _binding_ rutenya pada _array_ `getPages` di dalam `lib/app.dart`.
-3. **Penyambungan API Baru**:
-   - Daftarkan path endpoint di `api_endpoints.dart`.
-   - Buat fungsi pemanggilannya (`GET/POST/...`) di `/services/` melalui instansi `Dio`.
-   - Proses dan bungkus logika bisinisnya (seperti pengaktifan status _loading_, _error handling_) di `/providers/`.
-4. **Penanganan Error (Error Handling)**:
-   - Apabila melempar / menangkap error dari API (Exception), manfaatkan kelas perantara `ApiErrorHandler.getMessage(error)` di `api_error_handler.dart` agar pesan yang muncul di-UI menjadi lebih rapi dan dapat dibaca (Human-readable).
+- **Base URL development:** `https://testapilatik.brin.go.id/api`
+- **Daftar endpoint:** `lib/core/constants/api_endpoints.dart`
+- **Pemanggilan API:** `lib/data/services/`
+
+Semua request melalui `ApiClient.dio` di `lib/data/services/api_client.dart`. Header `X-App-Client: flutter-silatik` dikirim pada setiap request. Bearer token ditambahkan oleh interceptor di `providers/auth_provider.dart` dari secure storage, kecuali pada endpoint login, registrasi, dan lupa password.
+
+---
+
+## Panduan Pengembangan
+
+1. **Membuat layar baru**
+   - Letakkan di `lib/presentation/<nama_fitur>/`.
+   - Gunakan `ConsumerWidget` atau `ConsumerStatefulWidget` jika layar perlu membaca state Riverpod.
+2. **Menambah rute baru**
+   - Tambahkan konstanta path di `lib/core/constants/app_routes.dart`, misalnya `static const myPage = '/my-page';`.
+   - Daftarkan `GoRoute` di `lib/core/router/app_router.dart`.
+3. **Menyambungkan API baru**
+   - Tambahkan path di `lib/core/constants/api_endpoints.dart`.
+   - Tulis pemanggilan di `lib/data/services/` memakai `ApiClient.dio`.
+   - Bungkus logika bisnis (loading, error, mapping) di `lib/data/repositories/` dan `lib/providers/`.
+4. **Penanganan error**
+   - `main.dart` mengatur `DioException.readableStringBuilder` ke `ApiErrorHandler.getMessage`, sehingga `'$e'` dan `e.toString()` sudah menghasilkan pesan yang bisa dibaca.
+   - Untuk error non-Dio, gunakan `ApiErrorHandler.messageFrom(error)`, yang selalu mengembalikan pesan generik dan tidak membocorkan stack trace.
+
+---
+
+## Catatan Rilis
+
+- **Application ID masih template.** Android memakai `com.example.silatik_mobile` dan iOS memakai `com.example.silatikMobile`. Ganti sebelum rilis ke Play Store atau App Store.
+- **Link toko diatur lewat `.env`.** Ubah `PLAY_STORE_URL` dan `APP_STORE_URL` tanpa perlu rilis kode. `APP_STORE_URL` masih memakai App ID placeholder (`id0000000000`), jadi perbarui sebelum rilis iOS.
+
+---
+
+<p align="center">SILATIK Mobile, dikembangkan untuk BRIN.</p>
