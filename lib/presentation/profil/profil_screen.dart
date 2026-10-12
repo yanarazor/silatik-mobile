@@ -13,7 +13,6 @@ import 'widgets/app_version_footer.dart';
 import 'widgets/faq_item.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/sheet_frame.dart';
-import 'widgets/sheet_row.dart';
 
 class ProfilScreen extends ConsumerWidget {
   const ProfilScreen({super.key});
@@ -92,12 +91,7 @@ class ProfilScreen extends ConsumerWidget {
                         label: 'Pengaturan',
                         iconBgColor: const Color(0xFFF3F4F6),
                         iconColor: AppColors.textSecondary,
-                        onTap: () => _showApiInfoSheet(
-                          context,
-                          title: 'Pengaturan',
-                          future: ref.read(userProfileProvider.future),
-                          mapper: _mapSettings,
-                        ),
+                        onTap: () => context.push(AppRoutes.pengaturan),
                       ),
                     ],
                   ),
@@ -148,74 +142,6 @@ class ProfilScreen extends ConsumerWidget {
     if (!ok) return;
     await ref.read(authProvider.notifier).logout();
     if (context.mounted) context.go(AppRoutes.login);
-  }
-
-  void _showApiInfoSheet<T>(
-    BuildContext context, {
-    required String title,
-    required Future<T> future,
-    required Map<String, String> Function(T data) mapper,
-  }) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.78,
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
-              child: FutureBuilder<T>(
-                future: future,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState != ConnectionState.done) {
-                    return SheetFrame(
-                      title: title,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 28),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                    );
-                  }
-                  if (snapshot.hasError || !snapshot.hasData) {
-                    return SheetFrame(
-                      title: title,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Text(
-                          'Gagal memuat data dari API.',
-                          style: TextStyle(
-                            color: AppColors.error,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                  final rows = mapper(snapshot.data as T);
-                  return SheetFrame(
-                    title: title,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: rows.entries
-                          .map((e) => SheetRow(e.key, e.value))
-                          .toList(),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   void _showFaqSheet(BuildContext context, WidgetRef ref) {
@@ -305,16 +231,5 @@ class ProfilScreen extends ConsumerWidget {
         );
       },
     );
-  }
-
-  Map<String, String> _mapSettings(UserProfile user) {
-    final roles = user.roleLabels;
-    return {
-      'Status Akun': user.active ? 'Aktif' : 'Nonaktif',
-      'Role': roles.isEmpty ? '-' : roles.join(', '),
-      'Permission':
-          user.permissionCount == 0 ? '-' : '${user.permissionCount} akses',
-      'Tipe Identitas': user.identityTypeLabel,
-    };
   }
 }

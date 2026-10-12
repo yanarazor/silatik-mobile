@@ -18,6 +18,7 @@ import '../../presentation/perpanjangan/perpanjangan_entry_screen.dart';
 import '../../presentation/profil/data_pengguna_screen.dart';
 import '../../presentation/profil/dokumen_berkas_edit_screen.dart';
 import '../../presentation/profil/dokumen_berkas_screen.dart';
+import '../../presentation/profil/pengaturan_screen.dart';
 import '../../presentation/profil/profil_lembaga_edit_screen.dart';
 import '../../presentation/profil/profil_lembaga_screen.dart';
 import '../../presentation/profil/profil_screen.dart';
@@ -94,6 +95,10 @@ GoRouter createRouter(WidgetRef ref) {
       GoRoute(
         path: AppRoutes.dokumenBerkasEdit,
         builder: (_, __) => const DokumenBerkasEditScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.pengaturan,
+        builder: (_, __) => const PengaturanScreen(),
       ),
       GoRoute(
         path: AppRoutes.transaksi,
