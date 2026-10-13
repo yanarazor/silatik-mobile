@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
@@ -13,6 +14,11 @@ import 'widgets/app_version_footer.dart';
 import 'widgets/faq_item.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/sheet_frame.dart';
+
+/// Demo-only bridge for testers: opens a Google Form to collect feedback on
+/// app progress. Swap the placeholder URL before distributing test builds;
+/// remove the menu entirely once a real feedback channel exists.
+const String _feedbackFormUrl = 'https://forms.gle/REPLACE-ME';
 
 class ProfilScreen extends ConsumerWidget {
   const ProfilScreen({super.key});
@@ -93,6 +99,13 @@ class ProfilScreen extends ConsumerWidget {
                         iconColor: AppColors.textSecondary,
                         onTap: () => context.push(AppRoutes.pengaturan),
                       ),
+                      MenuItemData(
+                        icon: Icons.rate_review_outlined,
+                        label: 'Umpan Balik',
+                        iconBgColor: const Color(0xFFF3F4F6),
+                        iconColor: AppColors.textSecondary,
+                        onTap: () => _openFeedbackForm(context),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -142,6 +155,17 @@ class ProfilScreen extends ConsumerWidget {
     if (!ok) return;
     await ref.read(authProvider.notifier).logout();
     if (context.mounted) context.go(AppRoutes.login);
+  }
+
+  Future<void> _openFeedbackForm(BuildContext context) async {
+    final uri = Uri.tryParse(_feedbackFormUrl);
+    final ok = uri != null &&
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal membuka formulir masukan')),
+      );
+    }
   }
 
   void _showFaqSheet(BuildContext context, WidgetRef ref) {
