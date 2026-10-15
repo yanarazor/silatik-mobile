@@ -10,13 +10,16 @@ import '../../data/models/registrasi_model.dart';
 import '../../providers/auditor_form_provider.dart';
 import 'cached_remote_image.dart';
 
+enum ImagePickSource { camera, gallery }
+
 class DokumenUploadCard extends ConsumerWidget {
   const DokumenUploadCard({
     super.key,
     required this.title,
     required this.requiredDoc,
     required this.file,
-    required this.onPick,
+    this.onPick,
+    this.onPickImage,
     required this.onPreview,
     this.leadingIcon = Icons.picture_as_pdf,
     this.leadingColor = AppColors.error,
@@ -24,12 +27,20 @@ class DokumenUploadCard extends ConsumerWidget {
     this.imageThumbnail = false,
     this.extraFields,
     this.onReuse,
-  });
+  }) : assert(
+          onPick != null || onPickImage != null,
+          'DokumenUploadCard butuh onPick (dokumen) atau onPickImage (foto).',
+        );
 
   final String title;
   final bool requiredDoc;
   final FileItem? file;
-  final VoidCallback onPick;
+
+  final VoidCallback? onPick;
+
+  final Future<void> Function(ImagePickSource source)? onPickImage;
+
+  final VoidCallback? onReuse;
 
   final VoidCallback onPreview;
 
@@ -86,7 +97,9 @@ class DokumenUploadCard extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppTheme.spacing12),
-          file == null ? _uploadZone(theme) : _fileBox(context, ref, theme),
+          file == null
+              ? _uploadZone(context, theme)
+              : _fileBox(context, ref, theme),
           if (onReuse != null) ...[
             const SizedBox(height: AppTheme.spacing8),
             SizedBox(
@@ -108,9 +121,36 @@ class DokumenUploadCard extends ConsumerWidget {
     );
   }
 
-  Widget _uploadZone(ThemeData theme) {
+  void _handlePick(BuildContext context) {
+    final pickImage = onPickImage;
+    if (pickImage == null) {
+      onPick?.call();
+      return;
+    }
+    _chooseSource(context, pickImage);
+  }
+
+  Future<void> _chooseSource(
+    BuildContext context,
+    Future<void> Function(ImagePickSource source) pickImage,
+  ) async {
+    final source = await showModalBottomSheet<ImagePickSource>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppTheme.radiusXLarge),
+        ),
+      ),
+      builder: (_) => const _ImageSourceSheet(),
+    );
+    if (source == null) return;
+    await pickImage(source);
+  }
+
+  Widget _uploadZone(BuildContext context, ThemeData theme) {
     return InkWell(
-      onTap: onPick,
+      onTap: () => _handlePick(context),
       borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
       child: Container(
         width: double.infinity,
@@ -209,7 +249,7 @@ class DokumenUploadCard extends ConsumerWidget {
                   icon: Icons.sync,
                   label: 'Ganti',
                   color: AppColors.textSecondary,
-                  onTap: onPick,
+                  onTap: () => _handlePick(context),
                 ),
               ),
             ],
@@ -258,8 +298,8 @@ class DokumenUploadCard extends ConsumerWidget {
     if (!_isWebUrl && localSize > 0) {
       return Text(
         FileUtils.formatBytes(localSize),
-        style: theme.textTheme.bodySmall
-            ?.copyWith(color: AppColors.textSecondary),
+        style:
+            theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
       );
     }
     if (_isWebUrl) {
@@ -299,3 +339,68 @@ class DokumenUploadCard extends ConsumerWidget {
   }
 }
 
+class _ImageSourceSheet extends StatelessWidget {
+  const _ImageSourceSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: AppTheme.spacing8),
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0E4EA),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+            child: Text(
+              'Tambah Foto',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+          _option(
+            context,
+            icon: Icons.photo_camera_outlined,
+            label: 'Kamera',
+            source: ImagePickSource.camera,
+          ),
+          _option(
+            context,
+            icon: Icons.photo_library_outlined,
+            label: 'Galeri',
+            source: ImagePickSource.gallery,
+          ),
+          const SizedBox(height: AppTheme.spacing8),
+        ],
+      ),
+    );
+  }
+
+  Widget _option(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required ImagePickSource source,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: AppColors.primary),
+      title: Text(label),
+      onTap: () => Navigator.of(context).pop(source),
+    );
+  }
+}

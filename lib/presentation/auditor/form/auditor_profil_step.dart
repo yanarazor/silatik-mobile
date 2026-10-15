@@ -1,8 +1,9 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:reactive_forms/reactive_forms.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -11,15 +12,12 @@ import '../../../core/utils/validators.dart';
 import '../../../data/models/registrasi_model.dart';
 import '../../../providers/auditor_form_provider.dart';
 import '../../shared/date_field.dart';
+import '../../shared/dokumen_upload_card.dart';
 import '../../shared/field_label.dart';
 import 'widgets/profil_step_fields.dart';
 
-/// Batas ukuran foto/sertifikat per dokumen (10MB, sesuai handover doc).
-/// FileUtils.maxSizeBytes tetap 5MB untuk alur registrasi lain.
 const int kAuditorFileMaxBytes = 10 * 1024 * 1024;
 
-/// Step 0 — Profil Auditor. Menulis AuditorProfilDraft ke auditorFormProvider
-/// saat [onNext] tervalidasi.
 class AuditorProfilStep extends ConsumerStatefulWidget {
   const AuditorProfilStep({
     super.key,
@@ -27,7 +25,6 @@ class AuditorProfilStep extends ConsumerStatefulWidget {
     required this.onNext,
   });
 
-  /// Key family auditorFormProvider (null = create, ref = edit).
   final String? formKey;
   final VoidCallback onNext;
 
@@ -70,9 +67,6 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
     });
   }
 
-  /// Prefill dari draft di provider. Dalam mode edit, draft baru terisi setelah
-  /// initFromAuditor (yang menunggu fetch dokumen), jadi prefill dibiarkan
-  /// retryable: baru dikunci (`_prefilled=true`) begitu ada data nyata.
   void _prefill(AuditorProfilDraft p) {
     if (_prefilled) return;
     final hasData = p.nama.isNotEmpty ||
@@ -103,23 +97,26 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
 
   static const _fotoExts = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'];
 
-  Future<void> _pickFoto() async {
-    // FileType.image memakai galeri/foto native di iOS (bukan hanya Files).
-    final result =
-        await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result == null) return;
-    final file = result.files.single;
-    final ext = (file.extension ?? '').toLowerCase();
+  Future<void> _pickFoto(ImagePickSource source) async {
+    final picked = await ImagePicker().pickImage(
+      source: source == ImagePickSource.camera
+          ? ImageSource.camera
+          : ImageSource.gallery,
+    );
+    if (picked == null) return;
+    final ext = p.extension(picked.name).replaceFirst('.', '').toLowerCase();
     if (ext.isNotEmpty && !_fotoExts.contains(ext)) {
       _snack('Format foto harus jpg, png, gif, svg, atau webp');
       return;
     }
-    if (file.size > kAuditorFileMaxBytes) {
+    final size = await picked.length();
+    if (size > kAuditorFileMaxBytes) {
       _snack('Ukuran foto maksimal 10MB');
       return;
     }
-    setState(() => _foto =
-        FileItem(path: file.path ?? '', name: file.name, size: file.size));
+    if (!mounted) return;
+    setState(() =>
+        _foto = FileItem(path: picked.path, name: picked.name, size: size));
   }
 
   bool _validateAndSave() {
@@ -180,8 +177,6 @@ class _AuditorProfilStepState extends ConsumerState<AuditorProfilStep> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch profil supaya build ulang saat draft edit terisi (async), lalu
-    // prefill form. Retryable sampai data benar-benar ada.
     final profil =
         ref.watch(auditorFormProvider(widget.formKey).select((s) => s.profil));
     _prefill(profil);

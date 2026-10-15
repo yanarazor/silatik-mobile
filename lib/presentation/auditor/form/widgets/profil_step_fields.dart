@@ -12,8 +12,6 @@ import '../../../shared/dokumen_upload_card.dart';
 import '../../../shared/dropdown_states.dart';
 import '../../../shared/field_label.dart';
 
-/// Religion dropdown. Optional field: on load failure it degrades to an empty,
-/// non-blocking dropdown instead of blocking the form.
 class AgamaDropdown extends ConsumerWidget {
   const AgamaDropdown({super.key, required this.form});
 
@@ -24,7 +22,6 @@ class AgamaDropdown extends ConsumerWidget {
     final async = ref.watch(agamaListProvider);
     return async.when(
       loading: () => const DropdownLoading(),
-      // Agama opsional: kalau endpoint gagal, jangan blokir form.
       error: (_, __) => ReactiveDropdownField<String>(
         formControlName: 'agama',
         decoration: const InputDecoration(
@@ -49,13 +46,11 @@ class AgamaDropdown extends ConsumerWidget {
   }
 }
 
-/// Foto Auditor card, reusing the Data Dukung upload component tuned for
-/// images.
 class FotoField extends StatelessWidget {
   const FotoField({super.key, required this.foto, required this.onPick});
 
   final FileItem? foto;
-  final VoidCallback onPick;
+  final Future<void> Function(ImagePickSource source) onPick;
 
   Future<void> _preview(BuildContext context) async {
     final path = foto?.path.trim() ?? '';
@@ -78,7 +73,7 @@ class FotoField extends StatelessWidget {
       title: 'Foto Auditor',
       requiredDoc: true,
       file: foto,
-      onPick: onPick,
+      onPickImage: onPick,
       onPreview: () => _preview(context),
       leadingIcon: Icons.image_outlined,
       leadingColor: AppColors.primary,
@@ -88,8 +83,6 @@ class FotoField extends StatelessWidget {
   }
 }
 
-/// Dependent province / city dropdowns for the auditor profile step. Renders
-/// into [form]; [pendingKabupaten] is applied once its list contains the id.
 class ProfilWilayahFields extends ConsumerWidget {
   const ProfilWilayahFields({
     super.key,
@@ -157,9 +150,6 @@ class ProfilWilayahFields extends ConsumerWidget {
         onRetry: () => ref.invalidate(kabupatenListProvider(provinsiId)),
       ),
       data: (list) {
-        // Prefill edit: pasang kabupaten begitu daftarnya memuat nilai tsb.
-        // Dropdown reactive_forms mengosongkan value yang tak ada di items,
-        // jadi baru di-set setelah id-nya benar-benar tersedia.
         final pending = pendingKabupaten;
         if (pending != null &&
             form.control('kabupaten').value != pending &&
@@ -177,7 +167,6 @@ class ProfilWilayahFields extends ConsumerWidget {
             hintText: 'Pilih Kota/Kabupaten',
             prefixIcon: Icon(Icons.location_on_outlined),
           ),
-          // Kirim id sesuai kontrak backend (bukan nama).
           items: list
               .map((KabupatenModel e) =>
                   DropdownMenuItem(value: e.id, child: Text(e.nama)))
