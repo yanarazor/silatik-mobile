@@ -18,7 +18,7 @@ import 'widgets/sheet_frame.dart';
 /// Demo-only bridge for testers: opens a Google Form to collect feedback on
 /// app progress. Swap the placeholder URL before distributing test builds;
 /// remove the menu entirely once a real feedback channel exists.
-const String _feedbackFormUrl = 'https://forms.gle/REPLACE-ME';
+const String _feedbackFormUrl = 'https://bit.ly/feedback-silatik';
 
 class ProfilScreen extends ConsumerWidget {
   const ProfilScreen({super.key});
@@ -101,7 +101,7 @@ class ProfilScreen extends ConsumerWidget {
                       ),
                       MenuItemData(
                         icon: Icons.rate_review_outlined,
-                        label: 'Umpan Balik',
+                        label: 'Berikan Umpan Balik (Demo)',
                         iconBgColor: const Color(0xFFF3F4F6),
                         iconColor: AppColors.textSecondary,
                         onTap: () => _openFeedbackForm(context),
